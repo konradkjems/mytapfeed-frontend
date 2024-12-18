@@ -41,9 +41,9 @@
     "util": "^0.12.5"
   },
   "scripts": {
-    "start": "cross-env PORT=3001 craco start",
-    "build": "craco build",
-    "test": "craco test",
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
