@@ -4,6 +4,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { CategoryProvider } from './context/CategoryContext';
+import { Analytics } from '@vercel/analytics/react';
 import AppRoutes from './AppRoutes';
 import { CssBaseline } from '@mui/material';
 
@@ -16,6 +17,7 @@ function App() {
             <CategoryProvider>
               <CssBaseline />
               <AppRoutes />
+              <Analytics />
             </CategoryProvider>
           </AuthProvider>
         </LanguageProvider>

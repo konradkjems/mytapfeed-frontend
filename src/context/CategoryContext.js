@@ -8,19 +8,36 @@ export const CategoryProvider = ({ children }) => {
     const [categories, setCategories] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, checkAuthStatus } = useAuth();
 
     const fetchCategories = async () => {
-        if (!isAuthenticated) return;
+        if (!isAuthenticated) {
+            setCategories([]);
+            setIsLoading(false);
+            return;
+        }
         
         try {
+            setIsLoading(true);
             const response = await fetch(`${API_URL}/categories`, {
-                credentials: 'include'
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
             });
+            
             if (response.ok) {
                 const data = await response.json();
                 setCategories(data);
                 setError(null);
+            } else if (response.status === 401) {
+                // Hvis vi får en 401, prøv at tjekke auth status igen
+                const isStillAuth = await checkAuthStatus();
+                if (!isStillAuth) {
+                    setCategories([]);
+                    throw new Error('Din session er udløbet. Log venligst ind igen.');
+                }
             } else {
                 const errorData = await response.json();
                 throw new Error(errorData.message || 'Kunne ikke hente kategorier');
@@ -28,83 +45,50 @@ export const CategoryProvider = ({ children }) => {
         } catch (error) {
             console.error('Fejl ved hentning af kategorier:', error);
             setError(error.message);
+            setCategories([]);
         } finally {
             setIsLoading(false);
         }
     };
 
     const addCategory = async (categoryData) => {
+        if (!isAuthenticated) {
+            throw new Error('Du skal være logget ind for at oprette kategorier');
+        }
+
         try {
             const response = await fetch(`${API_URL}/categories`, {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
+                    'Accept': 'application/json',
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(categoryData)
             });
+
             if (response.ok) {
                 const newCategory = await response.json();
                 setCategories(prev => [...prev, newCategory]);
                 return newCategory;
-            } else {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Kunne ikke oprette kategori');
+            } else if (response.status === 401) {
+                // Hvis vi får en 401, prøv at tjekke auth status igen
+                const isStillAuth = await checkAuthStatus();
+                if (!isStillAuth) {
+                    throw new Error('Din session er udløbet. Log venligst ind igen.');
+                }
             }
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Kunne ikke oprette kategori');
         } catch (error) {
             console.error('Fejl ved oprettelse af kategori:', error);
             throw error;
         }
     };
 
-    const updateCategory = async (categoryId, categoryData) => {
-        try {
-            const response = await fetch(`${API_URL}/categories/${categoryId}`, {
-                method: 'PUT',
-                credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(categoryData)
-            });
-            if (response.ok) {
-                const updatedCategory = await response.json();
-                setCategories(prev => 
-                    prev.map(cat => cat._id === categoryId ? updatedCategory : cat)
-                );
-                return updatedCategory;
-            } else {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Kunne ikke opdatere kategori');
-            }
-        } catch (error) {
-            console.error('Fejl ved opdatering af kategori:', error);
-            throw error;
-        }
-    };
-
-    const deleteCategory = async (categoryId) => {
-        try {
-            const response = await fetch(`${API_URL}/categories/${categoryId}`, {
-                method: 'DELETE',
-                credentials: 'include'
-            });
-            if (response.ok) {
-                setCategories(prev => prev.filter(cat => cat._id !== categoryId));
-            } else {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Kunne ikke slette kategori');
-            }
-        } catch (error) {
-            console.error('Fejl ved sletning af kategori:', error);
-            throw error;
-        }
-    };
-
+    // Genindlæs kategorier når auth status ændrer sig
     useEffect(() => {
-        if (isAuthenticated) {
-            fetchCategories();
-        }
+        fetchCategories();
     }, [isAuthenticated]);
 
     const value = {
@@ -112,9 +96,7 @@ export const CategoryProvider = ({ children }) => {
         isLoading,
         error,
         fetchCategories,
-        addCategory,
-        updateCategory,
-        deleteCategory
+        addCategory
     };
 
     return (
