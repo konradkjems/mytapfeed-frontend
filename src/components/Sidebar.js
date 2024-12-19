@@ -66,7 +66,7 @@ const Sidebar = ({ open, toggleDrawer }) => {
           boxSizing: 'border-box',
           whiteSpace: 'nowrap',
           overflowX: 'hidden',
-          backgroundColor: 'primary.dark',
+          backgroundColor: '#001e3c',
           transition: theme => theme.transitions.create('width', {
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.enteringScreen,
@@ -78,9 +78,18 @@ const Sidebar = ({ open, toggleDrawer }) => {
         height: 64, 
         display: 'flex', 
         alignItems: 'center', 
-        justifyContent: 'flex-end',
-        pr: 1,
+        justifyContent: 'space-between',
+        px: 2,
       }}>
+        <Box sx={{ 
+          visibility: open ? 'visible' : 'hidden',
+          opacity: open ? 1 : 0,
+          transition: 'opacity 0.2s',
+          color: 'white',
+          fontWeight: 'bold',
+        }}>
+          Dashboard
+        </Box>
         <IconButton 
           onClick={toggleDrawer}
           sx={{ color: 'white' }}
@@ -97,7 +106,7 @@ const Sidebar = ({ open, toggleDrawer }) => {
               selected={location.pathname === item.path}
               sx={{
                 minHeight: 48,
-                justifyContent: 'center',
+                justifyContent: open ? 'initial' : 'center',
                 px: 2.5,
                 '&.Mui-selected': {
                   backgroundColor: 'rgba(255, 255, 255, 0.1)',
