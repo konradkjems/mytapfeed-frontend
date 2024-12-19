@@ -11,6 +11,7 @@ export const AuthProvider = ({ children }) => {
 
     const fetchUserData = async () => {
         try {
+            setIsLoading(true);
             const response = await fetch(`${API_URL}/user/profile`, {
                 credentials: 'include'
             });
@@ -26,6 +27,8 @@ export const AuthProvider = ({ children }) => {
             console.error('Fejl ved hentning af brugerdata:', error);
             setError(error.message);
             setUserData(null);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -41,19 +44,12 @@ export const AuthProvider = ({ children }) => {
                 
                 if (isMounted) {
                     setIsAuthenticated(data.isAuthenticated);
-                    if (data.isAuthenticated) {
-                        await fetchUserData();
-                    }
                 }
             } catch (error) {
                 console.error('Auth check failed:', error);
                 if (isMounted) {
                     setIsAuthenticated(false);
                     setError('Kunne ikke verificere login status');
-                }
-            } finally {
-                if (isMounted) {
-                    setIsLoading(false);
                 }
             }
         };
@@ -64,6 +60,33 @@ export const AuthProvider = ({ children }) => {
             isMounted = false;
         };
     }, []);
+
+    useEffect(() => {
+        let isMounted = true;
+
+        const loadUserData = async () => {
+            if (isAuthenticated) {
+                try {
+                    await fetchUserData();
+                } catch (error) {
+                    if (isMounted) {
+                        console.error('Fejl ved indlæsning af brugerdata:', error);
+                    }
+                }
+            } else {
+                setUserData(null);
+            }
+            if (isMounted) {
+                setIsLoading(false);
+            }
+        };
+
+        loadUserData();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [isAuthenticated]);
 
     const value = {
         isAuthenticated,
