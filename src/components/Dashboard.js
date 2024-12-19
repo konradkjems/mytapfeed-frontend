@@ -675,23 +675,71 @@ const Dashboard = () => {
               <Grid container spacing={3}>
                 <Grid item xs={12} md={4}>
                   <Card>
-                    <CardContent sx={{ textAlign: 'center' }}>
-                      <Typography variant="h3" color="primary" gutterBottom>
-                        {businessData?.rating || '-'}
-                      </Typography>
-                      <Typography variant="subtitle1" gutterBottom>
-                        Gennemsnitlig vurdering
-                      </Typography>
-                      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
-                        <Rating
-                          value={businessData?.rating || 0}
-                          precision={0.1}
-                          readOnly
-                        />
-                      </Box>
-                      <Typography variant="body2" color="text.secondary">
-                        Baseret på {businessData?.user_ratings_total || 0} anmeldelser
-                      </Typography>
+                    <CardContent>
+                      {businessData ? (
+                        <>
+                          <Typography variant="h6" gutterBottom>
+                            {businessData.name}
+                          </Typography>
+                          {businessData.address && (
+                            <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
+                              <LocationIcon sx={{ mr: 1, mt: 0.3 }} color="action" />
+                              <Typography variant="body2" color="text.secondary">
+                                {businessData.address}
+                              </Typography>
+                            </Box>
+                          )}
+                          <Divider sx={{ my: 2 }} />
+                          <Typography variant="h3" color="primary" gutterBottom>
+                            {businessData.rating || '-'}
+                          </Typography>
+                          <Typography variant="subtitle1" gutterBottom>
+                            Gennemsnitlig vurdering
+                          </Typography>
+                          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
+                            <Rating
+                              value={businessData.rating || 0}
+                              precision={0.1}
+                              readOnly
+                            />
+                          </Box>
+                          <Typography variant="body2" color="text.secondary">
+                            Baseret på {businessData.user_ratings_total || 0} anmeldelser
+                          </Typography>
+                          {businessData.phone && (
+                            <Box sx={{ mt: 2 }}>
+                              <Typography variant="body2" color="text.secondary">
+                                Telefon: {businessData.phone}
+                              </Typography>
+                            </Box>
+                          )}
+                          {businessData.website && (
+                            <Box sx={{ mt: 1 }}>
+                              <Link 
+                                href={businessData.website} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                color="primary"
+                                sx={{ 
+                                  display: 'flex', 
+                                  alignItems: 'center',
+                                  gap: 0.5,
+                                  typography: 'body2'
+                                }}
+                              >
+                                Besøg hjemmeside
+                                <LaunchIcon sx={{ fontSize: 16 }} />
+                              </Link>
+                            </Box>
+                          )}
+                        </>
+                      ) : (
+                        <Box sx={{ textAlign: 'center', py: 2 }}>
+                          <Typography color="text.secondary">
+                            Ingen virksomhedsdata tilgængelig
+                          </Typography>
+                        </Box>
+                      )}
                     </CardContent>
                   </Card>
                 </Grid>
