@@ -606,6 +606,12 @@ const Dashboard = () => {
     addProduct: "Opret et nyt produkt med QR-kode.",
     googleReviews: "Se og administrer dine Google anmeldelser.",
     statistics: "Se statistik over dine produkters performance.",
+    monthlyTraffic: "Grafisk oversigt over antal scanninger per måned for alle dine produkter.",
+    topProducts: "Liste over dine 5 mest scannede produkter sorteret efter antal scanninger.",
+    productTypeStats: "Oversigt over hvordan dine produkter performer fordelt på produkttype.",
+    totalClicks: "Det samlede antal scanninger for denne produkttype.",
+    avgClicks: "Gennemsnitligt antal scanninger per produkt af denne type.",
+    productCount: "Antal produkter du har af denne type."
   };
 
   return (
@@ -613,7 +619,7 @@ const Dashboard = () => {
       <Grid container spacing={3}>
         {/* Statistik sektion */}
         <Grid item xs={12}>
-          <Tooltip title="Se en grafisk oversigt over antal scanninger per måned">
+          <Tooltip title={tooltips.monthlyTraffic}>
             <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', height: 360 }}>
               <Typography component="h2" variant="h6" color="primary" gutterBottom>
                 Samlet trafik oversigt
@@ -870,70 +876,102 @@ const Dashboard = () => {
         </Grid>
 
         <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2 }}>
-            <Typography component="h2" variant="h6" color="primary" gutterBottom>
-              Top 5 mest besøgte produkter
-            </Typography>
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Produkt ID</TableCell>
-                    <TableCell>Produkttype</TableCell>
-                    <TableCell align="right">Antal klik</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {stands
-                    .sort((a, b) => (b.clicks || 0) - (a.clicks || 0))
-                    .slice(0, 5)
-                    .map((stand) => (
-                      <TableRow key={stand._id}>
-                        <TableCell>{stand.standerId}</TableCell>
-                        <TableCell>{PRODUCT_TYPES[stand.productType.toUpperCase()]?.label || stand.productType}</TableCell>
-                        <TableCell align="right">{stand.clicks || 0}</TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Paper>
+          <Tooltip title={tooltips.topProducts}>
+            <Paper sx={{ p: 2 }}>
+              <Typography component="h2" variant="h6" color="primary" gutterBottom>
+                Top 5 mest besøgte produkter
+              </Typography>
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>
+                        <Tooltip title={tooltips.productId}>
+                          <span>Produkt ID</span>
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell>
+                        <Tooltip title={tooltips.productType}>
+                          <span>Produkttype</span>
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell align="right">
+                        <Tooltip title={tooltips.clicks}>
+                          <span>Antal klik</span>
+                        </Tooltip>
+                      </TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {stands
+                      .sort((a, b) => (b.clicks || 0) - (a.clicks || 0))
+                      .slice(0, 5)
+                      .map((stand) => (
+                        <TableRow key={stand._id}>
+                          <TableCell>{stand.standerId}</TableCell>
+                          <TableCell>{PRODUCT_TYPES[stand.productType.toUpperCase()]?.label || stand.productType}</TableCell>
+                          <TableCell align="right">{stand.clicks || 0}</TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Paper>
+          </Tooltip>
         </Grid>
 
         <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2 }}>
-            <Typography component="h2" variant="h6" color="primary" gutterBottom>
-              Klik per produkttype
-            </Typography>
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Produkttype</TableCell>
-                    <TableCell align="right">Antal produkter</TableCell>
-                    <TableCell align="right">Samlet antal klik</TableCell>
-                    <TableCell align="right">Gennemsnit</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {Object.values(PRODUCT_TYPES).map(type => {
-                    const productsOfType = stands.filter(s => s.productType === type.value);
-                    const totalClicks = productsOfType.reduce((sum, stand) => sum + (stand.clicks || 0), 0);
-                    const avgClicks = productsOfType.length ? (totalClicks / productsOfType.length).toFixed(1) : 0;
-                    
-                    return (
-                      <TableRow key={type.value}>
-                        <TableCell>{type.label}</TableCell>
-                        <TableCell align="right">{productsOfType.length}</TableCell>
-                        <TableCell align="right">{totalClicks}</TableCell>
-                        <TableCell align="right">{avgClicks}</TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Paper>
+          <Tooltip title={tooltips.productTypeStats}>
+            <Paper sx={{ p: 2 }}>
+              <Typography component="h2" variant="h6" color="primary" gutterBottom>
+                Klik per produkttype
+              </Typography>
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>
+                        <Tooltip title={tooltips.productType}>
+                          <span>Produkttype</span>
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell align="right">
+                        <Tooltip title={tooltips.productCount}>
+                          <span>Antal produkter</span>
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell align="right">
+                        <Tooltip title={tooltips.totalClicks}>
+                          <span>Samlet antal klik</span>
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell align="right">
+                        <Tooltip title={tooltips.avgClicks}>
+                          <span>Gennemsnit</span>
+                        </Tooltip>
+                      </TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {Object.values(PRODUCT_TYPES).map(type => {
+                      const productsOfType = stands.filter(s => s.productType === type.value);
+                      const totalClicks = productsOfType.reduce((sum, stand) => sum + (stand.clicks || 0), 0);
+                      const avgClicks = productsOfType.length ? (totalClicks / productsOfType.length).toFixed(1) : 0;
+                      
+                      return (
+                        <TableRow key={type.value}>
+                          <TableCell>{type.label}</TableCell>
+                          <TableCell align="right">{productsOfType.length}</TableCell>
+                          <TableCell align="right">{totalClicks}</TableCell>
+                          <TableCell align="right">{avgClicks}</TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Paper>
+          </Tooltip>
         </Grid>
 
         {/* Produkter sektion */}
