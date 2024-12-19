@@ -22,6 +22,7 @@ import { BarChart } from '@mui/x-charts';
 import { LineChart } from '@mui/x-charts';
 import { useTheme } from '../context/ThemeContext';
 import Layout from './Layout';
+import API_URL from '../config';
 
 const PRODUCT_TYPES = {
   STANDER: { value: 'stander', label: 'Stander' },
@@ -43,7 +44,7 @@ const Statistics = () => {
 
   const fetchStands = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/stands', {
+      const response = await fetch(`${API_URL}/stands`, {
         credentials: 'include'
       });
       if (response.ok) {
