@@ -1,126 +1,124 @@
 import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
 import {
+  Box,
   Drawer,
   List,
-  ListItemButton,
+  ListItem,
   ListItemIcon,
   ListItemText,
+  ListItemButton,
   Divider,
-  styled,
-  Switch,
-  Box
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
-  BarChart as BarChartIcon,
+  Assessment as AssessmentIcon,
   Person as PersonIcon,
   AdminPanelSettings as AdminIcon,
-  DarkMode as DarkModeIcon,
-  LightMode as LightModeIcon
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const drawerWidth = 240;
 
-const StyledDrawer = styled(Drawer, { shouldForwardProp: (prop) => prop !== 'open' })(
-  ({ theme, open }) => ({
-    '& .MuiDrawer-paper': {
-      position: 'relative',
-      whiteSpace: 'nowrap',
-      width: drawerWidth,
-      transition: theme.transitions.create('width', {
-        easing: theme.transitions.easing.sharp,
-        duration: theme.transitions.duration.enteringScreen,
-      }),
-      boxSizing: 'border-box',
-      ...(!open && {
-        overflowX: 'hidden',
-        transition: theme.transitions.create('width', {
-          easing: theme.transitions.easing.sharp,
-          duration: theme.transitions.duration.leavingScreen,
-        }),
-        width: theme.spacing(7),
-        [theme.breakpoints.up('sm')]: {
-          width: theme.spacing(9),
-        },
-      }),
-    },
-  }),
-);
-
-const Sidebar = ({ open }) => {
-  const navigate = useNavigate();
+const Sidebar = ({ open, toggleDrawer }) => {
   const location = useLocation();
   const { userData } = useAuth();
-  const { mode, toggleTheme } = useTheme();
+  const { t } = useLanguage();
 
   const menuItems = [
     {
-      text: 'Dashboard',
+      text: t('menu.dashboard'),
       icon: <DashboardIcon />,
-      path: '/dashboard',
-      onClick: () => navigate('/dashboard')
+      path: '/dashboard'
     },
     {
-      text: 'Statistik',
-      icon: <BarChartIcon />,
-      path: '/statistics',
-      onClick: () => navigate('/statistics')
+      text: t('menu.statistics'),
+      icon: <AssessmentIcon />,
+      path: '/statistics'
     },
     {
-      text: 'Min konto',
+      text: t('menu.profile'),
       icon: <PersonIcon />,
-      path: '/profile',
-      onClick: () => navigate('/profile')
+      path: '/profile'
     }
   ];
 
   if (userData?.isAdmin) {
     menuItems.push({
-      text: 'Admin Panel',
+      text: t('menu.admin'),
       icon: <AdminIcon />,
-      path: '/admin',
-      onClick: () => navigate('/admin')
+      path: '/admin'
     });
   }
 
-  const handleThemeToggle = (event) => {
-    event.stopPropagation();
-    toggleTheme();
-  };
-
   return (
-    <StyledDrawer variant="permanent" open={open}>
-      <List component="nav">
-        {menuItems.map((item) => (
-          <ListItemButton
-            key={item.text}
-            selected={location.pathname === item.path}
-            onClick={item.onClick}
-          >
-            <ListItemIcon>
-              {item.icon}
-            </ListItemIcon>
-            <ListItemText primary={item.text} />
-          </ListItemButton>
-        ))}
-        <Divider sx={{ my: 1 }} />
-        <ListItemButton onClick={handleThemeToggle}>
-          <ListItemIcon>
-            {mode === 'dark' ? <DarkModeIcon /> : <LightModeIcon />}
-          </ListItemIcon>
-          <ListItemText primary={mode === 'dark' ? 'Mørk tema' : 'Lyst tema'} />
-          <Switch
-            edge="end"
-            checked={mode === 'dark'}
-            onChange={handleThemeToggle}
-            onClick={(e) => e.stopPropagation()}
-          />
-        </ListItemButton>
-      </List>
-    </StyledDrawer>
+    <Drawer
+      variant="permanent"
+      open={open}
+      sx={{
+        width: drawerWidth,
+        flexShrink: 0,
+        '& .MuiDrawer-paper': {
+          width: drawerWidth,
+          boxSizing: 'border-box',
+          whiteSpace: 'nowrap',
+          ...(open ? {
+            width: drawerWidth,
+            transition: theme => theme.transitions.create('width', {
+              easing: theme.transitions.easing.sharp,
+              duration: theme.transitions.duration.enteringScreen,
+            }),
+            overflowX: 'hidden',
+          } : {
+            width: theme => theme.spacing(7),
+            transition: theme => theme.transitions.create('width', {
+              easing: theme.transitions.easing.sharp,
+              duration: theme.transitions.duration.leavingScreen,
+            }),
+            overflowX: 'hidden',
+          }),
+        },
+      }}
+    >
+      <Box sx={{ mt: 8 }}>
+        <List>
+          {menuItems.map((item) => (
+            <ListItem key={item.text} disablePadding>
+              <ListItemButton
+                component={RouterLink}
+                to={item.path}
+                selected={location.pathname === item.path}
+                sx={{
+                  minHeight: 48,
+                  justifyContent: open ? 'initial' : 'center',
+                  px: 2.5,
+                }}
+              >
+                <ListItemIcon
+                  sx={{
+                    minWidth: 0,
+                    mr: open ? 3 : 'auto',
+                    justifyContent: 'center',
+                  }}
+                >
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText 
+                  primary={item.text} 
+                  sx={{ 
+                    opacity: open ? 1 : 0,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                  }} 
+                />
+              </ListItemButton>
+            </ListItem>
+          ))}
+        </List>
+      </Box>
+    </Drawer>
   );
 };
 

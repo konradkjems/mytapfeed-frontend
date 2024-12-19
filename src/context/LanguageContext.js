@@ -73,6 +73,14 @@ export const translations = {
       totalClicks: "Det samlede antal scanninger for denne produkttype.",
       avgClicks: "Gennemsnitligt antal scanninger per produkt af denne type.",
       productCount: "Antal produkter du har af denne type."
+    },
+
+    // Menu items
+    menu: {
+      dashboard: 'Dashboard',
+      statistics: 'Statistik',
+      profile: 'Min Profil',
+      admin: 'Admin Panel'
     }
   },
   en: {
@@ -146,6 +154,14 @@ export const translations = {
       totalClicks: "The total number of scans for this product type.",
       avgClicks: "Average number of scans per product of this type.",
       productCount: "Number of products you have of this type."
+    },
+
+    // Menu items
+    menu: {
+      dashboard: 'Dashboard',
+      statistics: 'Statistics',
+      profile: 'My Profile',
+      admin: 'Admin Panel'
     }
   }
 };
