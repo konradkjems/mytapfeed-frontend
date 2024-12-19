@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { useAuth } from './AuthContext';
 import API_URL from '../config';
 
 const CategoryContext = createContext(null);
@@ -7,8 +8,11 @@ export const CategoryProvider = ({ children }) => {
     const [categories, setCategories] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
+    const { isAuthenticated } = useAuth();
 
     const fetchCategories = async () => {
+        if (!isAuthenticated) return;
+        
         try {
             const response = await fetch(`${API_URL}/categories`, {
                 credentials: 'include'
@@ -98,8 +102,10 @@ export const CategoryProvider = ({ children }) => {
     };
 
     useEffect(() => {
-        fetchCategories();
-    }, []);
+        if (isAuthenticated) {
+            fetchCategories();
+        }
+    }, [isAuthenticated]);
 
     const value = {
         categories,

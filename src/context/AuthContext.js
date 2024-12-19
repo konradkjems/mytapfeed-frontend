@@ -50,6 +50,8 @@ export const AuthProvider = ({ children }) => {
             
             if (data.isAuthenticated) {
                 await fetchUserData();
+            } else {
+                setUserData(null);
             }
 
             return data.isAuthenticated;
@@ -68,12 +70,19 @@ export const AuthProvider = ({ children }) => {
         checkAuthStatus();
     }, []);
 
-    // Periodically check auth status
+    // Fetch user data whenever authentication state changes
     useEffect(() => {
+        if (isAuthenticated) {
+            fetchUserData();
+        }
+    }, [isAuthenticated]);
+
+    // Periodically check auth status and refresh user data
+    useEffect(() => {
+        if (!isAuthenticated) return;
+
         const interval = setInterval(() => {
-            if (isAuthenticated) {
-                checkAuthStatus();
-            }
+            checkAuthStatus();
         }, 5 * 60 * 1000); // Check every 5 minutes
 
         return () => clearInterval(interval);
