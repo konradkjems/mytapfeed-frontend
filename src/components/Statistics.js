@@ -18,7 +18,7 @@ import {
   FormControl,
   InputLabel
 } from '@mui/material';
-import { BarChart, LineChart } from '@mui/x-charts';
+import { BarChart } from '@mui/x-charts/BarChart';
 import { useTheme } from '../context/ThemeContext';
 import Layout from './Layout';
 

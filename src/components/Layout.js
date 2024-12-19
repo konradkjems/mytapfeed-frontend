@@ -47,7 +47,7 @@ const AppBar = styled(MuiAppBar, {
 const Layout = ({ children, title }) => {
   const [open, setOpen] = useState(true);
   const { userData, setIsAuthenticated } = useAuth();
-  const { mode } = useTheme();
+  const theme = useTheme();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
 

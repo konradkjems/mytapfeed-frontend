@@ -145,25 +145,16 @@ const LocationSelectionDialog = ({ open, onClose, onSelect }) => {
 
   // Debounce søgningen
   useEffect(() => {
-    if (searchTimeout) {
-      clearTimeout(searchTimeout);
-    }
-
-    if (searchQuery.trim()) {
-      const timeout = setTimeout(() => {
-        handleSearch(searchQuery);
+    if (searchQuery) {
+      if (searchTimeout) clearTimeout(searchTimeout);
+      const newTimeout = setTimeout(() => {
+        handleSearch();
       }, 500);
-      setSearchTimeout(timeout);
+      setSearchTimeout(newTimeout);
     } else {
       setPlaces([]);
     }
-
-    return () => {
-      if (searchTimeout) {
-        clearTimeout(searchTimeout);
-      }
-    };
-  }, [searchQuery]);
+  }, [searchQuery, handleSearch]);
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
