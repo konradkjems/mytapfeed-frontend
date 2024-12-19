@@ -9,6 +9,7 @@ import {
   ListItemText,
   ListItemButton,
   IconButton,
+  useTheme,
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
@@ -27,6 +28,7 @@ const Sidebar = ({ open, toggleDrawer }) => {
   const location = useLocation();
   const { userData } = useAuth();
   const { t } = useLanguage();
+  const theme = useTheme();
 
   const menuItems = [
     {
@@ -66,24 +68,28 @@ const Sidebar = ({ open, toggleDrawer }) => {
           boxSizing: 'border-box',
           whiteSpace: 'nowrap',
           overflowX: 'hidden',
-          backgroundColor: '#001e3c',
+          backgroundColor: theme.palette.mode === 'dark' ? '#001e3c' : '#fff',
+          borderRight: `1px solid ${theme.palette.divider}`,
           transition: theme => theme.transitions.create('width', {
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.enteringScreen,
           }),
-          mt: 8,
         },
       }}
     >
       <Box sx={{ 
+        minHeight: 64,
         display: 'flex', 
         alignItems: 'center', 
         justifyContent: 'flex-end',
         p: 1,
+        backgroundColor: theme.palette.mode === 'dark' ? '#001e3c' : '#fff',
       }}>
         <IconButton 
           onClick={toggleDrawer}
-          sx={{ color: 'white' }}
+          sx={{ 
+            color: theme.palette.mode === 'dark' ? 'white' : 'inherit'
+          }}
         >
           <MenuIcon />
         </IconButton>
@@ -100,13 +106,19 @@ const Sidebar = ({ open, toggleDrawer }) => {
                 justifyContent: open ? 'initial' : 'center',
                 px: 2.5,
                 '&.Mui-selected': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  backgroundColor: theme.palette.mode === 'dark' 
+                    ? 'rgba(255, 255, 255, 0.1)' 
+                    : theme.palette.action.selected,
                   '&:hover': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    backgroundColor: theme.palette.mode === 'dark'
+                      ? 'rgba(255, 255, 255, 0.2)'
+                      : theme.palette.action.hover,
                   },
                 },
                 '&:hover': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  backgroundColor: theme.palette.mode === 'dark'
+                    ? 'rgba(255, 255, 255, 0.1)'
+                    : theme.palette.action.hover,
                 },
               }}
             >
@@ -115,7 +127,7 @@ const Sidebar = ({ open, toggleDrawer }) => {
                   minWidth: 0,
                   mr: open ? 3 : 0,
                   justifyContent: 'center',
-                  color: 'white',
+                  color: theme.palette.mode === 'dark' ? 'white' : 'inherit',
                 }}
               >
                 {item.icon}
@@ -124,7 +136,7 @@ const Sidebar = ({ open, toggleDrawer }) => {
                 primary={item.text} 
                 sx={{ 
                   opacity: open ? 1 : 0,
-                  color: 'white',
+                  color: theme.palette.mode === 'dark' ? 'white' : 'inherit',
                   display: open ? 'block' : 'none',
                 }} 
               />
