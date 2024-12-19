@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import API_URL from '../config';
 
 const AuthContext = createContext(null);
 
@@ -9,7 +10,7 @@ export const AuthProvider = ({ children }) => {
 
     const fetchUserData = async () => {
         try {
-            const response = await fetch('http://localhost:3000/api/user/profile', {
+            const response = await fetch(`${API_URL}/user/profile`, {
                 credentials: 'include'
             });
             if (response.ok) {
@@ -24,7 +25,7 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         const checkAuthStatus = async () => {
             try {
-                const response = await fetch('http://localhost:3000/api/auth/status', {
+                const response = await fetch(`${API_URL}/auth/status`, {
                     credentials: 'include'
                 });
                 const data = await response.json();
