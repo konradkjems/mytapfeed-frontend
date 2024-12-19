@@ -15,6 +15,7 @@ import {
 } from '@mui/material';
 import LockResetIcon from '@mui/icons-material/LockReset';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import API_URL from '../config';
 
 const defaultTheme = createTheme({
   palette: {
@@ -56,11 +57,10 @@ const ResetPassword = () => {
     // Verificer token når komponenten indlæses
     const verifyToken = async () => {
       try {
-        const response = await fetch(`http://localhost:3000/api/verify-reset-token/${token}`, {
+        const response = await fetch(`${API_URL}/verify-reset-token/${token}`, {
           method: 'GET',
           headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': 'http://localhost:3001'
+            'Content-Type': 'application/json'
           }
         });
 
@@ -96,11 +96,10 @@ const ResetPassword = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:3000/api/reset-password', {
+      const response = await fetch(`${API_URL}/reset-password`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': 'http://localhost:3001'
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           token,

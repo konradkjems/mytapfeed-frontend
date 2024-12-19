@@ -24,6 +24,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import Layout from './Layout';
+import API_URL from '../config';
 
 const Admin = () => {
   const [users, setUsers] = useState([]);
@@ -37,7 +38,7 @@ const Admin = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/admin/users', {
+      const response = await fetch(`${API_URL}/admin/users`, {
         credentials: 'include'
       });
       if (response.ok) {
@@ -60,7 +61,7 @@ const Admin = () => {
 
   const handleBlockUser = async (userId, isBlocked) => {
     try {
-      const response = await fetch(`http://localhost:3000/api/admin/users/${userId}/${isBlocked ? 'unblock' : 'block'}`, {
+      const response = await fetch(`${API_URL}/admin/users/${userId}/${isBlocked ? 'unblock' : 'block'}`, {
         method: 'PUT',
         credentials: 'include'
       });
