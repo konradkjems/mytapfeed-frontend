@@ -254,7 +254,8 @@ const Dashboard = () => {
   const [newStand, setNewStand] = useState({ 
     standerId: '', 
     redirectUrl: '', 
-    productType: 'stander'
+    productType: 'stander',
+    name: ''
   });
   const [alert, setAlert] = useState({ open: false, message: '', severity: 'success' });
   const [isLoading, setIsLoading] = useState(true);
@@ -370,7 +371,8 @@ const Dashboard = () => {
         setNewStand({
           standerId: '',
           redirectUrl: '',
-          productType: 'stander'
+          productType: 'stander',
+          name: ''
         });
         
         // Hent opdateret liste af stands
@@ -891,6 +893,7 @@ const Dashboard = () => {
                   <TableHead>
                     <TableRow>
                       <TableCell>Produkt ID</TableCell>
+                      <TableCell>Navn</TableCell>
                       <TableCell>TapFeed URL</TableCell>
                       <TableCell>Redirect URL</TableCell>
                       <TableCell>Produkttype</TableCell>
@@ -902,6 +905,22 @@ const Dashboard = () => {
                     {stands.map((stand) => (
                       <TableRow key={stand._id}>
                         <TableCell>{stand.standerId}</TableCell>
+                        <TableCell>
+                          {editingId === stand._id ? (
+                            <TextField
+                              value={stand.name || ''}
+                              onChange={(e) => {
+                                const updatedStands = stands.map(s =>
+                                  s._id === stand._id ? { ...s, name: e.target.value } : s
+                                );
+                                setStands(updatedStands);
+                              }}
+                              fullWidth
+                            />
+                          ) : (
+                            stand.name || '-'
+                          )}
+                        </TableCell>
                         <TableCell>
                           <Link
                             href={`https://api.tapfeed.dk/${stand.standerId}`}
@@ -1009,6 +1028,14 @@ const Dashboard = () => {
             fullWidth
             value={newStand.standerId}
             onChange={(e) => setNewStand({ ...newStand, standerId: e.target.value })}
+          />
+          <TextField
+            margin="dense"
+            label="Navn"
+            fullWidth
+            value={newStand.name}
+            onChange={(e) => setNewStand({ ...newStand, name: e.target.value })}
+            helperText="F.eks. 'Butik Gammel Kongevej Kasse'"
           />
           <TextField
             margin="dense"
