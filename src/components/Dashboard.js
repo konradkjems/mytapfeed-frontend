@@ -321,7 +321,7 @@ const Dashboard = () => {
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState('all');
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
 
   const PRODUCT_TYPES = {
@@ -332,10 +332,10 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!authLoading && !isAuthenticated) {
       navigate('/login');
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, authLoading, navigate]);
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -705,8 +705,13 @@ const Dashboard = () => {
   };
 
   // Tilføj loading state
-  if (!isAuthenticated) {
+  if (isLoading) {
     return <div>Indlæser...</div>;
+  }
+
+  // Hvis ikke authenticated, vis intet mens vi redirecter
+  if (!isAuthenticated) {
+    return null;
   }
 
   return (

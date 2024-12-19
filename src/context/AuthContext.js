@@ -33,6 +33,7 @@ export const AuthProvider = ({ children }) => {
 
     const checkAuthStatus = async () => {
         try {
+            setIsLoading(true);
             const response = await fetch(`${API_URL}/auth/status`, {
                 credentials: 'include'
             });
@@ -45,21 +46,13 @@ export const AuthProvider = ({ children }) => {
             setIsAuthenticated(false);
             setUserData(null);
             return false;
+        } finally {
+            setIsLoading(false);
         }
     };
 
     useEffect(() => {
-        let mounted = true;
-
-        const initializeAuth = async () => {
-            await checkAuthStatus();
-        };
-
-        initializeAuth();
-
-        return () => {
-            mounted = false;
-        };
+        checkAuthStatus();
     }, []);
 
     // Fetch user data whenever authentication state changes
@@ -91,9 +84,13 @@ export const AuthProvider = ({ children }) => {
         error
     };
 
+    if (isLoading) {
+        return <div>Indlæser...</div>;
+    }
+
     return (
         <AuthContext.Provider value={value}>
-            {!isLoading && children}
+            {children}
         </AuthContext.Provider>
     );
 };
