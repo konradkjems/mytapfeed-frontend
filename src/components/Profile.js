@@ -3,167 +3,346 @@ import {
   Box,
   Paper,
   Typography,
-  Avatar,
-  Button,
   TextField,
+  Button,
   Grid,
-  CircularProgress,
-  Alert
+  Avatar,
+  Alert,
+  Snackbar,
+  Card,
+  CardContent,
+  Divider,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  CircularProgress
 } from '@mui/material';
-import Layout from './Layout';
+import {
+  Key as KeyIcon,
+  Email as EmailIcon,
+  Person as PersonIcon,
+  CalendarToday as CalendarIcon,
+  AdminPanelSettings as AdminIcon,
+  PhotoCamera as PhotoCameraIcon,
+  Error as ErrorIcon
+} from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
-import { useLanguage } from '../context/LanguageContext';
+import Layout from './Layout';
 import API_URL from '../config';
 
 const Profile = () => {
-  const { user, updateUser } = useAuth();
-  const { t } = useLanguage();
-  const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({
-    name: user?.name || '',
-    email: user?.email || ''
+  const { userData, fetchUserData, error: authError, isLoading: authLoading } = useAuth();
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
   });
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [alert, setAlert] = useState({ open: false, message: '', severity: 'success' });
+  const [isUploading, setIsUploading] = useState(false);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSubmit = async (e) => {
+  const handlePasswordChange = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError('');
-    setSuccess('');
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setAlert({
+        open: true,
+        message: 'De nye adgangskoder matcher ikke',
+        severity: 'error'
+      });
+      return;
+    }
 
     try {
-      const response = await fetch(`${API_URL}/user/update`, {
-        method: 'PUT',
+      const response = await fetch(`${API_URL}/user/change-password`, {
+        method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         credentials: 'include',
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          currentPassword: passwordForm.currentPassword,
+          newPassword: passwordForm.newPassword
+        })
       });
 
       if (response.ok) {
-        const updatedUser = await response.json();
-        updateUser(updatedUser);
-        setSuccess(t('profile.updateSuccess'));
-        setIsEditing(false);
+        setAlert({
+          open: true,
+          message: 'Adgangskode ændret succesfuldt',
+          severity: 'success'
+        });
+        setPasswordForm({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        });
       } else {
-        const data = await response.json();
-        setError(data.message || t('profile.updateError'));
+        const error = await response.json();
+        throw new Error(error.message || 'Kunne ikke ændre adgangskode');
       }
-    } catch (err) {
-      setError(t('profile.updateError'));
-    } finally {
-      setIsLoading(false);
+    } catch (error) {
+      setAlert({
+        open: true,
+        message: error.message || 'Der opstod en fejl ved ændring af adgangskode',
+        severity: 'error'
+      });
     }
   };
 
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const response = await fetch(`${API_URL}/user/profile-image`, {
+        method: 'POST',
+        credentials: 'include',
+        body: formData
+      });
+      
+      if (!response.ok) {
+        throw new Error('Kunne ikke uploade billede');
+      }
+      
+      await fetchUserData(); // Genindlæs brugerdata efter upload
+      
+      setAlert({
+        open: true,
+        message: 'Profilbillede opdateret succesfuldt',
+        severity: 'success'
+      });
+    } catch (error) {
+      console.error('Fejl ved upload:', error);
+      setAlert({
+        open: true,
+        message: 'Der opstod en fejl ved upload af billede',
+        severity: 'error'
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  if (authLoading) {
+    return (
+      <Layout title="Min Profil">
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+          <CircularProgress />
+        </Box>
+      </Layout>
+    );
+  }
+
+  if (authError) {
+    return (
+      <Layout title="Min Profil">
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, mt: 4 }}>
+          <ErrorIcon color="error" sx={{ fontSize: 60 }} />
+          <Typography variant="h6" color="error">
+            Der opstod en fejl
+          </Typography>
+          <Typography color="text.secondary">
+            {authError}
+          </Typography>
+          <Button
+            variant="contained"
+            onClick={() => window.location.reload()}
+            sx={{ mt: 2 }}
+          >
+            Prøv igen
+          </Button>
+        </Box>
+      </Layout>
+    );
+  }
+
+  if (!userData) {
+    return (
+      <Layout title="Min Profil">
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, mt: 4 }}>
+          <ErrorIcon color="warning" sx={{ fontSize: 60 }} />
+          <Typography variant="h6">
+            Ingen brugerdata fundet
+          </Typography>
+          <Button
+            variant="contained"
+            onClick={() => fetchUserData()}
+            sx={{ mt: 2 }}
+          >
+            Genindlæs data
+          </Button>
+        </Box>
+      </Layout>
+    );
+  }
+
   return (
-    <Layout title={t('profile.title')}>
-      <Grid container spacing={3} justifyContent="center">
-        <Grid item xs={12} md={8}>
-          <Paper sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
-              <Avatar
-                src={user?.picture}
-                alt={user?.name}
-                sx={{ width: 100, height: 100, mr: 3 }}
-              />
-              <Box>
-                <Typography variant="h4" gutterBottom>
-                  {user?.name}
-                </Typography>
-                <Typography color="textSecondary">
-                  {user?.email}
-                </Typography>
-                {user?.isAdmin && (
-                  <Typography color="primary" sx={{ mt: 1 }}>
-                    {t('profile.adminStatus')}
-                  </Typography>
-                )}
+    <Layout title="Min Profil">
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={4}>
+          <Card>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <Box sx={{ position: 'relative', display: 'inline-block' }}>
+                <Avatar
+                  src={userData.profileImage}
+                  sx={{ 
+                    width: 150, 
+                    height: 150, 
+                    mb: 2,
+                    mx: 'auto',
+                    border: '4px solid',
+                    borderColor: 'primary.main'
+                  }}
+                />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  style={{ display: 'none' }}
+                  id="profile-image-upload"
+                  disabled={isUploading}
+                />
+                <label htmlFor="profile-image-upload">
+                  <Button
+                    component="span"
+                    variant="contained"
+                    disabled={isUploading}
+                    sx={{ 
+                      position: 'absolute',
+                      bottom: 10,
+                      right: -10,
+                      minWidth: 'auto',
+                      width: 40,
+                      height: 40,
+                      borderRadius: '50%'
+                    }}
+                  >
+                    {isUploading ? <CircularProgress size={24} /> : <PhotoCameraIcon />}
+                  </Button>
+                </label>
               </Box>
-            </Box>
+              
+              <Typography variant="h5" gutterBottom>
+                {userData.username}
+              </Typography>
+              
+              <List>
+                <ListItem>
+                  <ListItemIcon>
+                    <EmailIcon />
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary="Email"
+                    secondary={userData.email}
+                  />
+                </ListItem>
+                <ListItem>
+                  <ListItemIcon>
+                    <CalendarIcon />
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary="Medlem siden"
+                    secondary={new Date(userData.createdAt).toLocaleDateString('da-DK')}
+                  />
+                </ListItem>
+                {userData.isAdmin && (
+                  <ListItem>
+                    <ListItemIcon>
+                      <AdminIcon color="primary" />
+                    </ListItemIcon>
+                    <ListItemText 
+                      primary="Administrator"
+                      secondary="Du har administratorrettigheder"
+                    />
+                  </ListItem>
+                )}
+              </List>
+            </CardContent>
+          </Card>
+        </Grid>
 
-            {error && (
-              <Alert severity="error" sx={{ mb: 2 }}>
-                {error}
-              </Alert>
-            )}
-
-            {success && (
-              <Alert severity="success" sx={{ mb: 2 }}>
-                {success}
-              </Alert>
-            )}
-
-            {isEditing ? (
-              <form onSubmit={handleSubmit}>
+        <Grid item xs={12} md={8}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Skift adgangskode
+              </Typography>
+              <Divider sx={{ mb: 3 }} />
+              <form onSubmit={handlePasswordChange}>
                 <Grid container spacing={2}>
                   <Grid item xs={12}>
                     <TextField
                       fullWidth
-                      label={t('profile.name')}
-                      name="name"
-                      value={formData.name}
-                      onChange={handleChange}
+                      label="Nuværende adgangskode"
+                      type="password"
+                      value={passwordForm.currentPassword}
+                      onChange={(e) => setPasswordForm({
+                        ...passwordForm,
+                        currentPassword: e.target.value
+                      })}
+                      required
                     />
                   </Grid>
-                  <Grid item xs={12}>
+                  <Grid item xs={12} sm={6}>
                     <TextField
                       fullWidth
-                      label={t('profile.email')}
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      disabled
+                      label="Ny adgangskode"
+                      type="password"
+                      value={passwordForm.newPassword}
+                      onChange={(e) => setPasswordForm({
+                        ...passwordForm,
+                        newPassword: e.target.value
+                      })}
+                      required
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Bekræft ny adgangskode"
+                      type="password"
+                      value={passwordForm.confirmPassword}
+                      onChange={(e) => setPasswordForm({
+                        ...passwordForm,
+                        confirmPassword: e.target.value
+                      })}
+                      required
                     />
                   </Grid>
                   <Grid item xs={12}>
-                    <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-                      <Button
-                        variant="outlined"
-                        onClick={() => setIsEditing(false)}
-                        disabled={isLoading}
-                      >
-                        {t('profile.cancel')}
-                      </Button>
-                      <Button
-                        type="submit"
-                        variant="contained"
-                        disabled={isLoading}
-                      >
-                        {isLoading ? (
-                          <CircularProgress size={24} />
-                        ) : (
-                          t('profile.save')
-                        )}
-                      </Button>
-                    </Box>
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      color="primary"
+                      startIcon={<KeyIcon />}
+                    >
+                      Skift adgangskode
+                    </Button>
                   </Grid>
                 </Grid>
               </form>
-            ) : (
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <Button
-                  variant="contained"
-                  onClick={() => setIsEditing(true)}
-                >
-                  {t('profile.edit')}
-                </Button>
-              </Box>
-            )}
-          </Paper>
+            </CardContent>
+          </Card>
         </Grid>
       </Grid>
+
+      <Snackbar
+        open={alert.open}
+        autoHideDuration={6000}
+        onClose={() => setAlert({ ...alert, open: false })}
+      >
+        <Alert
+          onClose={() => setAlert({ ...alert, open: false })}
+          severity={alert.severity}
+          sx={{ width: '100%' }}
+        >
+          {alert.message}
+        </Alert>
+      </Snackbar>
     </Layout>
   );
 };

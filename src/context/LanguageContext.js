@@ -47,14 +47,20 @@ export const translations = {
     totalClicks: 'Samlet antal klik',
     average: 'Gennemsnit',
     statistics: {
-      title: 'Statistik',
-      monthlyOverview: 'Månedlig oversigt',
-      productTypeAnalysis: 'Produkttype analyse',
-      totalProducts: 'Antal produkter',
+      timeRange: 'Tidsperiode',
+      lastWeek: 'Sidste 7 dage',
+      lastMonth: 'Sidste 30 dage',
+      lastYear: 'Sidste år',
+      productType: 'Produkttype',
+      allProducts: 'Alle produkter',
       totalClicks: 'Totale klik',
-      averageClicks: 'Gennemsnitlige klik',
-      months: 'Måneder',
-      clicks: 'Klik'
+      productCount: 'Antal produkter',
+      avgClicksPerProduct: 'Gennemsnit klik per produkt',
+      avgClicksPerDay: 'Gennemsnit klik per dag',
+      clicksOverTime: 'Klik over tid',
+      detailedOverview: 'Detaljeret produktoversigt',
+      noClicks: 'Ingen klik',
+      latestClick: 'Seneste klik'
     },
 
     // Product Types
@@ -91,18 +97,6 @@ export const translations = {
       statistics: 'Statistik',
       profile: 'Min Profil',
       admin: 'Admin Panel'
-    },
-
-    profile: {
-      title: 'Min Profil',
-      name: 'Navn',
-      email: 'Email',
-      adminStatus: 'Administrator',
-      edit: 'Rediger',
-      save: 'Gem',
-      cancel: 'Annuller',
-      updateSuccess: 'Profil opdateret',
-      updateError: 'Der opstod en fejl ved opdatering af profilen'
     }
   },
   en: {
@@ -150,14 +144,20 @@ export const translations = {
     totalClicks: 'Total Clicks',
     average: 'Average',
     statistics: {
-      title: 'Statistics',
-      monthlyOverview: 'Monthly Overview',
-      productTypeAnalysis: 'Product Type Analysis',
-      totalProducts: 'Total Products',
-      totalClicks: 'Total Clicks',
-      averageClicks: 'Average Clicks',
-      months: 'Months',
-      clicks: 'Clicks'
+      timeRange: 'Time Period',
+      lastWeek: 'Last 7 days',
+      lastMonth: 'Last 30 days',
+      lastYear: 'Last year',
+      productType: 'Product Type',
+      allProducts: 'All products',
+      totalClicks: 'Total clicks',
+      productCount: 'Number of products',
+      avgClicksPerProduct: 'Average clicks per product',
+      avgClicksPerDay: 'Average clicks per day',
+      clicksOverTime: 'Clicks over time',
+      detailedOverview: 'Detailed product overview',
+      noClicks: 'No clicks',
+      latestClick: 'Latest click'
     },
 
     // Product Types
@@ -194,18 +194,6 @@ export const translations = {
       statistics: 'Statistics',
       profile: 'My Profile',
       admin: 'Admin Panel'
-    },
-
-    profile: {
-      title: 'My Profile',
-      name: 'Name',
-      email: 'Email',
-      adminStatus: 'Administrator',
-      edit: 'Edit',
-      save: 'Save',
-      cancel: 'Cancel',
-      updateSuccess: 'Profile updated successfully',
-      updateError: 'An error occurred while updating the profile'
     }
   }
 };

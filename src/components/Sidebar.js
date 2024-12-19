@@ -56,8 +56,10 @@ const Sidebar = ({ open, toggleDrawer }) => {
 
   return (
     <Drawer
-      variant="permanent"
+      variant="temporary"
+      anchor="left"
       open={open}
+      onClose={toggleDrawer}
       sx={{
         width: drawerWidth,
         flexShrink: 0,
@@ -65,30 +67,15 @@ const Sidebar = ({ open, toggleDrawer }) => {
           width: drawerWidth,
           boxSizing: 'border-box',
           whiteSpace: 'nowrap',
-          ...(open ? {
-            width: drawerWidth,
-            transition: theme => theme.transitions.create('width', {
-              easing: theme.transitions.easing.sharp,
-              duration: theme.transitions.duration.enteringScreen,
-            }),
-            overflowX: 'hidden',
-          } : {
-            width: theme => theme.spacing(7),
-            transition: theme => theme.transitions.create('width', {
-              easing: theme.transitions.easing.sharp,
-              duration: theme.transitions.duration.leavingScreen,
-            }),
-            overflowX: 'hidden',
-          }),
+          overflowX: 'hidden',
         },
       }}
     >
       <Box sx={{ 
-        mt: 8,
-        display: 'flex',
-        alignItems: 'center',
+        display: 'flex', 
+        alignItems: 'center', 
         justifyContent: 'flex-end',
-        px: 1
+        p: 1
       }}>
         <IconButton onClick={toggleDrawer}>
           {open ? <ChevronLeftIcon /> : <MenuIcon />}
@@ -101,16 +88,16 @@ const Sidebar = ({ open, toggleDrawer }) => {
               component={RouterLink}
               to={item.path}
               selected={location.pathname === item.path}
+              onClick={toggleDrawer}
               sx={{
                 minHeight: 48,
-                justifyContent: open ? 'initial' : 'center',
                 px: 2.5,
               }}
             >
               <ListItemIcon
                 sx={{
                   minWidth: 0,
-                  mr: open ? 3 : 'auto',
+                  mr: 3,
                   justifyContent: 'center',
                 }}
               >
@@ -119,7 +106,6 @@ const Sidebar = ({ open, toggleDrawer }) => {
               <ListItemText 
                 primary={item.text} 
                 sx={{ 
-                  opacity: open ? 1 : 0,
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis'
