@@ -108,7 +108,7 @@ const LocationSelectionDialog = ({ open, onClose, onSelect }) => {
 
   const handleSearch = async (query) => {
     try {
-      if (!query.trim()) {
+      if (!query?.trim()) {
         setPlaces([]);
         return;
       }
@@ -116,7 +116,7 @@ const LocationSelectionDialog = ({ open, onClose, onSelect }) => {
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch(`http://localhost:3000/api/business/search?searchQuery=${encodeURIComponent(query)}`, {
+      const response = await fetch(`${API_URL}/business/search?searchQuery=${encodeURIComponent(query)}`, {
         credentials: 'include',
         headers: {
           'Accept': 'application/json',
@@ -149,13 +149,13 @@ const LocationSelectionDialog = ({ open, onClose, onSelect }) => {
     if (searchQuery) {
       if (searchTimeout) clearTimeout(searchTimeout);
       const newTimeout = setTimeout(() => {
-        handleSearch();
+        handleSearch(searchQuery);
       }, 500);
       setSearchTimeout(newTimeout);
     } else {
       setPlaces([]);
     }
-  }, [searchQuery, handleSearch]);
+  }, [searchQuery]);
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
