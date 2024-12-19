@@ -32,12 +32,9 @@ export const CategoryProvider = ({ children }) => {
                 setCategories(data);
                 setError(null);
             } else if (response.status === 401) {
-                // Hvis vi får en 401, prøv at tjekke auth status igen
-                const isStillAuth = await checkAuthStatus();
-                if (!isStillAuth) {
-                    setCategories([]);
-                    throw new Error('Din session er udløbet. Log venligst ind igen.');
-                }
+                await checkAuthStatus();
+                setCategories([]);
+                setError('Session udløbet');
             } else {
                 const errorData = await response.json();
                 throw new Error(errorData.message || 'Kunne ikke hente kategorier');
@@ -86,9 +83,21 @@ export const CategoryProvider = ({ children }) => {
         }
     };
 
-    // Genindlæs kategorier når auth status ændrer sig
+    // Opdater useEffect til at håndtere cleanup
     useEffect(() => {
-        fetchCategories();
+        let mounted = true;
+
+        const loadCategories = async () => {
+            if (mounted) {
+                await fetchCategories();
+            }
+        };
+
+        loadCategories();
+
+        return () => {
+            mounted = false;
+        };
     }, [isAuthenticated]);
 
     const value = {

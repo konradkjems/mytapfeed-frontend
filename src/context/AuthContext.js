@@ -34,40 +34,32 @@ export const AuthProvider = ({ children }) => {
     const checkAuthStatus = async () => {
         try {
             const response = await fetch(`${API_URL}/auth/status`, {
-                credentials: 'include',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                }
+                credentials: 'include'
             });
-            
-            if (!response.ok) {
-                throw new Error('Kunne ikke verificere login status');
-            }
-
             const data = await response.json();
             setIsAuthenticated(data.isAuthenticated);
-            
-            if (data.isAuthenticated) {
-                await fetchUserData();
-            } else {
-                setUserData(null);
-            }
-
+            setUserData(data.user || null);
             return data.isAuthenticated;
         } catch (error) {
-            console.error('Auth check failed:', error);
+            console.error('Fejl ved tjek af auth status:', error);
             setIsAuthenticated(false);
-            setError('Kunne ikke verificere login status');
+            setUserData(null);
             return false;
-        } finally {
-            setIsLoading(false);
         }
     };
 
-    // Check auth status when component mounts
     useEffect(() => {
-        checkAuthStatus();
+        let mounted = true;
+
+        const initializeAuth = async () => {
+            await checkAuthStatus();
+        };
+
+        initializeAuth();
+
+        return () => {
+            mounted = false;
+        };
     }, []);
 
     // Fetch user data whenever authentication state changes

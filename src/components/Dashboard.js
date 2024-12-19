@@ -66,6 +66,7 @@ import Layout from './Layout';
 import API_URL from '../config';
 import { useLanguage } from '../context/LanguageContext';
 import { useCategory } from '../context/CategoryContext';
+import { useNavigate } from 'react-router-dom';
 
 // Hjælpefunktioner
 const ensureHttps = (url) => {
@@ -320,6 +321,8 @@ const Dashboard = () => {
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState('all');
+  const { isAuthenticated, user } = useAuth();
+  const navigate = useNavigate();
 
   const PRODUCT_TYPES = {
     STANDER: { value: 'stander', label: 'Stander' },
@@ -327,6 +330,12 @@ const Dashboard = () => {
     KORT: { value: 'kort', label: 'Kort' },
     PLATE: { value: 'plate', label: 'Plate' }
   };
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login');
+    }
+  }, [isAuthenticated, navigate]);
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -694,6 +703,11 @@ const Dashboard = () => {
     avgClicks: t('tooltips.avgClicks'),
     productCount: t('tooltips.productCount')
   };
+
+  // Tilføj loading state
+  if (!isAuthenticated) {
+    return <div>Indlæser...</div>;
+  }
 
   return (
     <Layout title={t('dashboard')}>
