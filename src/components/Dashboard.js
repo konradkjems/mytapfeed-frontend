@@ -62,6 +62,7 @@ import { BarChart } from '@mui/x-charts/BarChart';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import Layout from './Layout';
+import API_URL from '../config';
 
 // Hjælpefunktioner
 const ensureHttps = (url) => {
@@ -281,10 +282,10 @@ const Dashboard = () => {
 
         // Hent data parallelt
         const [standsResponse, reviewsResponse] = await Promise.all([
-          fetch('http://localhost:3000/api/stands', {
+          fetch(`${API_URL}/stands`, {
             credentials: 'include'
           }),
-          fetch('http://localhost:3000/api/business/google-reviews', {
+          fetch(`${API_URL}/business/google-reviews`, {
             credentials: 'include'
           })
         ]);
@@ -324,7 +325,7 @@ const Dashboard = () => {
       if (!locationDialog && !isInitialLoad) {
         try {
           setIsLoadingReviews(true);
-          const response = await fetch('http://localhost:3000/api/business/google-reviews', {
+          const response = await fetch(`${API_URL}/business/google-reviews`, {
             credentials: 'include'
           });
           if (response.ok) {
@@ -350,7 +351,7 @@ const Dashboard = () => {
 
   const handleAddStand = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/stands', {
+      const response = await fetch(`${API_URL}/stands`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -373,7 +374,7 @@ const Dashboard = () => {
         });
         
         // Hent opdateret liste af stands
-        const standsResponse = await fetch('http://localhost:3000/api/stands', {
+        const standsResponse = await fetch(`${API_URL}/stands`, {
           credentials: 'include'
         });
         if (standsResponse.ok) {
@@ -403,7 +404,7 @@ const Dashboard = () => {
       const stand = stands.find(s => s._id === id);
       if (!stand) return;
 
-      const response = await fetch(`http://localhost:3000/api/stands/${id}`, {
+      const response = await fetch(`${API_URL}/stands/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -424,7 +425,7 @@ const Dashboard = () => {
         setEditingId(null);
         
         // Hent opdateret liste af stands
-        const standsResponse = await fetch('http://localhost:3000/api/stands', {
+        const standsResponse = await fetch(`${API_URL}/stands`, {
           credentials: 'include'
         });
         if (standsResponse.ok) {
@@ -448,7 +449,7 @@ const Dashboard = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Er du sikker på, at du vil slette dette produkt?')) {
       try {
-        const response = await fetch(`http://localhost:3000/api/stands/${id}`, {
+        const response = await fetch(`${API_URL}/stands/${id}`, {
           method: 'DELETE',
           credentials: 'include'
         });
@@ -461,7 +462,7 @@ const Dashboard = () => {
           });
           
           // Hent opdateret liste af stands
-          const standsResponse = await fetch('http://localhost:3000/api/stands', {
+          const standsResponse = await fetch(`${API_URL}/stands`, {
             credentials: 'include'
           });
           if (standsResponse.ok) {
@@ -515,7 +516,7 @@ const Dashboard = () => {
   const handleLocationSelect = async (location) => {
     try {
       setIsLoadingReviews(true);
-      const response = await fetch('http://localhost:3000/api/business/setup-google-maps', {
+      const response = await fetch(`${API_URL}/business/setup-google-maps`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -560,7 +561,7 @@ const Dashboard = () => {
 
   const handleLogoutBusiness = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/business/logout', {
+      const response = await fetch(`${API_URL}/business/logout`, {
         method: 'POST',
         credentials: 'include'
       });
