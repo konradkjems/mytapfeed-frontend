@@ -487,7 +487,7 @@ const Dashboard = () => {
     const qrSvg = document.createElement('div');
     qrSvg.innerHTML = ReactDOMServer.renderToString(
       <QRCodeSVG
-        value={`https://my.tapfeed.dk/${standerId}`}
+        value={`https://api.tapfeed.dk/${standerId}`}
         size={1000}
         level="H"
       />
@@ -904,11 +904,11 @@ const Dashboard = () => {
                         <TableCell>{stand.standerId}</TableCell>
                         <TableCell>
                           <Link
-                            href={`https://my.tapfeed.dk/${stand.standerId}`}
+                            href={`https://api.tapfeed.dk/${stand.standerId}`}
                             target="_blank"
                             rel="noopener noreferrer"
                           >
-                            my.tapfeed.dk/{stand.standerId}
+                            api.tapfeed.dk/{stand.standerId}
                           </Link>
                         </TableCell>
                         <TableCell>
@@ -1060,7 +1060,7 @@ const Dashboard = () => {
               justifyContent: 'center'
             }}>
               <QRCodeSVG
-                value={`https://my.tapfeed.dk/${qrDialog.standerId}`}
+                value={`https://api.tapfeed.dk/${qrDialog.standerId}`}
                 size={200}
                 level="H"
               />
@@ -1069,12 +1069,12 @@ const Dashboard = () => {
               Denne QR kode leder til:
             </Typography>
             <Link 
-              href={`https://my.tapfeed.dk/${qrDialog.standerId}`}
+              href={`https://api.tapfeed.dk/${qrDialog.standerId}`}
               target="_blank"
               rel="noopener noreferrer"
               sx={{ mb: 2 }}
             >
-              my.tapfeed.dk/{qrDialog.standerId}
+              api.tapfeed.dk/{qrDialog.standerId}
             </Link>
             <Button
               variant="contained"
