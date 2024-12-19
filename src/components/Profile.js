@@ -28,6 +28,7 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import Layout from './Layout';
+import API_URL from '../config';
 
 const Profile = () => {
   const { userData, fetchUserData } = useAuth();
@@ -51,7 +52,7 @@ const Profile = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:3000/api/user/change-password', {
+      const response = await fetch(`${API_URL}/user/change-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -96,7 +97,7 @@ const Profile = () => {
     formData.append('image', file);
 
     try {
-      const response = await fetch('http://localhost:3000/api/user/profile-image', {
+      const response = await fetch(`${API_URL}/user/profile-image`, {
         method: 'POST',
         credentials: 'include',
         body: formData
