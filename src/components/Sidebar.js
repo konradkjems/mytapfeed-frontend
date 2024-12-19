@@ -8,13 +8,15 @@ import {
   ListItemIcon,
   ListItemText,
   ListItemButton,
-  Divider,
+  IconButton,
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
   Assessment as AssessmentIcon,
   Person as PersonIcon,
   AdminPanelSettings as AdminIcon,
+  ChevronLeft as ChevronLeftIcon,
+  Menu as MenuIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -81,43 +83,52 @@ const Sidebar = ({ open, toggleDrawer }) => {
         },
       }}
     >
-      <Box sx={{ mt: 8 }}>
-        <List>
-          {menuItems.map((item) => (
-            <ListItem key={item.text} disablePadding>
-              <ListItemButton
-                component={RouterLink}
-                to={item.path}
-                selected={location.pathname === item.path}
+      <Box sx={{ 
+        mt: 8,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'flex-end',
+        px: 1
+      }}>
+        <IconButton onClick={toggleDrawer}>
+          {open ? <ChevronLeftIcon /> : <MenuIcon />}
+        </IconButton>
+      </Box>
+      <List>
+        {menuItems.map((item) => (
+          <ListItem key={item.text} disablePadding>
+            <ListItemButton
+              component={RouterLink}
+              to={item.path}
+              selected={location.pathname === item.path}
+              sx={{
+                minHeight: 48,
+                justifyContent: open ? 'initial' : 'center',
+                px: 2.5,
+              }}
+            >
+              <ListItemIcon
                 sx={{
-                  minHeight: 48,
-                  justifyContent: open ? 'initial' : 'center',
-                  px: 2.5,
+                  minWidth: 0,
+                  mr: open ? 3 : 'auto',
+                  justifyContent: 'center',
                 }}
               >
-                <ListItemIcon
-                  sx={{
-                    minWidth: 0,
-                    mr: open ? 3 : 'auto',
-                    justifyContent: 'center',
-                  }}
-                >
-                  {item.icon}
-                </ListItemIcon>
-                <ListItemText 
-                  primary={item.text} 
-                  sx={{ 
-                    opacity: open ? 1 : 0,
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis'
-                  }} 
-                />
-              </ListItemButton>
-            </ListItem>
-          ))}
-        </List>
-      </Box>
+                {item.icon}
+              </ListItemIcon>
+              <ListItemText 
+                primary={item.text} 
+                sx={{ 
+                  opacity: open ? 1 : 0,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                }} 
+              />
+            </ListItemButton>
+          </ListItem>
+        ))}
+      </List>
     </Drawer>
   );
 };

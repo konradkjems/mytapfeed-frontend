@@ -46,6 +46,16 @@ export const translations = {
     productCount: 'Antal produkter',
     totalClicks: 'Samlet antal klik',
     average: 'Gennemsnit',
+    statistics: {
+      title: 'Statistik',
+      monthlyOverview: 'Månedlig oversigt',
+      productTypeAnalysis: 'Produkttype analyse',
+      totalProducts: 'Antal produkter',
+      totalClicks: 'Totale klik',
+      averageClicks: 'Gennemsnitlige klik',
+      months: 'Måneder',
+      clicks: 'Klik'
+    },
 
     // Product Types
     stander: 'Stander',
@@ -81,6 +91,18 @@ export const translations = {
       statistics: 'Statistik',
       profile: 'Min Profil',
       admin: 'Admin Panel'
+    },
+
+    profile: {
+      title: 'Min Profil',
+      name: 'Navn',
+      email: 'Email',
+      adminStatus: 'Administrator',
+      edit: 'Rediger',
+      save: 'Gem',
+      cancel: 'Annuller',
+      updateSuccess: 'Profil opdateret',
+      updateError: 'Der opstod en fejl ved opdatering af profilen'
     }
   },
   en: {
@@ -127,6 +149,16 @@ export const translations = {
     productCount: 'Product Count',
     totalClicks: 'Total Clicks',
     average: 'Average',
+    statistics: {
+      title: 'Statistics',
+      monthlyOverview: 'Monthly Overview',
+      productTypeAnalysis: 'Product Type Analysis',
+      totalProducts: 'Total Products',
+      totalClicks: 'Total Clicks',
+      averageClicks: 'Average Clicks',
+      months: 'Months',
+      clicks: 'Clicks'
+    },
 
     // Product Types
     stander: 'Stand',
@@ -162,6 +194,18 @@ export const translations = {
       statistics: 'Statistics',
       profile: 'My Profile',
       admin: 'Admin Panel'
+    },
+
+    profile: {
+      title: 'My Profile',
+      name: 'Name',
+      email: 'Email',
+      adminStatus: 'Administrator',
+      edit: 'Edit',
+      save: 'Save',
+      cancel: 'Cancel',
+      updateSuccess: 'Profile updated successfully',
+      updateError: 'An error occurred while updating the profile'
     }
   }
 };
