@@ -18,7 +18,8 @@ import {
   FormControl,
   InputLabel
 } from '@mui/material';
-import { BarChart } from '@mui/x-charts/BarChart';
+import { BarChart } from '@mui/x-charts';
+import { LineChart } from '@mui/x-charts';
 import { useTheme } from '../context/ThemeContext';
 import Layout from './Layout';
 
@@ -229,7 +230,7 @@ const Statistics = () => {
             <Typography variant="h6" gutterBottom>
               Klik over tid
             </Typography>
-            <LineChart
+            <BarChart
               xAxis={[{
                 scaleType: 'band',
                 data: timeSeriesData.labels,
@@ -239,7 +240,6 @@ const Statistics = () => {
               }]}
               series={[{
                 data: timeSeriesData.data,
-                area: true,
                 color: mode === 'dark' ? '#4CAF50' : '#2E7D32'
               }]}
               height={400}
