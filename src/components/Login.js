@@ -18,6 +18,7 @@ import {
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import googleIcon from '../assets/google.svg';
+import API_URL from '../config';
 
 const defaultTheme = createTheme({
   typography: {
@@ -68,16 +69,13 @@ const Login = () => {
     setIsLoading(true);
     
     try {
-        const response = await fetch('https://api.tapfeed.dk/api/auth/login', {
+        const response = await fetch(`${API_URL}/auth/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             credentials: 'include',
-            body: JSON.stringify({
-                username: formData.username,
-                password: formData.password
-            })
+            body: JSON.stringify(formData)
         });
 
         const data = await response.json();
@@ -100,7 +98,7 @@ const Login = () => {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = 'http://localhost:3000/api/auth/google';
+    window.location.href = `${API_URL}/auth/google`;
   };
 
   return (
