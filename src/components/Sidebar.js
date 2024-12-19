@@ -55,93 +55,86 @@ const Sidebar = ({ open, toggleDrawer }) => {
   }
 
   return (
-    <Drawer
-      variant="permanent"
-      open={open}
-      sx={{
-        width: open ? drawerWidth : closedDrawerWidth,
-        flexShrink: 0,
-        '& .MuiDrawer-paper': {
+    <Box sx={{ display: 'flex', position: 'relative' }}>
+      <Drawer
+        variant="permanent"
+        open={open}
+        sx={{
           width: open ? drawerWidth : closedDrawerWidth,
-          boxSizing: 'border-box',
-          whiteSpace: 'nowrap',
-          overflowX: 'hidden',
-          backgroundColor: '#001e3c',
-          transition: theme => theme.transitions.create('width', {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.enteringScreen,
-          }),
-        },
-      }}
-    >
-      <Box sx={{ 
-        height: 64, 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'space-between',
-        px: 2,
-      }}>
+          flexShrink: 0,
+          '& .MuiDrawer-paper': {
+            width: open ? drawerWidth : closedDrawerWidth,
+            boxSizing: 'border-box',
+            whiteSpace: 'nowrap',
+            overflowX: 'hidden',
+            backgroundColor: '#001e3c',
+            transition: theme => theme.transitions.create('width', {
+              easing: theme.transitions.easing.sharp,
+              duration: theme.transitions.duration.enteringScreen,
+            }),
+          },
+        }}
+      >
         <Box sx={{ 
-          visibility: open ? 'visible' : 'hidden',
-          opacity: open ? 1 : 0,
-          transition: 'opacity 0.2s',
-          color: 'white',
-          fontWeight: 'bold',
+          height: 64, 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'flex-end',
+          px: 1,
         }}>
-          Dashboard
+          <IconButton 
+            onClick={toggleDrawer}
+            sx={{ color: 'white' }}
+          >
+            <MenuIcon />
+          </IconButton>
         </Box>
-        <IconButton 
-          onClick={toggleDrawer}
-          sx={{ color: 'white' }}
-        >
-          <MenuIcon />
-        </IconButton>
-      </Box>
-      <List sx={{ mt: 1 }}>
-        {menuItems.map((item) => (
-          <ListItem key={item.text} disablePadding>
-            <ListItemButton
-              component={RouterLink}
-              to={item.path}
-              selected={location.pathname === item.path}
-              sx={{
-                minHeight: 48,
-                justifyContent: open ? 'initial' : 'center',
-                px: 2.5,
-                '&.Mui-selected': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  '&:hover': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                  },
-                },
-                '&:hover': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                },
-              }}
-            >
-              <ListItemIcon
+        <List>
+          {menuItems.map((item) => (
+            <ListItem key={item.text} disablePadding>
+              <ListItemButton
+                component={RouterLink}
+                to={item.path}
+                selected={location.pathname === item.path}
                 sx={{
-                  minWidth: 0,
-                  mr: open ? 3 : 0,
-                  justifyContent: 'center',
-                  color: 'white',
+                  minHeight: 48,
+                  justifyContent: open ? 'initial' : 'center',
+                  px: 2.5,
+                  '&.Mui-selected': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    '&:hover': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    },
+                  },
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  },
                 }}
               >
-                {item.icon}
-              </ListItemIcon>
-              <ListItemText 
-                primary={item.text} 
-                sx={{ 
-                  opacity: open ? 1 : 0,
-                  color: 'white',
-                  display: open ? 'block' : 'none',
-                }} 
-              />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
-    </Drawer>
+                <ListItemIcon
+                  sx={{
+                    minWidth: 0,
+                    mr: open ? 3 : 0,
+                    justifyContent: 'center',
+                    color: 'white',
+                  }}
+                >
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText 
+                  primary={item.text} 
+                  sx={{ 
+                    opacity: open ? 1 : 0,
+                    color: 'white',
+                    display: open ? 'block' : 'none',
+                  }} 
+                />
+              </ListItemButton>
+            </ListItem>
+          ))}
+        </List>
+      </Drawer>
+    </Box>
   );
 };
 
