@@ -40,6 +40,7 @@ import {
   ListItemButton,
   Menu,
   ListItemIcon,
+  Tooltip,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -591,213 +592,233 @@ const Dashboard = () => {
     }
   };
 
+  // Tilføj tooltips tekster
+  const tooltips = {
+    productId: "Dette er det unikke ID for dit produkt. Det bruges i QR-koden og URL'en.",
+    name: "Et valgfrit navn til at identificere dit produkt. F.eks. 'Butik Vestergade Kasse 1'",
+    tapfeedUrl: "Den URL som QR-koden vil pege på. Dette er den URL der skal scannes.",
+    redirectUrl: "Den URL som brugeren bliver sendt til når de scanner QR-koden.",
+    productType: "Vælg hvilken type produkt dette er. Dette hjælper med at organisere dine produkter.",
+    clicks: "Antal gange QR-koden er blevet scannet.",
+    qrCode: "Download QR-koden for dette produkt.",
+    edit: "Rediger produktets information.",
+    delete: "Slet dette produkt permanent.",
+    addProduct: "Opret et nyt produkt med QR-kode.",
+    googleReviews: "Se og administrer dine Google anmeldelser.",
+    statistics: "Se statistik over dine produkters performance.",
+  };
+
   return (
     <Layout title="Dashboard">
       <Grid container spacing={3}>
         {/* Statistik sektion */}
         <Grid item xs={12}>
-          <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', height: 360 }}>
-            <Typography component="h2" variant="h6" color="primary" gutterBottom>
-              Samlet trafik oversigt
-            </Typography>
-            <BarChart
-              xAxis={[{
-                scaleType: 'band',
-                data: prepareChartData(stands).map(item => item.month),
-                label: 'Måneder',
-                tickLabelStyle: { 
-                  fill: mode === 'dark' ? 'white' : 'black'
-                },
-                labelStyle: { 
-                  fill: mode === 'dark' ? 'white' : 'black'
-                }
-              }]}
-              yAxis={[{
-                tickLabelStyle: { 
-                  fill: mode === 'dark' ? 'white' : 'black'
-                },
-                labelStyle: { 
-                  fill: mode === 'dark' ? 'white' : 'black'
-                }
-              }]}
-              series={[{
-                data: prepareChartData(stands).map(item => item.clicks),
-                label: 'Antal klik',
-                color: mode === 'dark' ? '#4CAF50' : '#2E7D32'
-              }]}
-              height={300}
-              sx={{
-                '.MuiChartsAxis-label': { 
-                  fill: mode === 'dark' ? 'white' : 'black'
-                },
-                '.MuiChartsAxis-tick': { 
-                  fill: mode === 'dark' ? 'white' : 'black'
-                },
-                '.MuiChartsAxis-line': { 
-                  stroke: mode === 'dark' ? 'white' : 'black'
-                },
-                '.MuiChartsLegend-label': { 
-                  fill: mode === 'dark' ? 'white' : 'black'
-                },
-                '.MuiChartsLegend-root': { 
-                  color: mode === 'dark' ? 'white' : 'black'
-                }
-              }}
-            />
-          </Paper>
+          <Tooltip title="Se en grafisk oversigt over antal scanninger per måned">
+            <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', height: 360 }}>
+              <Typography component="h2" variant="h6" color="primary" gutterBottom>
+                Samlet trafik oversigt
+              </Typography>
+              <BarChart
+                xAxis={[{
+                  scaleType: 'band',
+                  data: prepareChartData(stands).map(item => item.month),
+                  label: 'Måneder',
+                  tickLabelStyle: { 
+                    fill: mode === 'dark' ? 'white' : 'black'
+                  },
+                  labelStyle: { 
+                    fill: mode === 'dark' ? 'white' : 'black'
+                  }
+                }]}
+                yAxis={[{
+                  tickLabelStyle: { 
+                    fill: mode === 'dark' ? 'white' : 'black'
+                  },
+                  labelStyle: { 
+                    fill: mode === 'dark' ? 'white' : 'black'
+                  }
+                }]}
+                series={[{
+                  data: prepareChartData(stands).map(item => item.clicks),
+                  label: 'Antal klik',
+                  color: mode === 'dark' ? '#4CAF50' : '#2E7D32'
+                }]}
+                height={300}
+                sx={{
+                  '.MuiChartsAxis-label': { 
+                    fill: mode === 'dark' ? 'white' : 'black'
+                  },
+                  '.MuiChartsAxis-tick': { 
+                    fill: mode === 'dark' ? 'white' : 'black'
+                  },
+                  '.MuiChartsAxis-line': { 
+                    stroke: mode === 'dark' ? 'white' : 'black'
+                  },
+                  '.MuiChartsLegend-label': { 
+                    fill: mode === 'dark' ? 'white' : 'black'
+                  },
+                  '.MuiChartsLegend-root': { 
+                    color: mode === 'dark' ? 'white' : 'black'
+                  }
+                }}
+              />
+            </Paper>
+          </Tooltip>
         </Grid>
 
         <Grid item xs={12}>
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h6" color="primary" gutterBottom>
-              Google Maps Anmeldelser
-            </Typography>
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={4}>
-                <Card>
-                  <CardContent sx={{ textAlign: 'center' }}>
-                    <Typography variant="h3" color="primary" gutterBottom>
-                      {businessData?.rating || '-'}
-                    </Typography>
-                    <Typography variant="subtitle1" gutterBottom>
-                      Gennemsnitlig vurdering
-                    </Typography>
-                    <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
-                      <Rating
-                        value={businessData?.rating || 0}
-                        precision={0.1}
-                        readOnly
-                      />
-                    </Box>
-                    <Typography variant="body2" color="text.secondary">
-                      Baseret på {businessData?.user_ratings_total || 0} anmeldelser
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} md={8}>
-                <Card>
-                  <CardContent>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                      <Typography variant="h6">
-                        Seneste anmeldelser
+          <Tooltip title="Administrer dine Google Maps anmeldelser og virksomhedsprofil">
+            <Paper sx={{ p: 2 }}>
+              <Typography variant="h6" color="primary" gutterBottom>
+                Google Maps Anmeldelser
+              </Typography>
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={4}>
+                  <Card>
+                    <CardContent sx={{ textAlign: 'center' }}>
+                      <Typography variant="h3" color="primary" gutterBottom>
+                        {businessData?.rating || '-'}
                       </Typography>
-                      <Box sx={{ display: 'flex', gap: 1 }}>
-                        <Button
-                          variant="outlined"
-                          onClick={() => setReviewSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
-                          startIcon={reviewSortOrder === 'desc' ? <ArrowDownward /> : <ArrowUpward />}
-                        >
-                          {reviewSortOrder === 'desc' ? 'Nyeste først' : 'Ældste først'}
-                        </Button>
-                        {businessData?.place_id ? (
-                          <Box sx={{ display: 'flex', gap: 1 }}>
-                            <Button
-                              variant="outlined"
-                              startIcon={<LaunchIcon />}
-                              href={`https://search.google.com/local/reviews?placeid=${businessData.place_id}`}
-                              target="_blank"
-                            >
-                              Se alle anmeldelser
-                            </Button>
-                            <Button
-                              variant="outlined"
-                              onClick={handleBusinessMenuClick}
-                              startIcon={<BusinessIcon />}
-                            >
-                              Administrer lokation
-                            </Button>
-                            <Menu
-                              anchorEl={businessMenu}
-                              open={Boolean(businessMenu)}
-                              onClose={handleBusinessMenuClose}
-                            >
-                              <MenuItem onClick={() => {
-                                handleBusinessMenuClose();
-                                setLocationDialog(true);
-                              }}>
-                                <ListItemIcon>
-                                  <SwitchIcon fontSize="small" />
-                                </ListItemIcon>
-                                Skift lokation
-                              </MenuItem>
-                              <MenuItem onClick={handleLogoutBusiness}>
-                                <ListItemIcon>
-                                  <LogoutIcon fontSize="small" />
-                                </ListItemIcon>
-                                Log ud af Google Business
-                              </MenuItem>
-                            </Menu>
-                          </Box>
-                        ) : (
-                          <Button
-                            variant="contained"
-                            onClick={handleSetupGoogleMaps}
-                            startIcon={<AddIcon />}
-                          >
-                            Tilknyt din virksomhed
-                          </Button>
-                        )}
+                      <Typography variant="subtitle1" gutterBottom>
+                        Gennemsnitlig vurdering
+                      </Typography>
+                      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
+                        <Rating
+                          value={businessData?.rating || 0}
+                          precision={0.1}
+                          readOnly
+                        />
                       </Box>
-                    </Box>
-                    {isLoadingReviews ? (
-                      <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-                        <CircularProgress />
-                      </Box>
-                    ) : reviews.length > 0 ? (
-                      <List>
-                        {[...reviews]
-                          .sort((a, b) => {
-                            const sortMultiplier = reviewSortOrder === 'desc' ? -1 : 1;
-                            return sortMultiplier * (a.time - b.time);
-                          })
-                          .map((review, index) => (
-                            <React.Fragment key={review.time}>
-                              <ListItem alignItems="flex-start">
-                                <ListItemAvatar>
-                                  <Avatar src={review.profile_photo_url} alt={review.author_name}>
-                                    {review.author_name[0]}
-                                  </Avatar>
-                                </ListItemAvatar>
-                                <ListItemText
-                                  primary={
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                      <Typography component="span" variant="subtitle2">
-                                        {review.author_name}
-                                      </Typography>
-                                      <Rating value={review.rating} size="small" readOnly />
-                                      <Typography variant="caption" color="text.secondary">
-                                        {new Date(review.time * 1000).toLocaleDateString('da-DK')}
-                                      </Typography>
-                                    </Box>
-                                  }
-                                  secondary={
-                                    <Typography
-                                      component="span"
-                                      variant="body2"
-                                      color="text.primary"
-                                    >
-                                      {review.text}
-                                    </Typography>
-                                  }
-                                />
-                              </ListItem>
-                              {index < reviews.length - 1 && <Divider />}
-                            </React.Fragment>
-                          ))}
-                      </List>
-                    ) : (
-                      <Box sx={{ textAlign: 'center', py: 3 }}>
-                        <Typography color="text.secondary">
-                          Ingen anmeldelser at vise
+                      <Typography variant="body2" color="text.secondary">
+                        Baseret på {businessData?.user_ratings_total || 0} anmeldelser
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} md={8}>
+                  <Card>
+                    <CardContent>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                        <Typography variant="h6">
+                          Seneste anmeldelser
                         </Typography>
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                          <Button
+                            variant="outlined"
+                            onClick={() => setReviewSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
+                            startIcon={reviewSortOrder === 'desc' ? <ArrowDownward /> : <ArrowUpward />}
+                          >
+                            {reviewSortOrder === 'desc' ? 'Nyeste først' : 'Ældste først'}
+                          </Button>
+                          {businessData?.place_id ? (
+                            <Box sx={{ display: 'flex', gap: 1 }}>
+                              <Button
+                                variant="outlined"
+                                startIcon={<LaunchIcon />}
+                                href={`https://search.google.com/local/reviews?placeid=${businessData.place_id}`}
+                                target="_blank"
+                              >
+                                Se alle anmeldelser
+                              </Button>
+                              <Button
+                                variant="outlined"
+                                onClick={handleBusinessMenuClick}
+                                startIcon={<BusinessIcon />}
+                              >
+                                Administrer lokation
+                              </Button>
+                              <Menu
+                                anchorEl={businessMenu}
+                                open={Boolean(businessMenu)}
+                                onClose={handleBusinessMenuClose}
+                              >
+                                <MenuItem onClick={() => {
+                                  handleBusinessMenuClose();
+                                  setLocationDialog(true);
+                                }}>
+                                  <ListItemIcon>
+                                    <SwitchIcon fontSize="small" />
+                                  </ListItemIcon>
+                                  Skift lokation
+                                </MenuItem>
+                                <MenuItem onClick={handleLogoutBusiness}>
+                                  <ListItemIcon>
+                                    <LogoutIcon fontSize="small" />
+                                  </ListItemIcon>
+                                  Log ud af Google Business
+                                </MenuItem>
+                              </Menu>
+                            </Box>
+                          ) : (
+                            <Button
+                              variant="contained"
+                              onClick={handleSetupGoogleMaps}
+                              startIcon={<AddIcon />}
+                            >
+                              Tilknyt din virksomhed
+                            </Button>
+                          )}
+                        </Box>
                       </Box>
-                    )}
-                  </CardContent>
-                </Card>
+                      {isLoadingReviews ? (
+                        <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                          <CircularProgress />
+                        </Box>
+                      ) : reviews.length > 0 ? (
+                        <List>
+                          {[...reviews]
+                            .sort((a, b) => {
+                              const sortMultiplier = reviewSortOrder === 'desc' ? -1 : 1;
+                              return sortMultiplier * (a.time - b.time);
+                            })
+                            .map((review, index) => (
+                              <React.Fragment key={review.time}>
+                                <ListItem alignItems="flex-start">
+                                  <ListItemAvatar>
+                                    <Avatar src={review.profile_photo_url} alt={review.author_name}>
+                                      {review.author_name[0]}
+                                    </Avatar>
+                                  </ListItemAvatar>
+                                  <ListItemText
+                                    primary={
+                                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <Typography component="span" variant="subtitle2">
+                                          {review.author_name}
+                                        </Typography>
+                                        <Rating value={review.rating} size="small" readOnly />
+                                        <Typography variant="caption" color="text.secondary">
+                                          {new Date(review.time * 1000).toLocaleDateString('da-DK')}
+                                        </Typography>
+                                      </Box>
+                                    }
+                                    secondary={
+                                      <Typography
+                                        component="span"
+                                        variant="body2"
+                                        color="text.primary"
+                                      >
+                                        {review.text}
+                                      </Typography>
+                                    }
+                                  />
+                                </ListItem>
+                                {index < reviews.length - 1 && <Divider />}
+                              </React.Fragment>
+                            ))}
+                        </List>
+                      ) : (
+                        <Box sx={{ textAlign: 'center', py: 3 }}>
+                          <Typography color="text.secondary">
+                            Ingen anmeldelser at vise
+                          </Typography>
+                        </Box>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Grid>
               </Grid>
-            </Grid>
-          </Paper>
+            </Paper>
+          </Tooltip>
         </Grid>
 
         <Grid item xs={12} md={6}>
@@ -874,14 +895,16 @@ const Dashboard = () => {
               <Typography component="h2" variant="h6" color="primary">
                 Produkter
               </Typography>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={() => setOpenDialog(true)}
-                startIcon={<AddIcon />}
-              >
-                Tilføj Nyt Produkt
-              </Button>
+              <Tooltip title={tooltips.addProduct}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() => setOpenDialog(true)}
+                  startIcon={<AddIcon />}
+                >
+                  Tilføj Nyt Produkt
+                </Button>
+              </Tooltip>
             </Box>
             {isLoading ? (
               <CircularProgress />
@@ -892,12 +915,36 @@ const Dashboard = () => {
                 <Table>
                   <TableHead>
                     <TableRow>
-                      <TableCell>Produkt ID</TableCell>
-                      <TableCell>Navn</TableCell>
-                      <TableCell>TapFeed URL</TableCell>
-                      <TableCell>Redirect URL</TableCell>
-                      <TableCell>Produkttype</TableCell>
-                      <TableCell>Antal Klik</TableCell>
+                      <TableCell>
+                        <Tooltip title={tooltips.productId}>
+                          <span>Produkt ID</span>
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell>
+                        <Tooltip title={tooltips.name}>
+                          <span>Navn</span>
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell>
+                        <Tooltip title={tooltips.tapfeedUrl}>
+                          <span>TapFeed URL</span>
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell>
+                        <Tooltip title={tooltips.redirectUrl}>
+                          <span>Redirect URL</span>
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell>
+                        <Tooltip title={tooltips.productType}>
+                          <span>Produkttype</span>
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell>
+                        <Tooltip title={tooltips.clicks}>
+                          <span>Antal Klik</span>
+                        </Tooltip>
+                      </TableCell>
                       <TableCell>Handlinger</TableCell>
                     </TableRow>
                   </TableHead>
@@ -975,36 +1022,40 @@ const Dashboard = () => {
                         <TableCell>
                           <ButtonGroup>
                             {editingId === stand._id ? (
-                              <IconButton
-                                onClick={() => handleSave(stand._id)}
-                                color="primary"
-                                title="Gem ændringer"
-                              >
-                                <SaveIcon />
-                              </IconButton>
+                              <Tooltip title="Gem ændringer">
+                                <IconButton
+                                  onClick={() => handleSave(stand._id)}
+                                  color="primary"
+                                >
+                                  <SaveIcon />
+                                </IconButton>
+                              </Tooltip>
                             ) : (
-                              <IconButton
-                                onClick={() => handleEdit(stand._id)}
-                                color="primary"
-                                title="Rediger produkt"
-                              >
-                                <EditIcon />
-                              </IconButton>
+                              <Tooltip title={tooltips.edit}>
+                                <IconButton
+                                  onClick={() => handleEdit(stand._id)}
+                                  color="primary"
+                                >
+                                  <EditIcon />
+                                </IconButton>
+                              </Tooltip>
                             )}
-                            <IconButton
-                              onClick={() => handleQrDownload(stand.standerId)}
-                              color="secondary"
-                              title="Download QR kode"
-                            >
-                              <QrCodeIcon />
-                            </IconButton>
-                            <IconButton
-                              onClick={() => handleDelete(stand._id)}
-                              color="error"
-                              title="Slet produkt"
-                            >
-                              <DeleteIcon />
-                            </IconButton>
+                            <Tooltip title={tooltips.qrCode}>
+                              <IconButton
+                                onClick={() => handleQrDownload(stand.standerId)}
+                                color="secondary"
+                              >
+                                <QrCodeIcon />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title={tooltips.delete}>
+                              <IconButton
+                                onClick={() => handleDelete(stand._id)}
+                                color="error"
+                              >
+                                <DeleteIcon />
+                              </IconButton>
+                            </Tooltip>
                           </ButtonGroup>
                         </TableCell>
                       </TableRow>
@@ -1021,42 +1072,50 @@ const Dashboard = () => {
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
         <DialogTitle>Tilføj Nyt Produkt</DialogTitle>
         <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Produkt ID"
-            fullWidth
-            value={newStand.standerId}
-            onChange={(e) => setNewStand({ ...newStand, standerId: e.target.value })}
-          />
-          <TextField
-            margin="dense"
-            label="Navn"
-            fullWidth
-            value={newStand.name}
-            onChange={(e) => setNewStand({ ...newStand, name: e.target.value })}
-            helperText="F.eks. 'Butik Gammel Kongevej Kasse'"
-          />
-          <TextField
-            margin="dense"
-            label="Redirect URL"
-            fullWidth
-            value={newStand.redirectUrl}
-            onChange={(e) => setNewStand({ ...newStand, redirectUrl: e.target.value })}
-          />
-          <FormControl fullWidth margin="dense">
-            <InputLabel>Produkttype</InputLabel>
-            <Select
-              value={newStand.productType}
-              onChange={(e) => setNewStand({ ...newStand, productType: e.target.value })}
-            >
-              {Object.values(PRODUCT_TYPES).map(type => (
-                <MenuItem key={type.value} value={type.value}>
-                  {type.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          <Tooltip title={tooltips.productId} placement="right">
+            <TextField
+              autoFocus
+              margin="dense"
+              label="Produkt ID"
+              fullWidth
+              value={newStand.standerId}
+              onChange={(e) => setNewStand({ ...newStand, standerId: e.target.value })}
+            />
+          </Tooltip>
+          <Tooltip title={tooltips.name} placement="right">
+            <TextField
+              margin="dense"
+              label="Navn"
+              fullWidth
+              value={newStand.name}
+              onChange={(e) => setNewStand({ ...newStand, name: e.target.value })}
+              helperText="F.eks. 'Butik Gammel Kongevej Kasse'"
+            />
+          </Tooltip>
+          <Tooltip title={tooltips.redirectUrl} placement="right">
+            <TextField
+              margin="dense"
+              label="Redirect URL"
+              fullWidth
+              value={newStand.redirectUrl}
+              onChange={(e) => setNewStand({ ...newStand, redirectUrl: e.target.value })}
+            />
+          </Tooltip>
+          <Tooltip title={tooltips.productType} placement="right">
+            <FormControl fullWidth margin="dense">
+              <InputLabel>Produkttype</InputLabel>
+              <Select
+                value={newStand.productType}
+                onChange={(e) => setNewStand({ ...newStand, productType: e.target.value })}
+              >
+                {Object.values(PRODUCT_TYPES).map(type => (
+                  <MenuItem key={type.value} value={type.value}>
+                    {type.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Tooltip>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenDialog(false)}>Annuller</Button>
