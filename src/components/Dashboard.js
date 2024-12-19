@@ -64,6 +64,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import Layout from './Layout';
 import API_URL from '../config';
+import { useLanguage } from '../context/LanguageContext';
 
 // Hjælpefunktioner
 const ensureHttps = (url) => {
@@ -268,6 +269,7 @@ const Dashboard = () => {
   const [businessMenu, setBusinessMenu] = useState(null);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [reviewSortOrder, setReviewSortOrder] = useState('desc');
+  const { t } = useLanguage();
 
   const PRODUCT_TYPES = {
     STANDER: { value: 'stander', label: 'Stander' },
@@ -594,41 +596,41 @@ const Dashboard = () => {
 
   // Tilføj tooltips tekster
   const tooltips = {
-    productId: "Dette er det unikke ID for dit produkt. Det bruges i QR-koden og URL'en.",
-    name: "Et valgfrit navn til at identificere dit produkt. F.eks. 'Butik Vestergade Kasse 1'",
-    tapfeedUrl: "Den URL som QR-koden vil pege på. Dette er den URL der skal scannes.",
-    redirectUrl: "Den URL som brugeren bliver sendt til når de scanner QR-koden.",
-    productType: "Vælg hvilken type produkt dette er. Dette hjælper med at organisere dine produkter.",
-    clicks: "Antal gange QR-koden er blevet scannet.",
-    qrCode: "Download QR-koden for dette produkt.",
-    edit: "Rediger produktets information.",
-    delete: "Slet dette produkt permanent.",
-    addProduct: "Opret et nyt produkt med QR-kode.",
-    googleReviews: "Se og administrer dine Google anmeldelser.",
-    statistics: "Se statistik over dine produkters performance.",
-    monthlyTraffic: "Grafisk oversigt over antal scanninger per måned for alle dine produkter.",
-    topProducts: "Liste over dine 5 mest scannede produkter sorteret efter antal scanninger.",
-    productTypeStats: "Oversigt over hvordan dine produkter performer fordelt på produkttype.",
-    totalClicks: "Det samlede antal scanninger for denne produkttype.",
-    avgClicks: "Gennemsnitligt antal scanninger per produkt af denne type.",
-    productCount: "Antal produkter du har af denne type."
+    productId: t('tooltips.productId'),
+    name: t('tooltips.name'),
+    tapfeedUrl: t('tooltips.tapfeedUrl'),
+    redirectUrl: t('tooltips.redirectUrl'),
+    productType: t('tooltips.productType'),
+    clicks: t('tooltips.clicks'),
+    qrCode: t('tooltips.qrCode'),
+    edit: t('tooltips.edit'),
+    delete: t('tooltips.delete'),
+    addProduct: t('tooltips.addProduct'),
+    googleReviews: t('tooltips.googleReviews'),
+    statistics: t('tooltips.statistics'),
+    monthlyTraffic: t('tooltips.monthlyTraffic'),
+    topProducts: t('tooltips.topProducts'),
+    productTypeStats: t('tooltips.productTypeStats'),
+    totalClicks: t('tooltips.totalClicks'),
+    avgClicks: t('tooltips.avgClicks'),
+    productCount: t('tooltips.productCount')
   };
 
   return (
-    <Layout title="Dashboard">
+    <Layout title={t('dashboard')}>
       <Grid container spacing={3}>
         {/* Statistik sektion */}
         <Grid item xs={12}>
           <Tooltip title={tooltips.monthlyTraffic}>
             <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', height: 360 }}>
               <Typography component="h2" variant="h6" color="primary" gutterBottom>
-                Samlet trafik oversigt
+                {t('totalTrafficOverview')}
               </Typography>
               <BarChart
                 xAxis={[{
                   scaleType: 'band',
                   data: prepareChartData(stands).map(item => item.month),
-                  label: 'Måneder',
+                  label: t('months'),
                   tickLabelStyle: { 
                     fill: mode === 'dark' ? 'white' : 'black'
                   },
@@ -646,7 +648,7 @@ const Dashboard = () => {
                 }]}
                 series={[{
                   data: prepareChartData(stands).map(item => item.clicks),
-                  label: 'Antal klik',
+                  label: t('clicks'),
                   color: mode === 'dark' ? '#4CAF50' : '#2E7D32'
                 }]}
                 height={300}
@@ -673,10 +675,10 @@ const Dashboard = () => {
         </Grid>
 
         <Grid item xs={12}>
-          <Tooltip title="Administrer dine Google Maps anmeldelser og virksomhedsprofil">
+          <Tooltip title={tooltips.googleReviews}>
             <Paper sx={{ p: 2 }}>
               <Typography variant="h6" color="primary" gutterBottom>
-                Google Maps Anmeldelser
+                {t('googleMapsReviews')}
               </Typography>
               <Grid container spacing={3}>
                 <Grid item xs={12} md={4}>
@@ -700,7 +702,7 @@ const Dashboard = () => {
                             {businessData.rating || '-'}
                           </Typography>
                           <Typography variant="subtitle1" gutterBottom>
-                            Gennemsnitlig vurdering
+                            {t('averageRating')}
                           </Typography>
                           <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
                             <Rating
@@ -710,12 +712,12 @@ const Dashboard = () => {
                             />
                           </Box>
                           <Typography variant="body2" color="text.secondary">
-                            Baseret på {businessData.user_ratings_total || 0} anmeldelser
+                            {t('basedOn')} {businessData.user_ratings_total || 0} {t('reviews')}
                           </Typography>
                           {businessData.phone && (
                             <Box sx={{ mt: 2 }}>
                               <Typography variant="body2" color="text.secondary">
-                                Telefon: {businessData.phone}
+                                {t('phone')}: {businessData.phone}
                               </Typography>
                             </Box>
                           )}
@@ -733,7 +735,7 @@ const Dashboard = () => {
                                   typography: 'body2'
                                 }}
                               >
-                                Besøg hjemmeside
+                                {t('visitWebsite')}
                                 <LaunchIcon sx={{ fontSize: 16 }} />
                               </Link>
                             </Box>
@@ -742,7 +744,7 @@ const Dashboard = () => {
                       ) : (
                         <Box sx={{ textAlign: 'center', py: 2 }}>
                           <Typography color="text.secondary">
-                            Ingen virksomhedsdata tilgængelig
+                            {t('noBusinessData')}
                           </Typography>
                         </Box>
                       )}
@@ -754,7 +756,7 @@ const Dashboard = () => {
                     <CardContent>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                         <Typography variant="h6">
-                          Seneste anmeldelser
+                          {t('latestReviews')}
                         </Typography>
                         <Box sx={{ display: 'flex', gap: 1 }}>
                           <Button
@@ -762,7 +764,7 @@ const Dashboard = () => {
                             onClick={() => setReviewSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
                             startIcon={reviewSortOrder === 'desc' ? <ArrowDownward /> : <ArrowUpward />}
                           >
-                            {reviewSortOrder === 'desc' ? 'Nyeste først' : 'Ældste først'}
+                            {reviewSortOrder === 'desc' ? t('newestFirst') : t('oldestFirst')}
                           </Button>
                           {businessData?.place_id ? (
                             <Box sx={{ display: 'flex', gap: 1 }}>
@@ -772,14 +774,14 @@ const Dashboard = () => {
                                 href={`https://search.google.com/local/reviews?placeid=${businessData.place_id}`}
                                 target="_blank"
                               >
-                                Se alle anmeldelser
+                                {t('seeAllReviews')}
                               </Button>
                               <Button
                                 variant="outlined"
                                 onClick={handleBusinessMenuClick}
                                 startIcon={<BusinessIcon />}
                               >
-                                Administrer lokation
+                                {t('manageLocation')}
                               </Button>
                               <Menu
                                 anchorEl={businessMenu}
@@ -793,13 +795,13 @@ const Dashboard = () => {
                                   <ListItemIcon>
                                     <SwitchIcon fontSize="small" />
                                   </ListItemIcon>
-                                  Skift lokation
+                                  {t('changeLocation')}
                                 </MenuItem>
                                 <MenuItem onClick={handleLogoutBusiness}>
                                   <ListItemIcon>
                                     <LogoutIcon fontSize="small" />
                                   </ListItemIcon>
-                                  Log ud af Google Business
+                                  {t('logoutGoogle')}
                                 </MenuItem>
                               </Menu>
                             </Box>
@@ -809,7 +811,7 @@ const Dashboard = () => {
                               onClick={handleSetupGoogleMaps}
                               startIcon={<AddIcon />}
                             >
-                              Tilknyt din virksomhed
+                              {t('connectBusiness')}
                             </Button>
                           )}
                         </Box>
@@ -879,7 +881,7 @@ const Dashboard = () => {
           <Tooltip title={tooltips.topProducts}>
             <Paper sx={{ p: 2 }}>
               <Typography component="h2" variant="h6" color="primary" gutterBottom>
-                Top 5 mest besøgte produkter
+                {t('topProducts')}
               </Typography>
               <TableContainer>
                 <Table>
@@ -887,17 +889,17 @@ const Dashboard = () => {
                     <TableRow>
                       <TableCell>
                         <Tooltip title={tooltips.productId}>
-                          <span>Produkt ID</span>
+                          <span>{t('productId')}</span>
                         </Tooltip>
                       </TableCell>
                       <TableCell>
                         <Tooltip title={tooltips.productType}>
-                          <span>Produkttype</span>
+                          <span>{t('productType')}</span>
                         </Tooltip>
                       </TableCell>
                       <TableCell align="right">
                         <Tooltip title={tooltips.clicks}>
-                          <span>Antal klik</span>
+                          <span>{t('clicks')}</span>
                         </Tooltip>
                       </TableCell>
                     </TableRow>
@@ -909,7 +911,7 @@ const Dashboard = () => {
                       .map((stand) => (
                         <TableRow key={stand._id}>
                           <TableCell>{stand.standerId}</TableCell>
-                          <TableCell>{PRODUCT_TYPES[stand.productType.toUpperCase()]?.label || stand.productType}</TableCell>
+                          <TableCell>{t(stand.productType)}</TableCell>
                           <TableCell align="right">{stand.clicks || 0}</TableCell>
                         </TableRow>
                       ))}
@@ -924,7 +926,7 @@ const Dashboard = () => {
           <Tooltip title={tooltips.productTypeStats}>
             <Paper sx={{ p: 2 }}>
               <Typography component="h2" variant="h6" color="primary" gutterBottom>
-                Klik per produkttype
+                {t('clicksByType')}
               </Typography>
               <TableContainer>
                 <Table>
@@ -932,22 +934,22 @@ const Dashboard = () => {
                     <TableRow>
                       <TableCell>
                         <Tooltip title={tooltips.productType}>
-                          <span>Produkttype</span>
+                          <span>{t('productType')}</span>
                         </Tooltip>
                       </TableCell>
                       <TableCell align="right">
                         <Tooltip title={tooltips.productCount}>
-                          <span>Antal produkter</span>
+                          <span>{t('productCount')}</span>
                         </Tooltip>
                       </TableCell>
                       <TableCell align="right">
                         <Tooltip title={tooltips.totalClicks}>
-                          <span>Samlet antal klik</span>
+                          <span>{t('totalClicks')}</span>
                         </Tooltip>
                       </TableCell>
                       <TableCell align="right">
                         <Tooltip title={tooltips.avgClicks}>
-                          <span>Gennemsnit</span>
+                          <span>{t('average')}</span>
                         </Tooltip>
                       </TableCell>
                     </TableRow>
@@ -960,7 +962,7 @@ const Dashboard = () => {
                       
                       return (
                         <TableRow key={type.value}>
-                          <TableCell>{type.label}</TableCell>
+                          <TableCell>{t(type.value)}</TableCell>
                           <TableCell align="right">{productsOfType.length}</TableCell>
                           <TableCell align="right">{totalClicks}</TableCell>
                           <TableCell align="right">{avgClicks}</TableCell>
@@ -979,7 +981,7 @@ const Dashboard = () => {
           <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
               <Typography component="h2" variant="h6" color="primary">
-                Produkter
+                {t('products')}
               </Typography>
               <Tooltip title={tooltips.addProduct}>
                 <Button
@@ -988,14 +990,14 @@ const Dashboard = () => {
                   onClick={() => setOpenDialog(true)}
                   startIcon={<AddIcon />}
                 >
-                  Tilføj Nyt Produkt
+                  {t('addNewProduct')}
                 </Button>
               </Tooltip>
             </Box>
             {isLoading ? (
               <CircularProgress />
             ) : stands.length === 0 ? (
-              <Typography>Ingen produkter tilføjet endnu</Typography>
+              <Typography>{t('noProductsYet')}</Typography>
             ) : (
               <TableContainer>
                 <Table>
@@ -1003,12 +1005,12 @@ const Dashboard = () => {
                     <TableRow>
                       <TableCell>
                         <Tooltip title={tooltips.productId}>
-                          <span>Produkt ID</span>
+                          <span>{t('productId')}</span>
                         </Tooltip>
                       </TableCell>
                       <TableCell>
                         <Tooltip title={tooltips.name}>
-                          <span>Navn</span>
+                          <span>{t('name')}</span>
                         </Tooltip>
                       </TableCell>
                       <TableCell>
@@ -1018,20 +1020,20 @@ const Dashboard = () => {
                       </TableCell>
                       <TableCell>
                         <Tooltip title={tooltips.redirectUrl}>
-                          <span>Redirect URL</span>
+                          <span>{t('redirectUrl')}</span>
                         </Tooltip>
                       </TableCell>
                       <TableCell>
                         <Tooltip title={tooltips.productType}>
-                          <span>Produkttype</span>
+                          <span>{t('productType')}</span>
                         </Tooltip>
                       </TableCell>
                       <TableCell>
                         <Tooltip title={tooltips.clicks}>
-                          <span>Antal Klik</span>
+                          <span>{t('clicks')}</span>
                         </Tooltip>
                       </TableCell>
-                      <TableCell>Handlinger</TableCell>
+                      <TableCell>{t('actions')}</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -1095,20 +1097,20 @@ const Dashboard = () => {
                               >
                                 {Object.values(PRODUCT_TYPES).map(type => (
                                   <MenuItem key={type.value} value={type.value}>
-                                    {type.label}
+                                    {t(type.value)}
                                   </MenuItem>
                                 ))}
                               </Select>
                             </FormControl>
                           ) : (
-                            PRODUCT_TYPES[stand.productType.toUpperCase()]?.label || stand.productType
+                            t(stand.productType)
                           )}
                         </TableCell>
                         <TableCell>{stand.clicks || 0}</TableCell>
                         <TableCell>
                           <ButtonGroup>
                             {editingId === stand._id ? (
-                              <Tooltip title="Gem ændringer">
+                              <Tooltip title={t('save')}>
                                 <IconButton
                                   onClick={() => handleSave(stand._id)}
                                   color="primary"
@@ -1156,13 +1158,13 @@ const Dashboard = () => {
 
       {/* Dialogs og Snackbar */}
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
-        <DialogTitle>Tilføj Nyt Produkt</DialogTitle>
+        <DialogTitle>{t('addNewProduct')}</DialogTitle>
         <DialogContent>
           <Tooltip title={tooltips.productId} placement="right">
             <TextField
               autoFocus
               margin="dense"
-              label="Produkt ID"
+              label={t('productId')}
               fullWidth
               value={newStand.standerId}
               onChange={(e) => setNewStand({ ...newStand, standerId: e.target.value })}
@@ -1171,17 +1173,16 @@ const Dashboard = () => {
           <Tooltip title={tooltips.name} placement="right">
             <TextField
               margin="dense"
-              label="Navn"
+              label={t('name')}
               fullWidth
               value={newStand.name}
               onChange={(e) => setNewStand({ ...newStand, name: e.target.value })}
-              helperText="F.eks. 'Butik Gammel Kongevej Kasse'"
             />
           </Tooltip>
           <Tooltip title={tooltips.redirectUrl} placement="right">
             <TextField
               margin="dense"
-              label="Redirect URL"
+              label={t('redirectUrl')}
               fullWidth
               value={newStand.redirectUrl}
               onChange={(e) => setNewStand({ ...newStand, redirectUrl: e.target.value })}
@@ -1189,14 +1190,14 @@ const Dashboard = () => {
           </Tooltip>
           <Tooltip title={tooltips.productType} placement="right">
             <FormControl fullWidth margin="dense">
-              <InputLabel>Produkttype</InputLabel>
+              <InputLabel>{t('productType')}</InputLabel>
               <Select
                 value={newStand.productType}
                 onChange={(e) => setNewStand({ ...newStand, productType: e.target.value })}
               >
                 {Object.values(PRODUCT_TYPES).map(type => (
                   <MenuItem key={type.value} value={type.value}>
-                    {type.label}
+                    {t(type.value)}
                   </MenuItem>
                 ))}
               </Select>
@@ -1204,8 +1205,8 @@ const Dashboard = () => {
           </Tooltip>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDialog(false)}>Annuller</Button>
-          <Button onClick={handleAddStand} variant="contained">Tilføj</Button>
+          <Button onClick={() => setOpenDialog(false)}>{t('cancel')}</Button>
+          <Button onClick={handleAddStand} variant="contained">{t('add')}</Button>
         </DialogActions>
       </Dialog>
 

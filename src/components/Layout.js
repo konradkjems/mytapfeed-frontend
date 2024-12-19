@@ -11,17 +11,25 @@ import {
   Avatar,
   Menu,
   MenuItem,
-  Divider
+  Divider,
+  useMediaQuery,
+  useTheme as useMuiTheme,
+  Tooltip,
+  Button
 } from '@mui/material';
 import {
   Menu as MenuIcon,
   ChevronLeft as ChevronLeftIcon,
   Person as PersonIcon,
   Logout as LogoutIcon,
-  AdminPanelSettings as AdminIcon
+  AdminPanelSettings as AdminIcon,
+  Brightness4 as DarkIcon,
+  Brightness7 as LightIcon,
+  Language as LanguageIcon
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 import Sidebar from './Sidebar';
 
 const drawerWidth = 240;
@@ -47,9 +55,12 @@ const AppBar = styled(MuiAppBar, {
 const Layout = ({ children, title }) => {
   const [open, setOpen] = useState(true);
   const { userData, setIsAuthenticated } = useAuth();
-  const theme = useTheme();
+  const theme = useMuiTheme();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
+  const { mode, toggleTheme } = useTheme();
+  const { language, toggleLanguage, t } = useLanguage();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const toggleDrawer = () => {
     setOpen(!open);
@@ -90,13 +101,15 @@ const Layout = ({ children, title }) => {
           alignItems: 'center'
         }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <IconButton
-              edge="start"
-              color="inherit"
-              onClick={toggleDrawer}
-            >
-              {open ? <ChevronLeftIcon /> : <MenuIcon />}
-            </IconButton>
+            {isMobile && (
+              <IconButton
+                edge="start"
+                color="inherit"
+                onClick={toggleDrawer}
+              >
+                <MenuIcon />
+              </IconButton>
+            )}
             <Typography component="h1" variant="h6" color="inherit" noWrap>
               {title}
             </Typography>
@@ -158,6 +171,16 @@ const Layout = ({ children, title }) => {
                 Log ud
               </MenuItem>
             </Menu>
+            <Tooltip title={language === 'da' ? 'Switch to English' : 'Skift til dansk'}>
+              <IconButton color="inherit" onClick={toggleLanguage} sx={{ mr: 1 }}>
+                <LanguageIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title={mode === 'dark' ? 'Skift til lyst tema' : 'Skift til mørkt tema'}>
+              <IconButton color="inherit" onClick={toggleTheme}>
+                {mode === 'dark' ? <LightIcon /> : <DarkIcon />}
+              </IconButton>
+            </Tooltip>
           </Box>
         </Toolbar>
       </AppBar>
