@@ -306,6 +306,7 @@ const Dashboard = () => {
   });
   const [alert, setAlert] = useState({ open: false, message: '', severity: 'success' });
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const { mode } = useTheme();
   const [businessData, setBusinessData] = useState(null);
   const [reviews, setReviews] = useState([]);
