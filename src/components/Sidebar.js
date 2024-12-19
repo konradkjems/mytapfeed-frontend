@@ -8,22 +8,19 @@ import {
   ListItemIcon,
   ListItemText,
   ListItemButton,
-  IconButton,
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
   Assessment as AssessmentIcon,
   Person as PersonIcon,
   AdminPanelSettings as AdminIcon,
-  ChevronLeft as ChevronLeftIcon,
-  Menu as MenuIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 
 const drawerWidth = 240;
 
-const Sidebar = ({ open, toggleDrawer }) => {
+const Sidebar = ({ open }) => {
   const location = useLocation();
   const { userData } = useAuth();
   const { t } = useLanguage();
@@ -56,10 +53,8 @@ const Sidebar = ({ open, toggleDrawer }) => {
 
   return (
     <Drawer
-      variant="temporary"
-      anchor="left"
+      variant="permanent"
       open={open}
-      onClose={toggleDrawer}
       sx={{
         width: drawerWidth,
         flexShrink: 0,
@@ -68,53 +63,55 @@ const Sidebar = ({ open, toggleDrawer }) => {
           boxSizing: 'border-box',
           whiteSpace: 'nowrap',
           overflowX: 'hidden',
+          transition: theme => theme.transitions.create('width', {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.enteringScreen,
+          }),
+          ...(open ? {
+            width: drawerWidth,
+          } : {
+            width: theme => theme.spacing(7),
+          }),
         },
       }}
     >
-      <Box sx={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'flex-end',
-        p: 1
-      }}>
-        <IconButton onClick={toggleDrawer}>
-          {open ? <ChevronLeftIcon /> : <MenuIcon />}
-        </IconButton>
-      </Box>
-      <List>
-        {menuItems.map((item) => (
-          <ListItem key={item.text} disablePadding>
-            <ListItemButton
-              component={RouterLink}
-              to={item.path}
-              selected={location.pathname === item.path}
-              onClick={toggleDrawer}
-              sx={{
-                minHeight: 48,
-                px: 2.5,
-              }}
-            >
-              <ListItemIcon
+      <Box sx={{ mt: 8 }}>
+        <List>
+          {menuItems.map((item) => (
+            <ListItem key={item.text} disablePadding>
+              <ListItemButton
+                component={RouterLink}
+                to={item.path}
+                selected={location.pathname === item.path}
                 sx={{
-                  minWidth: 0,
-                  mr: 3,
-                  justifyContent: 'center',
+                  minHeight: 48,
+                  justifyContent: open ? 'initial' : 'center',
+                  px: 2.5,
                 }}
               >
-                {item.icon}
-              </ListItemIcon>
-              <ListItemText 
-                primary={item.text} 
-                sx={{ 
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                }} 
-              />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
+                <ListItemIcon
+                  sx={{
+                    minWidth: 0,
+                    mr: open ? 3 : 'auto',
+                    justifyContent: 'center',
+                  }}
+                >
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText 
+                  primary={item.text} 
+                  sx={{ 
+                    opacity: open ? 1 : 0,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                  }} 
+                />
+              </ListItemButton>
+            </ListItem>
+          ))}
+        </List>
+      </Box>
     </Drawer>
   );
 };
