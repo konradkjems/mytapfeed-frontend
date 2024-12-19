@@ -9,7 +9,6 @@ import {
   ListItemText,
   ListItemButton,
   IconButton,
-  Toolbar,
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
@@ -22,6 +21,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 
 const drawerWidth = 240;
+const closedDrawerWidth = 65;
 
 const Sidebar = ({ open, toggleDrawer }) => {
   const location = useLocation();
@@ -59,36 +59,36 @@ const Sidebar = ({ open, toggleDrawer }) => {
       variant="permanent"
       open={open}
       sx={{
-        width: drawerWidth,
+        width: open ? drawerWidth : closedDrawerWidth,
         flexShrink: 0,
         '& .MuiDrawer-paper': {
-          width: drawerWidth,
+          width: open ? drawerWidth : closedDrawerWidth,
           boxSizing: 'border-box',
           whiteSpace: 'nowrap',
           overflowX: 'hidden',
+          backgroundColor: 'primary.dark',
           transition: theme => theme.transitions.create('width', {
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.enteringScreen,
           }),
-          ...(open ? {
-            width: drawerWidth,
-          } : {
-            width: theme => theme.spacing(7),
-          }),
         },
       }}
     >
-      <Toolbar sx={{ 
+      <Box sx={{ 
+        height: 64, 
         display: 'flex', 
         alignItems: 'center', 
         justifyContent: 'flex-end',
-        px: [1],
+        pr: 1,
       }}>
-        <IconButton onClick={toggleDrawer}>
+        <IconButton 
+          onClick={toggleDrawer}
+          sx={{ color: 'white' }}
+        >
           <MenuIcon />
         </IconButton>
-      </Toolbar>
-      <List>
+      </Box>
+      <List sx={{ mt: 1 }}>
         {menuItems.map((item) => (
           <ListItem key={item.text} disablePadding>
             <ListItemButton
@@ -97,15 +97,25 @@ const Sidebar = ({ open, toggleDrawer }) => {
               selected={location.pathname === item.path}
               sx={{
                 minHeight: 48,
-                justifyContent: open ? 'initial' : 'center',
+                justifyContent: 'center',
                 px: 2.5,
+                '&.Mui-selected': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                  },
+                },
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                },
               }}
             >
               <ListItemIcon
                 sx={{
                   minWidth: 0,
-                  mr: open ? 3 : 'auto',
+                  mr: open ? 3 : 0,
                   justifyContent: 'center',
+                  color: 'white',
                 }}
               >
                 {item.icon}
@@ -114,9 +124,8 @@ const Sidebar = ({ open, toggleDrawer }) => {
                 primary={item.text} 
                 sx={{ 
                   opacity: open ? 1 : 0,
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
+                  color: 'white',
+                  display: open ? 'block' : 'none',
                 }} 
               />
             </ListItemButton>
