@@ -72,26 +72,25 @@ const Login = () => {
         const response = await fetch(`${API_URL}/auth/login`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
             },
             credentials: 'include',
             body: JSON.stringify(formData)
         });
 
         const data = await response.json();
+        console.log('Login response:', { status: response.status, data });
 
         if (response.ok) {
             setIsAuthenticated(true);
-            // Vent et kort øjeblik for at sikre at session er gemt
-            setTimeout(() => {
-                navigate('/dashboard');
-            }, 100);
+            navigate('/dashboard');
         } else {
-            setError(data.message || 'Login fejlede');
+            setError(data.message || `Login fejlede (${response.status})`);
         }
     } catch (error) {
         console.error('Login fejl:', error);
-        setError('Der opstod en fejl under login. Prøv igen.');
+        setError(`Der opstod en fejl under login: ${error.message}`);
     } finally {
         setIsLoading(false);
     }
