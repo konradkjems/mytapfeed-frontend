@@ -10,6 +10,9 @@ import {
   ListItemButton,
   IconButton,
   useTheme,
+  AppBar,
+  Toolbar,
+  Typography,
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
@@ -57,94 +60,106 @@ const Sidebar = ({ open, toggleDrawer }) => {
   }
 
   return (
-    <Drawer
-      variant="permanent"
-      open={open}
-      sx={{
-        width: open ? drawerWidth : closedDrawerWidth,
-        flexShrink: 0,
-        '& .MuiDrawer-paper': {
-          width: open ? drawerWidth : closedDrawerWidth,
-          boxSizing: 'border-box',
-          whiteSpace: 'nowrap',
-          overflowX: 'hidden',
-          backgroundColor: theme.palette.mode === 'dark' ? '#001e3c' : '#fff',
-          borderRight: `1px solid ${theme.palette.divider}`,
-          transition: theme => theme.transitions.create('width', {
+    <>
+      <AppBar
+        position="fixed"
+        sx={{
+          width: open ? `calc(100% - ${drawerWidth}px)` : `calc(100% - ${closedDrawerWidth}px)`,
+          ml: open ? `${drawerWidth}px` : `${closedDrawerWidth}px`,
+          transition: theme.transitions.create(['width', 'margin'], {
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.enteringScreen,
           }),
-        },
-      }}
-    >
-      <Box sx={{ 
-        minHeight: 64,
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'flex-end',
-        p: 1,
-        backgroundColor: theme.palette.mode === 'dark' ? '#001e3c' : '#fff',
-      }}>
-        <IconButton 
-          onClick={toggleDrawer}
-          sx={{ 
-            color: theme.palette.mode === 'dark' ? 'white' : 'inherit'
-          }}
-        >
-          <MenuIcon />
-        </IconButton>
-      </Box>
-      <List>
-        {menuItems.map((item) => (
-          <ListItem key={item.text} disablePadding>
-            <ListItemButton
-              component={RouterLink}
-              to={item.path}
-              selected={location.pathname === item.path}
-              sx={{
-                minHeight: 48,
-                justifyContent: open ? 'initial' : 'center',
-                px: 2.5,
-                '&.Mui-selected': {
-                  backgroundColor: theme.palette.mode === 'dark' 
-                    ? 'rgba(255, 255, 255, 0.1)' 
-                    : theme.palette.action.selected,
+        }}
+      >
+        <Toolbar>
+          <IconButton
+            color="inherit"
+            aria-label="toggle drawer"
+            onClick={toggleDrawer}
+            edge="start"
+            sx={{ mr: 2 }}
+          >
+            <MenuIcon />
+          </IconButton>
+          <Typography variant="h6" noWrap component="div">
+            {menuItems.find(item => item.path === location.pathname)?.text || ''}
+          </Typography>
+        </Toolbar>
+      </AppBar>
+      <Drawer
+        variant="permanent"
+        sx={{
+          width: open ? drawerWidth : closedDrawerWidth,
+          flexShrink: 0,
+          '& .MuiDrawer-paper': {
+            width: open ? drawerWidth : closedDrawerWidth,
+            boxSizing: 'border-box',
+            whiteSpace: 'nowrap',
+            overflowX: 'hidden',
+            backgroundColor: theme.palette.mode === 'dark' ? '#001e3c' : '#fff',
+            borderRight: `1px solid ${theme.palette.divider}`,
+            transition: theme.transitions.create('width', {
+              easing: theme.transitions.easing.sharp,
+              duration: theme.transitions.duration.enteringScreen,
+            }),
+          },
+        }}
+        open={open}
+      >
+        <Box sx={{ height: 64 }} /> {/* Spacer for AppBar */}
+        <List>
+          {menuItems.map((item) => (
+            <ListItem key={item.text} disablePadding>
+              <ListItemButton
+                component={RouterLink}
+                to={item.path}
+                selected={location.pathname === item.path}
+                sx={{
+                  minHeight: 48,
+                  justifyContent: open ? 'initial' : 'center',
+                  px: 2.5,
+                  '&.Mui-selected': {
+                    backgroundColor: theme.palette.mode === 'dark' 
+                      ? 'rgba(255, 255, 255, 0.1)' 
+                      : theme.palette.action.selected,
+                    '&:hover': {
+                      backgroundColor: theme.palette.mode === 'dark'
+                        ? 'rgba(255, 255, 255, 0.2)'
+                        : theme.palette.action.hover,
+                    },
+                  },
                   '&:hover': {
                     backgroundColor: theme.palette.mode === 'dark'
-                      ? 'rgba(255, 255, 255, 0.2)'
+                      ? 'rgba(255, 255, 255, 0.1)'
                       : theme.palette.action.hover,
                   },
-                },
-                '&:hover': {
-                  backgroundColor: theme.palette.mode === 'dark'
-                    ? 'rgba(255, 255, 255, 0.1)'
-                    : theme.palette.action.hover,
-                },
-              }}
-            >
-              <ListItemIcon
-                sx={{
-                  minWidth: 0,
-                  mr: open ? 3 : 0,
-                  justifyContent: 'center',
-                  color: theme.palette.mode === 'dark' ? 'white' : 'inherit',
                 }}
               >
-                {item.icon}
-              </ListItemIcon>
-              <ListItemText 
-                primary={item.text} 
-                sx={{ 
-                  opacity: open ? 1 : 0,
-                  color: theme.palette.mode === 'dark' ? 'white' : 'inherit',
-                  display: open ? 'block' : 'none',
-                }} 
-              />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
-    </Drawer>
+                <ListItemIcon
+                  sx={{
+                    minWidth: 0,
+                    mr: open ? 3 : 0,
+                    justifyContent: 'center',
+                    color: theme.palette.mode === 'dark' ? 'white' : 'inherit',
+                  }}
+                >
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText 
+                  primary={item.text} 
+                  sx={{ 
+                    opacity: open ? 1 : 0,
+                    color: theme.palette.mode === 'dark' ? 'white' : 'inherit',
+                    display: open ? 'block' : 'none',
+                  }} 
+                />
+              </ListItemButton>
+            </ListItem>
+          ))}
+        </List>
+      </Drawer>
+    </>
   );
 };
 
