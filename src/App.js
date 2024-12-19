@@ -1,21 +1,26 @@
 import React from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
+import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
+import { AuthProvider } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
+import { CategoryProvider } from './context/CategoryContext';
 import AppRoutes from './AppRoutes';
+import { CssBaseline } from '@mui/material';
 
 function App() {
   return (
-    <Router>
+    <BrowserRouter>
       <ThemeProvider>
         <LanguageProvider>
           <AuthProvider>
-            <AppRoutes />
+            <CategoryProvider>
+              <CssBaseline />
+              <AppRoutes />
+            </CategoryProvider>
           </AuthProvider>
         </LanguageProvider>
       </ThemeProvider>
-    </Router>
+    </BrowserRouter>
   );
 }
 

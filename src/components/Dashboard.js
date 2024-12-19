@@ -65,6 +65,7 @@ import { useTheme } from '../context/ThemeContext';
 import Layout from './Layout';
 import API_URL from '../config';
 import { useLanguage } from '../context/LanguageContext';
+import { useCategory } from '../context/CategoryContext';
 
 // Hjælpefunktioner
 const ensureHttps = (url) => {
@@ -247,6 +248,50 @@ const LocationSelectionDialog = ({ open, onClose, onSelect }) => {
   );
 };
 
+const CategoryDialog = ({ open, onClose, onSave, initialData = null }) => {
+  const [name, setName] = useState(initialData?.name || '');
+  const [description, setDescription] = useState(initialData?.description || '');
+
+  const handleSubmit = () => {
+    onSave({ name, description });
+    setName('');
+    setDescription('');
+  };
+
+  return (
+    <Dialog open={open} onClose={onClose}>
+      <DialogTitle>
+        {initialData ? 'Rediger kategori' : 'Opret ny kategori'}
+      </DialogTitle>
+      <DialogContent>
+        <TextField
+          autoFocus
+          margin="dense"
+          label="Kategorinavn"
+          fullWidth
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+        <TextField
+          margin="dense"
+          label="Beskrivelse"
+          fullWidth
+          multiline
+          rows={3}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>Annuller</Button>
+        <Button onClick={handleSubmit} variant="contained" disabled={!name.trim()}>
+          {initialData ? 'Gem' : 'Opret'}
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
 const Dashboard = () => {
   const [stands, setStands] = useState([]);
   const [editingId, setEditingId] = useState(null);
@@ -270,6 +315,10 @@ const Dashboard = () => {
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [reviewSortOrder, setReviewSortOrder] = useState('desc');
   const { t } = useLanguage();
+  const { categories, addCategory, updateCategory, deleteCategory } = useCategory();
+  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState('all');
 
   const PRODUCT_TYPES = {
     STANDER: { value: 'stander', label: 'Stander' },
@@ -593,6 +642,35 @@ const Dashboard = () => {
       handleBusinessMenuClose();
     }
   };
+
+  const handleCategorySubmit = async (categoryData) => {
+    try {
+      if (selectedCategory) {
+        await updateCategory(selectedCategory._id, categoryData);
+      } else {
+        await addCategory(categoryData);
+      }
+      setCategoryDialogOpen(false);
+      setSelectedCategory(null);
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
+  const handleDeleteCategory = async (categoryId) => {
+    if (window.confirm('Er du sikker på, at du vil slette denne kategori?')) {
+      try {
+        await deleteCategory(categoryId);
+        setSelectedCategoryId('all');
+      } catch (error) {
+        setError(error.message);
+      }
+    }
+  };
+
+  const filteredStands = stands.filter(stand => 
+    selectedCategoryId === 'all' || stand.categoryId === selectedCategoryId
+  );
 
   // Tilføj tooltips tekster
   const tooltips = {
@@ -1154,136 +1232,181 @@ const Dashboard = () => {
             )}
           </Paper>
         </Grid>
-      </Grid>
 
-      {/* Dialogs og Snackbar */}
-      <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
-        <DialogTitle>{t('addNewProduct')}</DialogTitle>
-        <DialogContent>
-          <Tooltip title={tooltips.productId} placement="right">
-            <TextField
-              autoFocus
-              margin="dense"
-              label={t('productId')}
-              fullWidth
-              value={newStand.standerId}
-              onChange={(e) => setNewStand({ ...newStand, standerId: e.target.value })}
-            />
-          </Tooltip>
-          <Tooltip title={tooltips.name} placement="right">
-            <TextField
-              margin="dense"
-              label={t('name')}
-              fullWidth
-              value={newStand.name}
-              onChange={(e) => setNewStand({ ...newStand, name: e.target.value })}
-            />
-          </Tooltip>
-          <Tooltip title={tooltips.redirectUrl} placement="right">
-            <TextField
-              margin="dense"
-              label={t('redirectUrl')}
-              fullWidth
-              value={newStand.redirectUrl}
-              onChange={(e) => setNewStand({ ...newStand, redirectUrl: e.target.value })}
-            />
-          </Tooltip>
-          <Tooltip title={tooltips.productType} placement="right">
-            <FormControl fullWidth margin="dense">
-              <InputLabel>{t('productType')}</InputLabel>
-              <Select
-                value={newStand.productType}
-                onChange={(e) => setNewStand({ ...newStand, productType: e.target.value })}
-              >
-                {Object.values(PRODUCT_TYPES).map(type => (
-                  <MenuItem key={type.value} value={type.value}>
-                    {t(type.value)}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Tooltip>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenDialog(false)}>{t('cancel')}</Button>
-          <Button onClick={handleAddStand} variant="contained">{t('add')}</Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog 
-        open={qrDialog.open} 
-        onClose={() => setQrDialog({ open: false, standerId: null })}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>QR Kode</DialogTitle>
-        <DialogContent>
-          <Box sx={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'center', 
-            gap: 2,
-            p: 2 
-          }}>
-            <Box sx={{ 
-              bgcolor: 'white', 
-              p: 3, 
-              borderRadius: 1,
-              display: 'flex',
-              justifyContent: 'center'
-            }}>
-              <QRCodeSVG
-                value={`https://api.tapfeed.dk/${qrDialog.standerId}`}
-                size={200}
-                level="H"
-              />
+        {/* Kategori sektion */}
+        <Grid item xs={12}>
+          <Paper sx={{ p: 2, mb: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <FormControl sx={{ minWidth: 200 }}>
+                <InputLabel>Kategori</InputLabel>
+                <Select
+                  value={selectedCategoryId}
+                  label="Kategori"
+                  onChange={(e) => setSelectedCategoryId(e.target.value)}
+                >
+                  <MenuItem value="all">Alle produkter</MenuItem>
+                  {categories.map((category) => (
+                    <MenuItem key={category._id} value={category._id}>
+                      {category.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <Box>
+                <Button
+                  variant="outlined"
+                  startIcon={<AddIcon />}
+                  onClick={() => {
+                    setSelectedCategory(null);
+                    setCategoryDialogOpen(true);
+                  }}
+                >
+                  Ny kategori
+                </Button>
+              </Box>
             </Box>
-            <Typography variant="body1" color="text.secondary">
-              Denne QR kode leder til:
-            </Typography>
-            <Link 
-              href={`https://api.tapfeed.dk/${qrDialog.standerId}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              sx={{ mb: 2 }}
-            >
-              api.tapfeed.dk/{qrDialog.standerId}
-            </Link>
-            <Button
-              variant="contained"
-              onClick={() => handleQrDownload(qrDialog.standerId)}
-              startIcon={<DownloadIcon />}
-            >
-              Download QR Kode
-            </Button>
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setQrDialog({ open: false, standerId: null })}>
-            Luk
-          </Button>
-        </DialogActions>
-      </Dialog>
+          </Paper>
+        </Grid>
 
-      <LocationSelectionDialog
-        open={locationDialog}
-        onClose={() => setLocationDialog(false)}
-        onSelect={handleLocationSelect}
-      />
+        {/* Dialogs og Snackbar */}
+        <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+          <DialogTitle>{t('addNewProduct')}</DialogTitle>
+          <DialogContent>
+            <Tooltip title={tooltips.productId} placement="right">
+              <TextField
+                autoFocus
+                margin="dense"
+                label={t('productId')}
+                fullWidth
+                value={newStand.standerId}
+                onChange={(e) => setNewStand({ ...newStand, standerId: e.target.value })}
+              />
+            </Tooltip>
+            <Tooltip title={tooltips.name} placement="right">
+              <TextField
+                margin="dense"
+                label={t('name')}
+                fullWidth
+                value={newStand.name}
+                onChange={(e) => setNewStand({ ...newStand, name: e.target.value })}
+              />
+            </Tooltip>
+            <Tooltip title={tooltips.redirectUrl} placement="right">
+              <TextField
+                margin="dense"
+                label={t('redirectUrl')}
+                fullWidth
+                value={newStand.redirectUrl}
+                onChange={(e) => setNewStand({ ...newStand, redirectUrl: e.target.value })}
+              />
+            </Tooltip>
+            <Tooltip title={tooltips.productType} placement="right">
+              <FormControl fullWidth margin="dense">
+                <InputLabel>{t('productType')}</InputLabel>
+                <Select
+                  value={newStand.productType}
+                  onChange={(e) => setNewStand({ ...newStand, productType: e.target.value })}
+                >
+                  {Object.values(PRODUCT_TYPES).map(type => (
+                    <MenuItem key={type.value} value={type.value}>
+                      {t(type.value)}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Tooltip>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenDialog(false)}>{t('cancel')}</Button>
+            <Button onClick={handleAddStand} variant="contained">{t('add')}</Button>
+          </DialogActions>
+        </Dialog>
 
-      <Snackbar
-        open={alert.open}
-        autoHideDuration={6000}
-        onClose={() => setAlert({ ...alert, open: false })}
-      >
-        <Alert
-          onClose={() => setAlert({ ...alert, open: false })}
-          severity={alert.severity}
-          sx={{ width: '100%' }}
+        <Dialog 
+          open={qrDialog.open} 
+          onClose={() => setQrDialog({ open: false, standerId: null })}
+          maxWidth="sm"
+          fullWidth
         >
-          {alert.message}
-        </Alert>
-      </Snackbar>
+          <DialogTitle>QR Kode</DialogTitle>
+          <DialogContent>
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center', 
+              gap: 2,
+              p: 2 
+            }}>
+              <Box sx={{ 
+                bgcolor: 'white', 
+                p: 3, 
+                borderRadius: 1,
+                display: 'flex',
+                justifyContent: 'center'
+              }}>
+                <QRCodeSVG
+                  value={`https://api.tapfeed.dk/${qrDialog.standerId}`}
+                  size={200}
+                  level="H"
+                />
+              </Box>
+              <Typography variant="body1" color="text.secondary">
+                Denne QR kode leder til:
+              </Typography>
+              <Link 
+                href={`https://api.tapfeed.dk/${qrDialog.standerId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                sx={{ mb: 2 }}
+              >
+                api.tapfeed.dk/{qrDialog.standerId}
+              </Link>
+              <Button
+                variant="contained"
+                onClick={() => handleQrDownload(qrDialog.standerId)}
+                startIcon={<DownloadIcon />}
+              >
+                Download QR Kode
+              </Button>
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setQrDialog({ open: false, standerId: null })}>
+              Luk
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        <LocationSelectionDialog
+          open={locationDialog}
+          onClose={() => setLocationDialog(false)}
+          onSelect={handleLocationSelect}
+        />
+
+        <CategoryDialog
+          open={categoryDialogOpen}
+          onClose={() => {
+            setCategoryDialogOpen(false);
+            setSelectedCategory(null);
+          }}
+          onSave={handleCategorySubmit}
+          initialData={selectedCategory}
+        />
+
+        <Snackbar
+          open={alert.open}
+          autoHideDuration={6000}
+          onClose={() => setAlert({ ...alert, open: false })}
+        >
+          <Alert
+            onClose={() => setAlert({ ...alert, open: false })}
+            severity={alert.severity}
+            sx={{ width: '100%' }}
+          >
+            {alert.message}
+          </Alert>
+        </Snackbar>
+      </Grid>
     </Layout>
   );
 };

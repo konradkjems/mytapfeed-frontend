@@ -11,7 +11,6 @@ export const AuthProvider = ({ children }) => {
 
     const fetchUserData = async () => {
         try {
-            setIsLoading(true);
             const response = await fetch(`${API_URL}/user/profile`, {
                 credentials: 'include'
             });
@@ -19,6 +18,7 @@ export const AuthProvider = ({ children }) => {
                 const data = await response.json();
                 setUserData(data);
                 setError(null);
+                return true;
             } else {
                 const errorData = await response.json();
                 throw new Error(errorData.message || 'Kunne ikke hente brugerdata');
@@ -27,65 +27,56 @@ export const AuthProvider = ({ children }) => {
             console.error('Fejl ved hentning af brugerdata:', error);
             setError(error.message);
             setUserData(null);
+            return false;
+        }
+    };
+
+    const checkAuthStatus = async () => {
+        try {
+            const response = await fetch(`${API_URL}/auth/status`, {
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error('Kunne ikke verificere login status');
+            }
+
+            const data = await response.json();
+            setIsAuthenticated(data.isAuthenticated);
+            
+            if (data.isAuthenticated) {
+                await fetchUserData();
+            }
+
+            return data.isAuthenticated;
+        } catch (error) {
+            console.error('Auth check failed:', error);
+            setIsAuthenticated(false);
+            setError('Kunne ikke verificere login status');
+            return false;
         } finally {
             setIsLoading(false);
         }
     };
 
+    // Check auth status when component mounts
     useEffect(() => {
-        let isMounted = true;
-
-        const checkAuthStatus = async () => {
-            try {
-                const response = await fetch(`${API_URL}/auth/status`, {
-                    credentials: 'include'
-                });
-                const data = await response.json();
-                
-                if (isMounted) {
-                    setIsAuthenticated(data.isAuthenticated);
-                }
-            } catch (error) {
-                console.error('Auth check failed:', error);
-                if (isMounted) {
-                    setIsAuthenticated(false);
-                    setError('Kunne ikke verificere login status');
-                }
-            }
-        };
-
         checkAuthStatus();
-
-        return () => {
-            isMounted = false;
-        };
     }, []);
 
+    // Periodically check auth status
     useEffect(() => {
-        let isMounted = true;
-
-        const loadUserData = async () => {
+        const interval = setInterval(() => {
             if (isAuthenticated) {
-                try {
-                    await fetchUserData();
-                } catch (error) {
-                    if (isMounted) {
-                        console.error('Fejl ved indlæsning af brugerdata:', error);
-                    }
-                }
-            } else {
-                setUserData(null);
+                checkAuthStatus();
             }
-            if (isMounted) {
-                setIsLoading(false);
-            }
-        };
+        }, 5 * 60 * 1000); // Check every 5 minutes
 
-        loadUserData();
-
-        return () => {
-            isMounted = false;
-        };
+        return () => clearInterval(interval);
     }, [isAuthenticated]);
 
     const value = {
@@ -95,6 +86,7 @@ export const AuthProvider = ({ children }) => {
         userData,
         setUserData,
         fetchUserData,
+        checkAuthStatus,
         error
     };
 
