@@ -7,6 +7,7 @@ export const AuthProvider = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [userData, setUserData] = useState(null);
+    const [error, setError] = useState(null);
 
     const fetchUserData = async () => {
         try {
@@ -16,32 +17,52 @@ export const AuthProvider = ({ children }) => {
             if (response.ok) {
                 const data = await response.json();
                 setUserData(data);
+                setError(null);
+            } else {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Kunne ikke hente brugerdata');
             }
         } catch (error) {
             console.error('Fejl ved hentning af brugerdata:', error);
+            setError(error.message);
+            setUserData(null);
         }
     };
 
     useEffect(() => {
+        let isMounted = true;
+
         const checkAuthStatus = async () => {
             try {
                 const response = await fetch(`${API_URL}/auth/status`, {
                     credentials: 'include'
                 });
                 const data = await response.json();
-                setIsAuthenticated(data.isAuthenticated);
-                if (data.isAuthenticated) {
-                    await fetchUserData();
+                
+                if (isMounted) {
+                    setIsAuthenticated(data.isAuthenticated);
+                    if (data.isAuthenticated) {
+                        await fetchUserData();
+                    }
                 }
             } catch (error) {
                 console.error('Auth check failed:', error);
-                setIsAuthenticated(false);
+                if (isMounted) {
+                    setIsAuthenticated(false);
+                    setError('Kunne ikke verificere login status');
+                }
             } finally {
-                setIsLoading(false);
+                if (isMounted) {
+                    setIsLoading(false);
+                }
             }
         };
 
         checkAuthStatus();
+
+        return () => {
+            isMounted = false;
+        };
     }, []);
 
     const value = {
@@ -50,7 +71,8 @@ export const AuthProvider = ({ children }) => {
         isLoading,
         userData,
         setUserData,
-        fetchUserData
+        fetchUserData,
+        error
     };
 
     return (

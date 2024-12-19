@@ -24,14 +24,15 @@ import {
   Person as PersonIcon,
   CalendarToday as CalendarIcon,
   AdminPanelSettings as AdminIcon,
-  PhotoCamera as PhotoCameraIcon
+  PhotoCamera as PhotoCameraIcon,
+  Error as ErrorIcon
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import Layout from './Layout';
 import API_URL from '../config';
 
 const Profile = () => {
-  const { userData, fetchUserData } = useAuth();
+  const { userData, fetchUserData, error: authError, isLoading: authLoading } = useAuth();
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
     newPassword: '',
@@ -126,11 +127,54 @@ const Profile = () => {
     }
   };
 
-  if (!userData) {
+  if (authLoading) {
     return (
       <Layout title="Min Profil">
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
           <CircularProgress />
+        </Box>
+      </Layout>
+    );
+  }
+
+  if (authError) {
+    return (
+      <Layout title="Min Profil">
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, mt: 4 }}>
+          <ErrorIcon color="error" sx={{ fontSize: 60 }} />
+          <Typography variant="h6" color="error">
+            Der opstod en fejl
+          </Typography>
+          <Typography color="text.secondary">
+            {authError}
+          </Typography>
+          <Button
+            variant="contained"
+            onClick={() => window.location.reload()}
+            sx={{ mt: 2 }}
+          >
+            Prøv igen
+          </Button>
+        </Box>
+      </Layout>
+    );
+  }
+
+  if (!userData) {
+    return (
+      <Layout title="Min Profil">
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, mt: 4 }}>
+          <ErrorIcon color="warning" sx={{ fontSize: 60 }} />
+          <Typography variant="h6">
+            Ingen brugerdata fundet
+          </Typography>
+          <Button
+            variant="contained"
+            onClick={() => fetchUserData()}
+            sx={{ mt: 2 }}
+          >
+            Genindlæs data
+          </Button>
         </Box>
       </Layout>
     );
