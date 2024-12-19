@@ -94,12 +94,28 @@ const Layout = ({ children }) => {
           gap: 1
         }}>
           <Tooltip title={language === 'da' ? 'Switch to English' : 'Skift til dansk'}>
-            <IconButton color="inherit" onClick={toggleLanguage}>
+            <IconButton 
+              onClick={toggleLanguage}
+              sx={{ 
+                color: 'white',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                },
+              }}
+            >
               <LanguageIcon />
             </IconButton>
           </Tooltip>
           <Tooltip title={mode === 'dark' ? 'Skift til lyst tema' : 'Skift til mørkt tema'}>
-            <IconButton color="inherit" onClick={toggleTheme}>
+            <IconButton 
+              onClick={toggleTheme}
+              sx={{ 
+                color: 'white',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                },
+              }}
+            >
               {mode === 'dark' ? <LightIcon /> : <DarkIcon />}
             </IconButton>
           </Tooltip>
