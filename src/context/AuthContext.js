@@ -32,12 +32,14 @@ export const AuthProvider = ({ children }) => {
     };
 
     const checkAuthStatus = async () => {
+        console.log('Checking auth status...');
         try {
             setIsLoading(true);
             const response = await fetch(`${API_URL}/auth/status`, {
                 credentials: 'include'
             });
             const data = await response.json();
+            console.log('Auth status response:', data);
             setIsAuthenticated(data.isAuthenticated);
             setUserData(data.user || null);
             return data.isAuthenticated;
@@ -52,6 +54,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     useEffect(() => {
+        console.log('AuthProvider mounted');
         checkAuthStatus();
     }, []);
 
@@ -73,6 +76,11 @@ export const AuthProvider = ({ children }) => {
         return () => clearInterval(interval);
     }, [isAuthenticated]);
 
+    // Log state changes
+    useEffect(() => {
+        console.log('Auth state updated:', { isAuthenticated, isLoading });
+    }, [isAuthenticated, isLoading]);
+
     const value = {
         isAuthenticated,
         setIsAuthenticated,
@@ -83,10 +91,6 @@ export const AuthProvider = ({ children }) => {
         checkAuthStatus,
         error
     };
-
-    if (isLoading) {
-        return <div>Indlæser...</div>;
-    }
 
     return (
         <AuthContext.Provider value={value}>

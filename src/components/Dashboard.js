@@ -323,6 +323,40 @@ const Dashboard = () => {
   const [selectedCategoryId, setSelectedCategoryId] = useState('all');
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const [isPageLoading, setIsPageLoading] = useState(true);
+
+  console.log('Dashboard render:', { isAuthenticated, authLoading }); // Debug log
+
+  useEffect(() => {
+    console.log('Dashboard auth effect:', { authLoading, isAuthenticated }); // Debug log
+    if (!authLoading) {
+      if (!isAuthenticated) {
+        console.log('Redirecting to login...'); // Debug log
+        navigate('/login');
+      } else {
+        setIsPageLoading(false);
+      }
+    }
+  }, [isAuthenticated, authLoading, navigate]);
+
+  // Vis loading state mens vi venter på auth
+  if (authLoading || isPageLoading) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh' 
+      }}>
+        Indlæser...
+      </div>
+    );
+  }
+
+  // Hvis ikke authenticated, vis intet mens vi redirecter
+  if (!isAuthenticated) {
+    return null;
+  }
 
   const PRODUCT_TYPES = {
     STANDER: { value: 'stander', label: 'Stander' },
@@ -330,12 +364,6 @@ const Dashboard = () => {
     KORT: { value: 'kort', label: 'Kort' },
     PLATE: { value: 'plate', label: 'Plate' }
   };
-
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      navigate('/login');
-    }
-  }, [isAuthenticated, authLoading, navigate]);
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -707,11 +735,6 @@ const Dashboard = () => {
   // Tilføj loading state
   if (isLoading) {
     return <div>Indlæser...</div>;
-  }
-
-  // Hvis ikke authenticated, vis intet mens vi redirecter
-  if (!isAuthenticated) {
-    return null;
   }
 
   return (

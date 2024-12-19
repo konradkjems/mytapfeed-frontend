@@ -11,6 +11,7 @@ import Dashboard from './components/Dashboard';
 import Login from './components/Login';
 
 function App() {
+  console.log('App rendering'); // Debug log
   return (
     <Router>
       <ThemeProvider>
@@ -20,9 +21,15 @@ function App() {
               <CssBaseline />
               <Routes>
                 <Route path="/login" element={<Login />} />
-                <Route path="/dashboard" element={<Dashboard />} />
+                <Route 
+                  path="/dashboard" 
+                  element={
+                    <React.Suspense fallback={<div>Indlæser...</div>}>
+                      <Dashboard />
+                    </React.Suspense>
+                  } 
+                />
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                {/* Andre routes */}
               </Routes>
               <Analytics />
             </CategoryProvider>
