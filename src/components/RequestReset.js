@@ -38,7 +38,7 @@ const RequestReset = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch(`${API_URL}/request-reset`, {
+      const response = await fetch(`${API_URL}/api/request-reset`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
