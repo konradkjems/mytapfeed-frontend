@@ -8,6 +8,27 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const fetchUserData = async () => {
+    try {
+      const response = await fetch(`${API_URL}/auth/user`, {
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        const userData = await response.json();
+        setUser(userData);
+        setIsAuthenticated(true);
+      } else {
+        setIsAuthenticated(false);
+        setUser(null);
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      setIsAuthenticated(false);
+      setUser(null);
+    }
+  };
+
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
@@ -16,12 +37,12 @@ export const AuthProvider = ({ children }) => {
         });
         
         if (response.ok) {
-          const data = await response.json();
-          setIsAuthenticated(true);
-          setUser(data.user);
+          await fetchUserData();
         }
       } catch (error) {
         console.error('Auth check error:', error);
+        setIsAuthenticated(false);
+        setUser(null);
       } finally {
         setLoading(false);
       }
@@ -53,7 +74,8 @@ export const AuthProvider = ({ children }) => {
       setIsAuthenticated,
       user,
       setUser,
-      logout
+      logout,
+      fetchUserData
     }}>
       {children}
     </AuthContext.Provider>
