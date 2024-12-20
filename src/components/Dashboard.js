@@ -43,7 +43,6 @@ import {
   Tooltip,
   FormHelperText,
 } from '@mui/material';
-import { LoadingButton } from '@mui/lab';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -1416,14 +1415,14 @@ const Dashboard = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setBulkDialog(false)}>Annuller</Button>
-          <LoadingButton
+          <Button
             onClick={handleBulkUpload}
-            loading={bulkLoading}
-            disabled={!bulkFile}
+            disabled={!bulkFile || bulkLoading}
             variant="contained"
+            startIcon={bulkLoading ? <CircularProgress size={20} /> : null}
           >
-            Upload
-          </LoadingButton>
+            {bulkLoading ? 'Uploader...' : 'Upload'}
+          </Button>
         </DialogActions>
       </Dialog>
 
