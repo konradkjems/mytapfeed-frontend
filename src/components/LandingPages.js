@@ -27,7 +27,8 @@ import {
   List,
   ListItem,
   ListItemText,
-  ListItemSecondaryAction
+  ListItemSecondaryAction,
+  Stack
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -38,7 +39,8 @@ import {
   Instagram as InstagramIcon,
   Facebook as FacebookIcon,
   YouTube as YouTubeIcon,
-  Twitter as TwitterIcon
+  Twitter as TwitterIcon,
+  Preview as PreviewIcon
 } from '@mui/icons-material';
 import Layout from './Layout';
 import API_URL from '../config';
@@ -184,6 +186,33 @@ const LandingPages = () => {
         [platform]: value
       }
     }));
+  };
+
+  const handleDeletePage = async (id) => {
+    if (window.confirm('Er du sikker på, at du vil slette denne landing page?')) {
+      try {
+        const response = await fetch(`${API_URL}/landing-pages/${id}`, {
+          method: 'DELETE',
+          credentials: 'include'
+        });
+
+        if (response.ok) {
+          setAlert({
+            open: true,
+            message: 'Landing page slettet succesfuldt',
+            severity: 'success'
+          });
+          fetchPages();
+        }
+      } catch (error) {
+        console.error('Fejl ved sletning af landing page:', error);
+        setAlert({
+          open: true,
+          message: 'Der opstod en fejl ved sletning af landing page',
+          severity: 'error'
+        });
+      }
+    }
   };
 
   // Live Preview Component
