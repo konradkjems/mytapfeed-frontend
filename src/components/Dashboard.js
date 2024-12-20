@@ -42,8 +42,8 @@ import {
   ListItemIcon,
   Tooltip,
   FormHelperText,
-  LoadingButton,
 } from '@mui/material';
+import { LoadingButton } from '@mui/lab';
 import {
   Add as AddIcon,
   Edit as EditIcon,
