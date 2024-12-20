@@ -91,7 +91,7 @@ export const ThemeProvider = ({ children }) => {
             },
             background: {
               default: '#001F3F',
-              paper: 'rgba(255, 255, 255, 0.1)',
+              paper: '#1a2027',
             },
           }),
     },
