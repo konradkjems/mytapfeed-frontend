@@ -57,6 +57,8 @@ import {
   Refresh as RefreshIcon,
   ArrowDownward,
   ArrowUpward,
+  Phone as PhoneIcon,
+  Language as LanguageIcon,
 } from '@mui/icons-material';
 import { BarChart } from '@mui/x-charts/BarChart';
 import { useAuth } from '../context/AuthContext';
@@ -254,7 +256,8 @@ const Dashboard = () => {
   const [newStand, setNewStand] = useState({ 
     standerId: '', 
     redirectUrl: '', 
-    productType: 'stander'
+    productType: 'stander',
+    nickname: ''
   });
   const [alert, setAlert] = useState({ open: false, message: '', severity: 'success' });
   const [isLoading, setIsLoading] = useState(true);
@@ -370,7 +373,8 @@ const Dashboard = () => {
         setNewStand({
           standerId: '',
           redirectUrl: '',
-          productType: 'stander'
+          productType: 'stander',
+          nickname: ''
         });
         
         // Hent opdateret liste af stands
@@ -412,7 +416,8 @@ const Dashboard = () => {
         credentials: 'include',
         body: JSON.stringify({
           redirectUrl: stand.redirectUrl,
-          productType: stand.productType
+          productType: stand.productType,
+          nickname: stand.nickname
         })
       });
 
@@ -673,6 +678,69 @@ const Dashboard = () => {
                   </CardContent>
                 </Card>
               </Grid>
+              <Grid item xs={12} md={4}>
+                <Card>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                      Virksomhedsdetaljer
+                    </Typography>
+                    {businessData ? (
+                      <List dense>
+                        <ListItem>
+                          <ListItemIcon>
+                            <BusinessIcon />
+                          </ListItemIcon>
+                          <ListItemText 
+                            primary="Virksomhedsnavn"
+                            secondary={businessData.name}
+                          />
+                        </ListItem>
+                        <ListItem>
+                          <ListItemIcon>
+                            <LocationIcon />
+                          </ListItemIcon>
+                          <ListItemText 
+                            primary="Adresse"
+                            secondary={businessData.formatted_address}
+                          />
+                        </ListItem>
+                        {businessData.formatted_phone_number && (
+                          <ListItem>
+                            <ListItemIcon>
+                              <PhoneIcon />
+                            </ListItemIcon>
+                            <ListItemText 
+                              primary="Telefon"
+                              secondary={businessData.formatted_phone_number}
+                            />
+                          </ListItem>
+                        )}
+                        {businessData.website && (
+                          <ListItem>
+                            <ListItemIcon>
+                              <LanguageIcon />
+                            </ListItemIcon>
+                            <ListItemText 
+                              primary="Hjemmeside"
+                              secondary={
+                                <Link href={businessData.website} target="_blank" rel="noopener noreferrer">
+                                  {businessData.website}
+                                </Link>
+                              }
+                            />
+                          </ListItem>
+                        )}
+                      </List>
+                    ) : (
+                      <Box sx={{ textAlign: 'center', py: 2 }}>
+                        <Typography color="text.secondary">
+                          Ingen virksomhedsdata tilgængelig
+                        </Typography>
+                      </Box>
+                    )}
+                  </CardContent>
+                </Card>
+              </Grid>
               <Grid item xs={12} md={8}>
                 <Card>
                   <CardContent>
@@ -891,6 +959,7 @@ const Dashboard = () => {
                   <TableHead>
                     <TableRow>
                       <TableCell>Produkt ID</TableCell>
+                      <TableCell>Kaldenavn</TableCell>
                       <TableCell>TapFeed URL</TableCell>
                       <TableCell>Redirect URL</TableCell>
                       <TableCell>Produkttype</TableCell>
@@ -902,6 +971,23 @@ const Dashboard = () => {
                     {stands.map((stand) => (
                       <TableRow key={stand._id}>
                         <TableCell>{stand.standerId}</TableCell>
+                        <TableCell>
+                          {editingId === stand._id ? (
+                            <TextField
+                              value={stand.nickname || ''}
+                              onChange={(e) => {
+                                const updatedStands = stands.map(s =>
+                                  s._id === stand._id ? { ...s, nickname: e.target.value } : s
+                                );
+                                setStands(updatedStands);
+                              }}
+                              fullWidth
+                              placeholder="Tilføj kaldenavn"
+                            />
+                          ) : (
+                            stand.nickname || '-'
+                          )}
+                        </TableCell>
                         <TableCell>
                           <Link
                             href={`https://api.tapfeed.dk/${stand.standerId}`}
@@ -1009,6 +1095,14 @@ const Dashboard = () => {
             fullWidth
             value={newStand.standerId}
             onChange={(e) => setNewStand({ ...newStand, standerId: e.target.value })}
+          />
+          <TextField
+            margin="dense"
+            label="Kaldenavn (valgfrit)"
+            fullWidth
+            value={newStand.nickname}
+            onChange={(e) => setNewStand({ ...newStand, nickname: e.target.value })}
+            placeholder="F.eks. 'Butik Vestergade' eller 'Café bord 1'"
           />
           <TextField
             margin="dense"
