@@ -88,6 +88,25 @@ export const AuthProvider = ({ children }) => {
         };
     }, [isAuthenticated]);
 
+    const logout = async () => {
+        try {
+            const response = await fetch(`${API_URL}/auth/logout`, {
+                method: 'POST',
+                credentials: 'include'
+            });
+            
+            if (response.ok) {
+                setIsAuthenticated(false);
+                setUserData(null);
+            } else {
+                throw new Error('Kunne ikke logge ud');
+            }
+        } catch (error) {
+            console.error('Fejl ved logout:', error);
+            throw error;
+        }
+    };
+
     const value = {
         isAuthenticated,
         setIsAuthenticated,
@@ -95,7 +114,8 @@ export const AuthProvider = ({ children }) => {
         userData,
         setUserData,
         fetchUserData,
-        error
+        error,
+        logout
     };
 
     return (

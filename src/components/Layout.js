@@ -46,7 +46,7 @@ const AppBar = styled(MuiAppBar, {
 
 const Layout = ({ children, title }) => {
   const [open, setOpen] = useState(true);
-  const { userData, setIsAuthenticated } = useAuth();
+  const { userData, logout } = useAuth();
   const theme = useTheme();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
@@ -66,14 +66,8 @@ const Layout = ({ children, title }) => {
   const handleLogout = async () => {
     handleClose();
     try {
-      const response = await fetch('http://localhost:3000/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include'
-      });
-      if (response.ok) {
-        setIsAuthenticated(false);
-        navigate('/login');
-      }
+      await logout();
+      navigate('/login');
     } catch (error) {
       console.error('Logout fejl:', error);
     }
