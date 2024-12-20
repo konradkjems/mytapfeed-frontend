@@ -635,6 +635,28 @@ const Dashboard = () => {
     }
   };
 
+  const fetchStands = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`${API_URL}/stands`, {
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setStands(data);
+      }
+    } catch (error) {
+      console.error('Fejl ved hentning af stands:', error);
+      setAlert({
+        open: true,
+        message: 'Der opstod en fejl ved hentning af produkter',
+        severity: 'error'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleBulkUpload = async () => {
     if (!bulkFile) return;
 
@@ -662,7 +684,7 @@ const Dashboard = () => {
 
       setBulkDialog(false);
       setBulkFile(null);
-      fetchStands();
+      await fetchStands();
     } catch (error) {
       console.error('Fejl ved bulk upload:', error);
       setAlert({
