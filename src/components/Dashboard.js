@@ -84,25 +84,41 @@ const prepareChartData = (stands) => {
     const clickHistory = stand.clickHistory || [];
     clickHistory.forEach(click => {
       const date = new Date(click.timestamp);
-      const monthKey = `${date.getFullYear()}-${date.getMonth() + 1}`;
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
       acc[monthKey] = (acc[monthKey] || 0) + 1;
     });
     return acc;
   }, {});
 
-  const last6Months = [];
+  // Få de sidste 7 dage
+  const last7Days = [];
   const now = new Date();
-  for (let i = 5; i >= 0; i--) {
-    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const monthKey = `${date.getFullYear()}-${date.getMonth() + 1}`;
-    const monthName = date.toLocaleString('da-DK', { month: 'short' });
-    last6Months.push({
-      month: monthName,
-      clicks: monthlyClicks[monthKey] || 0
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date(now);
+    date.setDate(now.getDate() - i);
+    const dayKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    const formattedDate = date.toLocaleDateString('da-DK', { 
+      day: 'numeric',
+      month: 'short'
+    });
+    
+    // Tæl kliks for denne dag
+    const dayClicks = stands.reduce((total, stand) => {
+      return total + (stand.clickHistory || []).filter(click => {
+        const clickDate = new Date(click.timestamp);
+        return clickDate.getFullYear() === date.getFullYear() &&
+               clickDate.getMonth() === date.getMonth() &&
+               clickDate.getDate() === date.getDate();
+      }).length;
+    }, 0);
+
+    last7Days.push({
+      month: formattedDate,
+      clicks: dayClicks
     });
   }
 
-  return last6Months;
+  return last7Days;
 };
 
 const LocationSelectionDialog = ({ open, onClose, onSelect }) => {
