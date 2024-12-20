@@ -61,6 +61,8 @@ import {
   ArrowUpward,
   Phone as PhoneIcon,
   Language as LanguageIcon,
+  RateReview as RateReviewIcon,
+  ContentCopy as ContentCopyIcon,
 } from '@mui/icons-material';
 import { BarChart } from '@mui/x-charts/BarChart';
 import { useAuth } from '../context/AuthContext';
@@ -735,6 +737,31 @@ const Dashboard = () => {
                               />
                             </ListItem>
                           )}
+                          <ListItem>
+                            <ListItemIcon>
+                              <RateReviewIcon />
+                            </ListItemIcon>
+                            <ListItemText 
+                              primary="Review Link"
+                              secondary={
+                                <Button
+                                  size="small"
+                                  startIcon={<ContentCopyIcon />}
+                                  onClick={() => {
+                                    const reviewUrl = `https://search.google.com/local/writereview?placeid=${businessData.place_id}`;
+                                    navigator.clipboard.writeText(reviewUrl);
+                                    setAlert({
+                                      open: true,
+                                      message: 'Review link kopieret til udklipsholder',
+                                      severity: 'success'
+                                    });
+                                  }}
+                                >
+                                  Kopier review link
+                                </Button>
+                              }
+                            />
+                          </ListItem>
                         </List>
                       </>
                     ) : (
