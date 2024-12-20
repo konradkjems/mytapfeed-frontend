@@ -15,13 +15,25 @@ export const AuthProvider = ({ children }) => {
             const response = await fetch(`${API_URL}/user/profile`, {
                 credentials: 'include'
             });
+            
+            const contentType = response.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) {
+                throw new Error('Serveren returnerede ikke JSON data');
+            }
+
             if (response.ok) {
                 const data = await response.json();
                 setUserData(data);
                 setError(null);
             } else {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Kunne ikke hente brugerdata');
+                let errorMessage = 'Kunne ikke hente brugerdata';
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.message || errorMessage;
+                } catch (e) {
+                    console.error('Kunne ikke parse fejlbesked:', e);
+                }
+                throw new Error(errorMessage);
             }
         } catch (error) {
             console.error('Fejl ved hentning af brugerdata:', error);
@@ -40,6 +52,12 @@ export const AuthProvider = ({ children }) => {
                 const response = await fetch(`${API_URL}/auth/status`, {
                     credentials: 'include'
                 });
+                
+                const contentType = response.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    throw new Error('Serveren returnerede ikke JSON data');
+                }
+
                 const data = await response.json();
                 
                 if (isMounted) {

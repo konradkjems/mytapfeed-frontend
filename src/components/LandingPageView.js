@@ -26,9 +26,7 @@ const LandingPageView = () => {
     const fetchPage = async () => {
       try {
         console.log('Henter landing page med ID:', id);
-        const response = await fetch(`${API_URL}/landing-pages/${id}`, {
-          credentials: 'include'
-        });
+        const response = await fetch(`${API_URL}/landing-pages/view/${id}`);
         
         console.log('Server response:', response.status, response.statusText);
         
@@ -39,10 +37,14 @@ const LandingPageView = () => {
         const data = await response.json();
         console.log('Modtaget data:', data);
         
+        if (!data) {
+          throw new Error('Ingen data modtaget fra serveren');
+        }
+        
         setPage(data);
       } catch (err) {
         console.error('Fejl ved hentning af landing page:', err);
-        setError(err.message);
+        setError(err.message || 'Der opstod en fejl ved indlæsning af siden');
       } finally {
         setLoading(false);
       }
@@ -59,7 +61,8 @@ const LandingPageView = () => {
         display: 'flex', 
         justifyContent: 'center', 
         alignItems: 'center', 
-        minHeight: '100vh' 
+        minHeight: '100vh',
+        bgcolor: '#fff'
       }}>
         <CircularProgress />
       </Box>
@@ -72,9 +75,14 @@ const LandingPageView = () => {
         display: 'flex', 
         justifyContent: 'center', 
         alignItems: 'center', 
-        minHeight: '100vh' 
+        minHeight: '100vh',
+        bgcolor: '#fff'
       }}>
-        <Typography color="error">{error}</Typography>
+        <Typography color="error">
+          {error}
+          <br />
+          <small>ID: {id}</small>
+        </Typography>
       </Box>
     );
   }

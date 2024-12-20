@@ -360,33 +360,53 @@ const Dashboard = () => {
 
   // Opdater kun Google reviews når locationDialog lukkes
   useEffect(() => {
+    let isSubscribed = true;
+    let retryTimeout;
+
     const fetchGoogleReviews = async () => {
-      if (!locationDialog && !isInitialLoad) {
-        try {
-          setIsLoadingReviews(true);
-          const response = await fetch(`${API_URL}/business/google-reviews`, {
-            credentials: 'include'
-          });
-          if (response.ok) {
-            const data = await response.json();
-            setBusinessData(data.business);
-            setReviews(data.reviews);
+      try {
+        const response = await fetch(`${API_URL}/business/google-reviews`, {
+          credentials: 'include',
+          headers: {
+            'Cache-Control': 'no-cache'
           }
-        } catch (error) {
-          console.error('Fejl ved hentning af Google Maps data:', error);
-          setAlert({
-            open: true,
-            message: 'Der opstod en fejl ved hentning af Google Maps data',
-            severity: 'error'
-          });
-        } finally {
-          setIsLoadingReviews(false);
+        });
+
+        if (response.status === 429) {
+          console.log('Rate limit nået for Google Reviews API');
+          // Vent 5 minutter før næste forsøg
+          setTimeout(fetchGoogleReviews, 5 * 60 * 1000);
+          return;
         }
+
+        if (!response.ok) {
+          throw new Error('Kunne ikke hente Google anmeldelser');
+        }
+
+        const data = await response.json();
+        setBusinessData(data);
+      } catch (error) {
+        console.error('Fejl ved hentning af Google anmeldelser:', error);
+        // Hvis der er en fejl, prøv igen om 30 sekunder
+        setTimeout(fetchGoogleReviews, 30 * 1000);
       }
     };
 
-    fetchGoogleReviews();
-  }, [locationDialog, isInitialLoad]);
+    const fetchData = async () => {
+      if (isSubscribed) {
+        await fetchGoogleReviews();
+      }
+    };
+
+    fetchData();
+
+    return () => {
+      isSubscribed = false;
+      if (retryTimeout) {
+        clearTimeout(retryTimeout);
+      }
+    };
+  }, []);
 
   const handleAddStand = async () => {
     try {
