@@ -29,9 +29,15 @@ const LandingPageView = () => {
         const response = await fetch(`${API_URL}/landing-pages/view/${id}`);
         
         console.log('Server response:', response.status, response.statusText);
+        const contentType = response.headers.get("content-type");
+        console.log('Content-Type:', contentType);
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        if (!contentType || !contentType.includes("application/json")) {
+          throw new Error('Serveren returnerede ikke JSON data');
         }
         
         const data = await response.json();
@@ -44,7 +50,7 @@ const LandingPageView = () => {
         setPage(data);
       } catch (err) {
         console.error('Fejl ved hentning af landing page:', err);
-        setError(err.message || 'Der opstod en fejl ved indlæsning af siden');
+        setError(`Fejl: ${err.message}. URL: ${API_URL}/landing-pages/view/${id}`);
       } finally {
         setLoading(false);
       }
@@ -59,12 +65,16 @@ const LandingPageView = () => {
     return (
       <Box sx={{ 
         display: 'flex', 
+        flexDirection: 'column',
         justifyContent: 'center', 
         alignItems: 'center', 
         minHeight: '100vh',
-        bgcolor: '#fff'
+        bgcolor: '#fff',
+        gap: 2,
+        p: 3
       }}>
         <CircularProgress />
+        <Typography>Indlæser landing page...</Typography>
       </Box>
     );
   }
@@ -73,12 +83,15 @@ const LandingPageView = () => {
     return (
       <Box sx={{ 
         display: 'flex', 
+        flexDirection: 'column',
         justifyContent: 'center', 
         alignItems: 'center', 
         minHeight: '100vh',
-        bgcolor: '#fff'
+        bgcolor: '#fff',
+        gap: 2,
+        p: 3
       }}>
-        <Typography color="error">
+        <Typography color="error" align="center">
           {error}
           <br />
           <small>ID: {id}</small>

@@ -343,6 +343,10 @@ const LandingPages = () => {
     setNewButton({ text: button.text, url: button.url });
   };
 
+  const handlePreview = (id) => {
+    window.open(`/landing-pages/view/${id}`, '_blank');
+  };
+
   // Live Preview Component
   const LivePreview = () => (
     <Box
@@ -591,8 +595,7 @@ const LandingPages = () => {
                     </Box>
                     <Tooltip title="Åbn preview">
                       <IconButton 
-                        href={`/landing/${page._id}`} 
-                        target="_blank"
+                        onClick={() => handlePreview(page._id)}
                         size="small"
                         color="primary"
                       >

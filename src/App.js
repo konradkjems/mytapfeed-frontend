@@ -52,6 +52,7 @@ function App() {
                   <LandingPages />
                 </ProtectedRoute>
               } />
+              <Route path="/landing-pages/view/:id" element={<LandingPageView />} />
               <Route path="/landing/:id" element={<LandingPageView />} />
             </Routes>
           </div>
