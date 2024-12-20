@@ -591,7 +591,7 @@ const LandingPages = () => {
                     </Box>
                     <Tooltip title="Åbn preview">
                       <IconButton 
-                        href={`https://my.tapfeed.dk/landing/${page._id}`} 
+                        href={`/landing/${page._id}`} 
                         target="_blank"
                         size="small"
                         color="primary"

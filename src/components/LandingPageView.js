@@ -25,20 +25,32 @@ const LandingPageView = () => {
   useEffect(() => {
     const fetchPage = async () => {
       try {
-        const response = await fetch(`${API_URL}/landing-pages/${id}`);
+        console.log('Henter landing page med ID:', id);
+        const response = await fetch(`${API_URL}/landing-pages/${id}`, {
+          credentials: 'include'
+        });
+        
+        console.log('Server response:', response.status, response.statusText);
+        
         if (!response.ok) {
-          throw new Error('Landing page ikke fundet');
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
+        
         const data = await response.json();
+        console.log('Modtaget data:', data);
+        
         setPage(data);
       } catch (err) {
+        console.error('Fejl ved hentning af landing page:', err);
         setError(err.message);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchPage();
+    if (id) {
+      fetchPage();
+    }
   }, [id]);
 
   if (loading) {
