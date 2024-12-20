@@ -11,6 +11,7 @@
     "@mui/lab": "^5.0.0-alpha.165",
     "@mui/material": "^5.15.3",
     "@mui/x-charts": "^7.23.2",
+    "@vercel/speed-insights": "^1.1.0",
     "axios": "^1.7.9",
     "codemirror": "^5.65.18",
     "qrcode.react": "^4.1.0",
