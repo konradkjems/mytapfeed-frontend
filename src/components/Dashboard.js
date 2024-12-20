@@ -658,79 +658,78 @@ const Dashboard = () => {
             <Grid container spacing={3}>
               <Grid item xs={12} md={4}>
                 <Card>
-                  <CardContent sx={{ textAlign: 'center' }}>
-                    <Typography variant="h3" color="primary" gutterBottom>
-                      {businessData?.rating || '-'}
-                    </Typography>
-                    <Typography variant="subtitle1" gutterBottom>
-                      Gennemsnitlig vurdering
-                    </Typography>
-                    <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
-                      <Rating
-                        value={businessData?.rating || 0}
-                        precision={0.1}
-                        readOnly
-                      />
-                    </Box>
-                    <Typography variant="body2" color="text.secondary">
-                      Baseret på {businessData?.user_ratings_total || 0} anmeldelser
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <Card>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
-                      Virksomhedsdetaljer
+                      Virksomhedsoplysninger
                     </Typography>
                     {businessData ? (
-                      <List dense>
-                        <ListItem>
-                          <ListItemIcon>
-                            <BusinessIcon />
-                          </ListItemIcon>
-                          <ListItemText 
-                            primary="Virksomhedsnavn"
-                            secondary={businessData.name}
-                          />
-                        </ListItem>
-                        <ListItem>
-                          <ListItemIcon>
-                            <LocationIcon />
-                          </ListItemIcon>
-                          <ListItemText 
-                            primary="Adresse"
-                            secondary={businessData.formatted_address}
-                          />
-                        </ListItem>
-                        {businessData.formatted_phone_number && (
+                      <>
+                        <Box sx={{ textAlign: 'center', mb: 3 }}>
+                          <Typography variant="h3" color="primary" gutterBottom>
+                            {businessData?.rating || '-'}
+                          </Typography>
+                          <Typography variant="subtitle1" gutterBottom>
+                            Gennemsnitlig vurdering
+                          </Typography>
+                          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
+                            <Rating
+                              value={businessData?.rating || 0}
+                              precision={0.1}
+                              readOnly
+                            />
+                          </Box>
+                          <Typography variant="body2" color="text.secondary">
+                            Baseret på {businessData?.user_ratings_total || 0} anmeldelser
+                          </Typography>
+                        </Box>
+                        <Divider sx={{ my: 2 }} />
+                        <List dense>
                           <ListItem>
                             <ListItemIcon>
-                              <PhoneIcon />
+                              <BusinessIcon />
                             </ListItemIcon>
                             <ListItemText 
-                              primary="Telefon"
-                              secondary={businessData.formatted_phone_number}
+                              primary="Virksomhedsnavn"
+                              secondary={businessData.name}
                             />
                           </ListItem>
-                        )}
-                        {businessData.website && (
                           <ListItem>
                             <ListItemIcon>
-                              <LanguageIcon />
+                              <LocationIcon />
                             </ListItemIcon>
                             <ListItemText 
-                              primary="Hjemmeside"
-                              secondary={
-                                <Link href={businessData.website} target="_blank" rel="noopener noreferrer">
-                                  {businessData.website}
-                                </Link>
-                              }
+                              primary="Adresse"
+                              secondary={businessData.formatted_address}
                             />
                           </ListItem>
-                        )}
-                      </List>
+                          {businessData.formatted_phone_number && (
+                            <ListItem>
+                              <ListItemIcon>
+                                <PhoneIcon />
+                              </ListItemIcon>
+                              <ListItemText 
+                                primary="Telefon"
+                                secondary={businessData.formatted_phone_number}
+                              />
+                            </ListItem>
+                          )}
+                          {businessData.website && (
+                            <ListItem>
+                              <ListItemIcon>
+                                <LanguageIcon />
+                              </ListItemIcon>
+                              <ListItemText 
+                                primary="Hjemmeside"
+                                secondary={
+                                  <Link href={businessData.website} target="_blank" rel="noopener noreferrer">
+                                    {businessData.website}
+                                  </Link>
+                                }
+                              />
+                            </ListItem>
+                          )}
+                        </List>
+                      </>
                     ) : (
                       <Box sx={{ textAlign: 'center', py: 2 }}>
                         <Typography color="text.secondary">
