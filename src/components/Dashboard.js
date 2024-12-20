@@ -415,6 +415,7 @@ const Dashboard = () => {
         },
         credentials: 'include',
         body: JSON.stringify({
+          standerId: stand.standerId,
           redirectUrl: stand.redirectUrl,
           productType: stand.productType,
           nickname: stand.nickname
