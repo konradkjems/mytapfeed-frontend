@@ -58,7 +58,7 @@ const RequestReset = () => {
         sm={4}
         md={7}
         sx={{
-          backgroundImage: 'linear-gradient(rgba(0, 31, 63, 0.8), rgba(0, 31, 63, 0.8))',
+          backgroundImage: 'url(/background.jpg)',
           backgroundRepeat: 'no-repeat',
           backgroundColor: '#001F3F',
           backgroundSize: 'cover',
@@ -66,18 +66,45 @@ const RequestReset = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          position: 'relative',
         }}
       >
-        <img
-          src={logo}
-          alt="TapFeed Logo"
-          style={{
-            maxWidth: '80%',
-            width: '400px',
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 31, 63, 0.8)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
-        />
+        >
+          <img
+            src={logo}
+            alt="TapFeed Logo"
+            style={{
+              maxWidth: '80%',
+              width: '400px',
+              zIndex: 1,
+            }}
+          />
+        </Box>
       </Grid>
-      <Grid item xs={12} sm={8} md={5} component={Paper} elevation={6} square>
+      <Grid 
+        item 
+        xs={12} 
+        sm={8} 
+        md={5} 
+        component={Paper} 
+        elevation={6} 
+        square
+        sx={{
+          backgroundColor: '#fff'
+        }}
+      >
         <Box
           sx={{
             my: 8,
