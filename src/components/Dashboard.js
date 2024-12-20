@@ -42,6 +42,7 @@ import {
   ListItemIcon,
   Tooltip,
   FormHelperText,
+  LoadingButton,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -63,6 +64,8 @@ import {
   Language as LanguageIcon,
   RateReview as RateReviewIcon,
   ContentCopy as ContentCopyIcon,
+  CloudUpload as CloudUploadIcon,
+  AttachFile as AttachFileIcon,
 } from '@mui/icons-material';
 import { BarChart } from '@mui/x-charts/BarChart';
 import { useAuth } from '../context/AuthContext';
@@ -289,6 +292,9 @@ const Dashboard = () => {
   const [businessMenu, setBusinessMenu] = useState(null);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [reviewSortOrder, setReviewSortOrder] = useState('desc');
+  const [bulkDialog, setBulkDialog] = useState(false);
+  const [bulkFile, setBulkFile] = useState(null);
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   const PRODUCT_TYPES = {
     STANDER: { value: 'stander', label: 'Stander' },
@@ -616,6 +622,46 @@ const Dashboard = () => {
       });
     } finally {
       handleBusinessMenuClose();
+    }
+  };
+
+  const handleBulkUpload = async () => {
+    if (!bulkFile) return;
+
+    setBulkLoading(true);
+    const formData = new FormData();
+    formData.append('file', bulkFile);
+
+    try {
+      const response = await fetch(`${API_URL}/stands/bulk`, {
+        method: 'POST',
+        credentials: 'include',
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error('Kunne ikke uploade produkter');
+      }
+
+      const result = await response.json();
+      setAlert({
+        open: true,
+        message: `${result.added} produkter tilføjet succesfuldt`,
+        severity: 'success'
+      });
+
+      setBulkDialog(false);
+      setBulkFile(null);
+      fetchStands();
+    } catch (error) {
+      console.error('Fejl ved bulk upload:', error);
+      setAlert({
+        open: true,
+        message: 'Der opstod en fejl ved upload af produkter',
+        severity: 'error'
+      });
+    } finally {
+      setBulkLoading(false);
     }
   };
 
@@ -1017,14 +1063,24 @@ const Dashboard = () => {
               <Typography component="h2" variant="h6" color="primary">
                 Produkter
               </Typography>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={() => setOpenDialog(true)}
-                startIcon={<AddIcon />}
-              >
-                Tilføj Nyt Produkt
-              </Button>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  startIcon={<CloudUploadIcon />}
+                  onClick={() => setBulkDialog(true)}
+                >
+                  Bulk Upload
+                </Button>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  startIcon={<AddIcon />}
+                  onClick={() => setOpenDialog(true)}
+                >
+                  Tilføj Produkt
+                </Button>
+              </Box>
             </Box>
             {isLoading ? (
               <CircularProgress />
@@ -1320,6 +1376,56 @@ const Dashboard = () => {
         onClose={() => setLocationDialog(false)}
         onSelect={handleLocationSelect}
       />
+
+      <Dialog open={bulkDialog} onClose={() => setBulkDialog(false)}>
+        <DialogTitle>Bulk Upload af Produkter</DialogTitle>
+        <DialogContent>
+          <Box sx={{ p: 2 }}>
+            <Typography variant="body1" gutterBottom>
+              Upload en CSV fil med følgende kolonner:
+            </Typography>
+            <Typography variant="body2" color="text.secondary" component="div" sx={{ mb: 2 }}>
+              <ul>
+                <li>standerId (påkrævet)</li>
+                <li>redirectUrl (påkrævet)</li>
+                <li>productType (valgfri, standard er 'stander')</li>
+                <li>nickname (valgfri)</li>
+              </ul>
+            </Typography>
+            <Button
+              variant="outlined"
+              component="label"
+              startIcon={<AttachFileIcon />}
+              fullWidth
+              sx={{ mb: 2 }}
+            >
+              Vælg CSV Fil
+              <input
+                type="file"
+                accept=".csv"
+                hidden
+                onChange={(e) => setBulkFile(e.target.files[0])}
+              />
+            </Button>
+            {bulkFile && (
+              <Typography variant="body2" color="text.secondary">
+                Valgt fil: {bulkFile.name}
+              </Typography>
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setBulkDialog(false)}>Annuller</Button>
+          <LoadingButton
+            onClick={handleBulkUpload}
+            loading={bulkLoading}
+            disabled={!bulkFile}
+            variant="contained"
+          >
+            Upload
+          </LoadingButton>
+        </DialogActions>
+      </Dialog>
 
       <Snackbar
         open={alert.open}
