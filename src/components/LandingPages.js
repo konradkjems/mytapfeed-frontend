@@ -62,6 +62,7 @@ const LandingPages = () => {
     buttonColor: '#000000',
     buttonTextColor: '#000000',
     titleColor: '#000000',
+    descriptionColor: '#000000',
     buttons: [],
     showTitle: true,
     socialLinks: {
@@ -169,6 +170,7 @@ const LandingPages = () => {
       buttonColor: '#000000',
       buttonTextColor: '#000000',
       titleColor: '#000000',
+      descriptionColor: '#000000',
       buttons: [],
       showTitle: true,
       socialLinks: {
@@ -245,14 +247,14 @@ const LandingPages = () => {
   const handleEdit = async (page) => {
     setSelectedPage(page);
     setNewPage({
-      title: page.title,
-      description: page.description,
+      ...page,
       logo: null,
       backgroundImage: null,
       backgroundColor: page.backgroundColor || '#ffffff',
       buttonColor: page.buttonColor || '#000000',
       buttonTextColor: page.buttonTextColor || '#000000',
       titleColor: page.titleColor || '#000000',
+      descriptionColor: page.descriptionColor || '#000000',
       buttons: page.buttons || [],
       showTitle: page.showTitle ?? true,
       socialLinks: page.socialLinks || {
@@ -331,7 +333,11 @@ const LandingPages = () => {
       sx={{
         height: '100%',
         backgroundColor: newPage.backgroundColor,
-        backgroundImage: newPage.backgroundImage ? `url(${URL.createObjectURL(newPage.backgroundImage)})` : 'none',
+        backgroundImage: newPage.backgroundImage 
+          ? `url(${URL.createObjectURL(newPage.backgroundImage)})` 
+          : selectedPage?.backgroundImage 
+            ? `url(${selectedPage.backgroundImage})`
+            : 'none',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
@@ -347,10 +353,10 @@ const LandingPages = () => {
         }
       }}
     >
-      {newPage.logo && (
+      {(newPage.logo || selectedPage?.logo) && (
         <Box
           component="img"
-          src={URL.createObjectURL(newPage.logo)}
+          src={newPage.logo ? URL.createObjectURL(newPage.logo) : selectedPage?.logo}
           alt="Logo"
           sx={{
             width: 'auto',
@@ -368,7 +374,7 @@ const LandingPages = () => {
           sx={{
             color: newPage.titleColor,
             textAlign: 'center',
-            marginBottom: 2
+            marginBottom: 3
           }}
         >
           {newPage.title || 'Din titel her'}
@@ -378,9 +384,9 @@ const LandingPages = () => {
       <Typography
         variant="body1"
         sx={{
-          color: newPage.buttonTextColor,
+          color: newPage.descriptionColor,
           textAlign: 'center',
-          marginBottom: 3
+          marginBottom: 4
         }}
       >
         {newPage.description || 'Din beskrivelse her'}
@@ -529,17 +535,17 @@ const LandingPages = () => {
                     </Typography>
                   </CardMedia>
                   <CardContent sx={{ flexGrow: 1, pb: 1 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    <Typography variant="body2" sx={{ mb: 2, color: 'text.primary' }}>
                       {page.description || 'Ingen beskrivelse'}
                     </Typography>
                     <Grid container spacing={1}>
                       <Grid item xs={6}>
-                        <Typography variant="caption" color="text.secondary">
+                        <Typography variant="caption" sx={{ color: 'text.primary' }}>
                           Links: {page.buttons?.length || 0}
                         </Typography>
                       </Grid>
                       <Grid item xs={6}>
-                        <Typography variant="caption" color="text.secondary">
+                        <Typography variant="caption" sx={{ color: 'text.primary' }}>
                           Sociale medier: {Object.values(page.socialLinks || {}).filter(Boolean).length}
                         </Typography>
                       </Grid>
@@ -588,10 +594,10 @@ const LandingPages = () => {
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="lg" fullWidth>
         <DialogTitle>{selectedPage ? 'Rediger landing page' : 'Opret ny landing page'}</DialogTitle>
         <DialogContent>
-          <Grid container spacing={3} sx={{ mt: 1 }}>
+          <Grid container spacing={4} sx={{ mt: 1 }}>
             {/* Venstre side - Indstillinger */}
             <Grid item xs={12} md={6}>
-              <Grid container spacing={3}>
+              <Grid container spacing={4}>
                 <Grid item xs={12}>
                   <TextField
                     fullWidth
@@ -703,6 +709,17 @@ const LandingPages = () => {
                         type="color"
                         value={newPage.titleColor}
                         onChange={(e) => setNewPage({ ...newPage, titleColor: e.target.value })}
+                        style={{ width: '100%', height: '56px', marginTop: '16px' }}
+                      />
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={12} sm={3}>
+                    <FormControl fullWidth>
+                      <InputLabel shrink>Beskrivelse farve</InputLabel>
+                      <input
+                        type="color"
+                        value={newPage.descriptionColor}
+                        onChange={(e) => setNewPage({ ...newPage, descriptionColor: e.target.value })}
                         style={{ width: '100%', height: '56px', marginTop: '16px' }}
                       />
                     </FormControl>
