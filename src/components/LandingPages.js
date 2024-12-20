@@ -103,15 +103,27 @@ const LandingPages = () => {
     try {
       const formData = new FormData();
       
+      console.log('Sender data:', newPage);
+      
       Object.keys(newPage).forEach(key => {
         if (key === 'logo' || key === 'backgroundImage') {
-          if (newPage[key]) formData.append(key, newPage[key]);
+          if (newPage[key]) {
+            console.log(`Tilføjer ${key} fil:`, newPage[key].name);
+            formData.append(key, newPage[key]);
+          }
         } else if (key === 'buttons' || key === 'socialLinks') {
-          formData.append(key, JSON.stringify(newPage[key]));
+          const jsonValue = JSON.stringify(newPage[key]);
+          console.log(`Tilføjer ${key}:`, jsonValue);
+          formData.append(key, jsonValue);
         } else {
+          console.log(`Tilføjer ${key}:`, newPage[key]);
           formData.append(key, newPage[key]);
         }
       });
+
+      for (let pair of formData.entries()) {
+        console.log('FormData indhold:', pair[0], pair[1]);
+      }
 
       const response = await fetch(`${API_URL}/landing-pages`, {
         method: 'POST',
@@ -119,12 +131,12 @@ const LandingPages = () => {
         body: formData
       });
 
-      if (!response.ok) {
-        throw new Error('Fejl ved oprettelse af landing page');
-      }
+      const responseData = await response.json();
+      console.log('Server response:', responseData);
 
-      const data = await response.json();
-      console.log('Landing page oprettet:', data);
+      if (!response.ok) {
+        throw new Error(responseData.message || 'Fejl ved oprettelse af landing page');
+      }
 
       setAlert({
         open: true,
@@ -135,10 +147,13 @@ const LandingPages = () => {
       resetNewPage();
       fetchPages();
     } catch (error) {
-      console.error('Fejl ved oprettelse af landing page:', error);
+      console.error('Detaljeret fejl ved oprettelse af landing page:', {
+        error: error.message,
+        stack: error.stack
+      });
       setAlert({
         open: true,
-        message: 'Der opstod en fejl ved oprettelse af landing page',
+        message: `Der opstod en fejl: ${error.message}`,
         severity: 'error'
       });
     }
