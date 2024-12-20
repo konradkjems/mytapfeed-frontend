@@ -28,7 +28,9 @@ import {
   ListItem,
   ListItemText,
   ListItemSecondaryAction,
-  Stack
+  Stack,
+  FormControlLabel,
+  Switch
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -60,6 +62,7 @@ const LandingPages = () => {
     buttonColor: '#000000',
     buttonTextColor: '#ffffff',
     buttons: [],
+    showTitle: true,
     socialLinks: {
       instagram: '',
       facebook: '',
@@ -98,6 +101,7 @@ const LandingPages = () => {
   const handleCreatePage = async () => {
     try {
       const formData = new FormData();
+      
       Object.keys(newPage).forEach(key => {
         if (key === 'logo' || key === 'backgroundImage') {
           if (newPage[key]) formData.append(key, newPage[key]);
@@ -114,16 +118,21 @@ const LandingPages = () => {
         body: formData
       });
 
-      if (response.ok) {
-        setAlert({
-          open: true,
-          message: 'Landing page oprettet succesfuldt',
-          severity: 'success'
-        });
-        setOpenDialog(false);
-        resetNewPage();
-        fetchPages();
+      if (!response.ok) {
+        throw new Error('Fejl ved oprettelse af landing page');
       }
+
+      const data = await response.json();
+      console.log('Landing page oprettet:', data);
+
+      setAlert({
+        open: true,
+        message: 'Landing page oprettet succesfuldt',
+        severity: 'success'
+      });
+      setOpenDialog(false);
+      resetNewPage();
+      fetchPages();
     } catch (error) {
       console.error('Fejl ved oprettelse af landing page:', error);
       setAlert({
@@ -144,6 +153,7 @@ const LandingPages = () => {
       buttonColor: '#000000',
       buttonTextColor: '#ffffff',
       buttons: [],
+      showTitle: true,
       socialLinks: {
         instagram: '',
         facebook: '',
@@ -246,16 +256,18 @@ const LandingPages = () => {
         />
       )}
 
-      <Typography
-        variant="h5"
-        sx={{
-          color: newPage.buttonTextColor,
-          textAlign: 'center',
-          marginBottom: 2
-        }}
-      >
-        {newPage.title || 'Din titel her'}
-      </Typography>
+      {newPage.showTitle && (
+        <Typography
+          variant="h5"
+          sx={{
+            color: newPage.buttonTextColor,
+            textAlign: 'center',
+            marginBottom: 2
+          }}
+        >
+          {newPage.title || 'Din titel her'}
+        </Typography>
+      )}
 
       <Typography
         variant="body1"
@@ -583,6 +595,18 @@ const LandingPages = () => {
                     </Grid>
                   </Grid>
                 </Grid>
+
+                <Grid item xs={12}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={newPage.showTitle}
+                        onChange={(e) => setNewPage({ ...newPage, showTitle: e.target.checked })}
+                      />
+                    }
+                    label="Vis titel på landing page"
+                  />
+                </Grid>
               </Grid>
             </Grid>
 
@@ -617,7 +641,7 @@ const LandingPages = () => {
             onClick={handleCreatePage}
             variant="contained"
             color="primary"
-            disabled={!newPage.title || !newPage.description}
+            disabled={!newPage.title}
           >
             Opret
           </Button>
