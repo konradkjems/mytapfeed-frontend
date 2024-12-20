@@ -33,7 +33,7 @@ const ResetPassword = () => {
     // Verificer token når komponenten indlæses
     const verifyToken = async () => {
       try {
-        const response = await fetch(`${API_URL}/verify-reset-token/${token}`, {
+        const response = await fetch(`${API_URL}/api/verify-reset-token/${token}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json'
@@ -73,7 +73,7 @@ const ResetPassword = () => {
     }
 
     try {
-      const response = await fetch(`${API_URL}/reset-password`, {
+      const response = await fetch(`${API_URL}/api/reset-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
