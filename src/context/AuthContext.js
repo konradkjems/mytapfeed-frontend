@@ -4,149 +4,183 @@ import API_URL from '../config';
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
-    const [userData, setUserData] = useState(null);
-    const [error, setError] = useState(null);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-    const fetchUserData = async () => {
-        try {
-            setIsLoading(true);
-            const response = await fetch(`${API_URL}/user/profile`, {
-                credentials: 'include'
-            });
-            
-            const contentType = response.headers.get("content-type");
-            if (!contentType || !contentType.includes("application/json")) {
-                throw new Error('Serveren returnerede ikke JSON data');
-            }
+  // Funktion til at gemme tokens
+  const saveTokens = (accessToken, refreshToken) => {
+    localStorage.setItem('accessToken', accessToken);
+    localStorage.setItem('refreshToken', refreshToken);
+  };
 
-            if (response.ok) {
-                const data = await response.json();
-                setUserData(data);
-                setError(null);
-            } else {
-                let errorMessage = 'Kunne ikke hente brugerdata';
-                try {
-                    const errorData = await response.json();
-                    errorMessage = errorData.message || errorMessage;
-                } catch (e) {
-                    console.error('Kunne ikke parse fejlbesked:', e);
-                }
-                throw new Error(errorMessage);
-            }
-        } catch (error) {
-            console.error('Fejl ved hentning af brugerdata:', error);
-            setError(error.message);
-            setUserData(null);
-        } finally {
-            setIsLoading(false);
+  // Funktion til at slette tokens
+  const clearTokens = () => {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+  };
+
+  // Funktion til at forny access token
+  const refreshAccessToken = async () => {
+    try {
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (!refreshToken) {
+        throw new Error('No refresh token available');
+      }
+
+      const response = await fetch(`${API_URL}/refresh-token`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refreshToken })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to refresh token');
+      }
+
+      const data = await response.json();
+      saveTokens(data.accessToken, data.refreshToken);
+      return data.accessToken;
+    } catch (error) {
+      console.error('Error refreshing token:', error);
+      clearTokens();
+      setUser(null);
+      throw error;
+    }
+  };
+
+  // Funktion til at hente brugerdata
+  const fetchUserData = async () => {
+    try {
+      const response = await fetch(`${API_URL}/user`, {
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          // Prøv at forny token og hent data igen
+          await refreshAccessToken();
+          const newResponse = await fetch(`${API_URL}/user`, {
+            credentials: 'include'
+          });
+          if (!newResponse.ok) {
+            throw new Error('Failed to fetch user data after token refresh');
+          }
+          const data = await newResponse.json();
+          setUser(data);
+          return;
         }
-    };
+        throw new Error('Failed to fetch user data');
+      }
 
-    useEffect(() => {
-        let isMounted = true;
+      const data = await response.json();
+      setUser(data);
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      setUser(null);
+      clearTokens();
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        const checkAuthStatus = async () => {
-            try {
-                const response = await fetch(`${API_URL}/auth/status`, {
-                    credentials: 'include'
-                });
-                
-                const contentType = response.headers.get("content-type");
-                if (!contentType || !contentType.includes("application/json")) {
-                    throw new Error('Serveren returnerede ikke JSON data');
-                }
-
-                const data = await response.json();
-                
-                if (isMounted) {
-                    setIsAuthenticated(data.isAuthenticated);
-                }
-            } catch (error) {
-                console.error('Auth check failed:', error);
-                if (isMounted) {
-                    setIsAuthenticated(false);
-                    setError('Kunne ikke verificere login status');
-                }
-            }
-        };
-
-        checkAuthStatus();
-
-        return () => {
-            isMounted = false;
-        };
-    }, []);
-
-    useEffect(() => {
-        let isMounted = true;
-
-        const loadUserData = async () => {
-            if (isAuthenticated) {
-                try {
-                    await fetchUserData();
-                } catch (error) {
-                    if (isMounted) {
-                        console.error('Fejl ved indlæsning af brugerdata:', error);
-                    }
-                }
-            } else {
-                setUserData(null);
-            }
-            if (isMounted) {
-                setIsLoading(false);
-            }
-        };
-
-        loadUserData();
-
-        return () => {
-            isMounted = false;
-        };
-    }, [isAuthenticated]);
-
-    const logout = async () => {
+  // Check for eksisterende tokens ved opstart
+  useEffect(() => {
+    const initAuth = async () => {
+      const accessToken = localStorage.getItem('accessToken');
+      if (accessToken) {
         try {
-            const response = await fetch(`${API_URL}/auth/logout`, {
-                method: 'POST',
-                credentials: 'include'
-            });
-            
-            if (response.ok) {
-                setIsAuthenticated(false);
-                setUserData(null);
-            } else {
-                throw new Error('Kunne ikke logge ud');
-            }
+          await fetchUserData();
         } catch (error) {
-            console.error('Fejl ved logout:', error);
-            throw error;
+          console.error('Error initializing auth:', error);
         }
+      } else {
+        setLoading(false);
+      }
     };
 
-    const value = {
-        isAuthenticated,
-        setIsAuthenticated,
-        isLoading,
-        userData,
-        setUserData,
-        fetchUserData,
-        error,
-        logout
-    };
+    initAuth();
+  }, []);
 
-    return (
-        <AuthContext.Provider value={value}>
-            {!isLoading && children}
-        </AuthContext.Provider>
-    );
+  // Login funktion
+  const login = async (email, password) => {
+    try {
+      const response = await fetch(`${API_URL}/login`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password })
+      });
+
+      if (!response.ok) {
+        throw new Error('Login failed');
+      }
+
+      const data = await response.json();
+      saveTokens(data.accessToken, data.refreshToken);
+      await fetchUserData();
+      return true;
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
+    }
+  };
+
+  // Logout funktion
+  const logout = async () => {
+    try {
+      await fetch(`${API_URL}/logout`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      clearTokens();
+      setUser(null);
+    }
+  };
+
+  // Automatisk token fornyelse hver 14. minut (tokens udløber efter 15 minutter)
+  useEffect(() => {
+    const refreshInterval = setInterval(async () => {
+      if (user) {
+        try {
+          await refreshAccessToken();
+        } catch (error) {
+          console.error('Auto refresh token error:', error);
+        }
+      }
+    }, 14 * 60 * 1000);
+
+    return () => clearInterval(refreshInterval);
+  }, [user]);
+
+  const value = {
+    user,
+    loading,
+    login,
+    logout,
+    refreshAccessToken
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => {
-    const context = useContext(AuthContext);
-    if (context === null) {
-        throw new Error('useAuth must be used within an AuthProvider');
-    }
-    return context;
-}; 
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
+export default AuthContext; 
