@@ -40,6 +40,8 @@ import {
   ListItemButton,
   Menu,
   ListItemIcon,
+  Tooltip,
+  FormHelperText,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -879,8 +881,9 @@ const Dashboard = () => {
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell>Produkt ID</TableCell>
                     <TableCell>Produkttype</TableCell>
+                    <TableCell>Kaldenavn</TableCell>
+                    <TableCell align="right">Produkt ID</TableCell>
                     <TableCell align="right">Antal klik</TableCell>
                   </TableRow>
                 </TableHead>
@@ -888,13 +891,27 @@ const Dashboard = () => {
                   {stands
                     .sort((a, b) => (b.clicks || 0) - (a.clicks || 0))
                     .slice(0, 5)
-                    .map((stand) => (
+                    .map(stand => (
                       <TableRow key={stand._id}>
-                        <TableCell>{stand.standerId}</TableCell>
-                        <TableCell>{PRODUCT_TYPES[stand.productType.toUpperCase()]?.label || stand.productType}</TableCell>
+                        <TableCell>
+                          <Tooltip title={stand.nickname || 'Intet kaldenavn'} arrow>
+                            <Box component="span" sx={{ cursor: 'help' }}>
+                              {PRODUCT_TYPES[stand.productType.toUpperCase()]?.label || stand.productType}
+                            </Box>
+                          </Tooltip>
+                        </TableCell>
+                        <TableCell>{stand.nickname || '-'}</TableCell>
+                        <TableCell align="right">
+                          <Tooltip title={stand.nickname || 'Intet kaldenavn'} arrow>
+                            <Box component="span" sx={{ cursor: 'help' }}>
+                              {stand.standerId}
+                            </Box>
+                          </Tooltip>
+                        </TableCell>
                         <TableCell align="right">{stand.clicks || 0}</TableCell>
                       </TableRow>
-                    ))}
+                    ))
+                  }
                 </TableBody>
               </Table>
             </TableContainer>
@@ -924,7 +941,20 @@ const Dashboard = () => {
                     
                     return (
                       <TableRow key={type.value}>
-                        <TableCell>{type.label}</TableCell>
+                        <TableCell>
+                          <Tooltip 
+                            title={
+                              productsOfType.length > 0 
+                                ? `Produkter: ${productsOfType.map(p => p.nickname || p.standerId).join(', ')}` 
+                                : 'Ingen produkter'
+                            } 
+                            arrow
+                          >
+                            <Box component="span" sx={{ cursor: 'help' }}>
+                              {type.label}
+                            </Box>
+                          </Tooltip>
+                        </TableCell>
                         <TableCell align="right">{productsOfType.length}</TableCell>
                         <TableCell align="right">{totalClicks}</TableCell>
                         <TableCell align="right">{avgClicks}</TableCell>
@@ -962,12 +992,48 @@ const Dashboard = () => {
                 <Table>
                   <TableHead>
                     <TableRow>
-                      <TableCell>Produkt ID</TableCell>
-                      <TableCell>Kaldenavn</TableCell>
-                      <TableCell>TapFeed URL</TableCell>
-                      <TableCell>Redirect URL</TableCell>
-                      <TableCell>Produkttype</TableCell>
-                      <TableCell>Antal Klik</TableCell>
+                      <TableCell>
+                        <Tooltip title="Et unikt ID for dit produkt" arrow placement="top">
+                          <Box component="span" sx={{ cursor: 'help' }}>
+                            Produkt ID
+                          </Box>
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell>
+                        <Tooltip title="Et valgfrit navn til at identificere dit produkt" arrow placement="top">
+                          <Box component="span" sx={{ cursor: 'help' }}>
+                            Kaldenavn
+                          </Box>
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell>
+                        <Tooltip title="Den URL som QR koden peger på" arrow placement="top">
+                          <Box component="span" sx={{ cursor: 'help' }}>
+                            TapFeed URL
+                          </Box>
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell>
+                        <Tooltip title="Den URL som brugeren bliver sendt videre til" arrow placement="top">
+                          <Box component="span" sx={{ cursor: 'help' }}>
+                            Redirect URL
+                          </Box>
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell>
+                        <Tooltip title="Typen af fysisk produkt" arrow placement="top">
+                          <Box component="span" sx={{ cursor: 'help' }}>
+                            Produkttype
+                          </Box>
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell>
+                        <Tooltip title="Antal gange QR koden er blevet scannet" arrow placement="top">
+                          <Box component="span" sx={{ cursor: 'help' }}>
+                            Antal Klik
+                          </Box>
+                        </Tooltip>
+                      </TableCell>
                       <TableCell>Handlinger</TableCell>
                     </TableRow>
                   </TableHead>
@@ -1046,36 +1112,40 @@ const Dashboard = () => {
                         <TableCell>
                           <ButtonGroup>
                             {editingId === stand._id ? (
-                              <IconButton
-                                onClick={() => handleSave(stand._id)}
-                                color="primary"
-                                title="Gem ændringer"
-                              >
-                                <SaveIcon />
-                              </IconButton>
+                              <Tooltip title="Gem ændringer" arrow>
+                                <IconButton
+                                  onClick={() => handleSave(stand._id)}
+                                  color="primary"
+                                >
+                                  <SaveIcon />
+                                </IconButton>
+                              </Tooltip>
                             ) : (
-                              <IconButton
-                                onClick={() => handleEdit(stand._id)}
-                                color="primary"
-                                title="Rediger produkt"
-                              >
-                                <EditIcon />
-                              </IconButton>
+                              <Tooltip title="Rediger produkt" arrow>
+                                <IconButton
+                                  onClick={() => handleEdit(stand._id)}
+                                  color="primary"
+                                >
+                                  <EditIcon />
+                                </IconButton>
+                              </Tooltip>
                             )}
-                            <IconButton
-                              onClick={() => handleQrDownload(stand.standerId)}
-                              color="secondary"
-                              title="Download QR kode"
-                            >
-                              <QrCodeIcon />
-                            </IconButton>
-                            <IconButton
-                              onClick={() => handleDelete(stand._id)}
-                              color="error"
-                              title="Slet produkt"
-                            >
-                              <DeleteIcon />
-                            </IconButton>
+                            <Tooltip title="Download QR kode" arrow>
+                              <IconButton
+                                onClick={() => handleQrDownload(stand.standerId)}
+                                color="secondary"
+                              >
+                                <QrCodeIcon />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Slet produkt" arrow>
+                              <IconButton
+                                onClick={() => handleDelete(stand._id)}
+                                color="error"
+                              >
+                                <DeleteIcon />
+                              </IconButton>
+                            </Tooltip>
                           </ButtonGroup>
                         </TableCell>
                       </TableRow>
@@ -1092,42 +1162,54 @@ const Dashboard = () => {
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
         <DialogTitle>Tilføj Nyt Produkt</DialogTitle>
         <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Produkt ID"
-            fullWidth
-            value={newStand.standerId}
-            onChange={(e) => setNewStand({ ...newStand, standerId: e.target.value })}
-          />
-          <TextField
-            margin="dense"
-            label="Kaldenavn (valgfrit)"
-            fullWidth
-            value={newStand.nickname}
-            onChange={(e) => setNewStand({ ...newStand, nickname: e.target.value })}
-            placeholder="F.eks. 'Butik Vestergade' eller 'Café bord 1'"
-          />
-          <TextField
-            margin="dense"
-            label="Redirect URL"
-            fullWidth
-            value={newStand.redirectUrl}
-            onChange={(e) => setNewStand({ ...newStand, redirectUrl: e.target.value })}
-          />
-          <FormControl fullWidth margin="dense">
-            <InputLabel>Produkttype</InputLabel>
-            <Select
-              value={newStand.productType}
-              onChange={(e) => setNewStand({ ...newStand, productType: e.target.value })}
-            >
-              {Object.values(PRODUCT_TYPES).map(type => (
-                <MenuItem key={type.value} value={type.value}>
-                  {type.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          <Tooltip title="Et unikt ID der identificerer dit produkt i systemet" arrow placement="top-start">
+            <TextField
+              autoFocus
+              margin="dense"
+              label="Produkt ID"
+              fullWidth
+              value={newStand.standerId}
+              onChange={(e) => setNewStand({ ...newStand, standerId: e.target.value })}
+              helperText="F.eks. 'cafe-bord-1' eller 'butik-vestergade'"
+            />
+          </Tooltip>
+          <Tooltip title="Et valgfrit navn der gør det lettere at genkende produktet" arrow placement="top-start">
+            <TextField
+              margin="dense"
+              label="Kaldenavn (valgfrit)"
+              fullWidth
+              value={newStand.nickname}
+              onChange={(e) => setNewStand({ ...newStand, nickname: e.target.value })}
+              placeholder="F.eks. 'Butik Vestergade' eller 'Café bord 1'"
+              helperText="Gør det lettere at identificere produktet i oversigten"
+            />
+          </Tooltip>
+          <Tooltip title="Den URL som brugeren bliver sendt videre til når de scanner QR koden" arrow placement="top-start">
+            <TextField
+              margin="dense"
+              label="Redirect URL"
+              fullWidth
+              value={newStand.redirectUrl}
+              onChange={(e) => setNewStand({ ...newStand, redirectUrl: e.target.value })}
+              helperText="F.eks. 'https://minbutik.dk/menu' eller 'https://facebook.com/minside'"
+            />
+          </Tooltip>
+          <Tooltip title="Vælg den type produkt du vil oprette" arrow placement="top-start">
+            <FormControl fullWidth margin="dense">
+              <InputLabel>Produkttype</InputLabel>
+              <Select
+                value={newStand.productType}
+                onChange={(e) => setNewStand({ ...newStand, productType: e.target.value })}
+              >
+                {Object.values(PRODUCT_TYPES).map(type => (
+                  <MenuItem key={type.value} value={type.value}>
+                    {type.label}
+                  </MenuItem>
+                ))}
+              </Select>
+              <FormHelperText>Vælg den type fysisk produkt du vil bruge</FormHelperText>
+            </FormControl>
+          </Tooltip>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenDialog(false)}>Annuller</Button>
