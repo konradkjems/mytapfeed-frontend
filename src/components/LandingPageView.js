@@ -26,9 +26,19 @@ const LandingPageView = () => {
     const fetchPage = async () => {
       try {
         console.log('Henter landing page med ID:', id);
-        const response = await fetch(`${API_URL}/api/landing/${id}`);
+        console.log('API URL:', API_URL);
         
-        console.log('Server response:', response.status, response.statusText);
+        // Prøv først det offentlige endpoint
+        let response = await fetch(`${API_URL}/api/landing/${id}`);
+        console.log('Første forsøg response:', response.status, response.statusText);
+        
+        // Hvis det ikke virker, prøv preview endpointet
+        if (!response.ok) {
+          console.log('Prøver preview endpoint...');
+          response = await fetch(`${API_URL}/api/landing-pages/preview/${id}`);
+          console.log('Andet forsøg response:', response.status, response.statusText);
+        }
+        
         const contentType = response.headers.get("content-type");
         console.log('Content-Type:', contentType);
         
@@ -49,8 +59,11 @@ const LandingPageView = () => {
         
         setPage(data);
       } catch (err) {
-        console.error('Fejl ved hentning af landing page:', err);
-        setError(`Fejl: ${err.message}`);
+        console.error('Detaljeret fejl ved hentning af landing page:', {
+          error: err.message,
+          stack: err.stack
+        });
+        setError(`Fejl ved hentning af landing page: ${err.message}`);
       } finally {
         setLoading(false);
       }
