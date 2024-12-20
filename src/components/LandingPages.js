@@ -73,6 +73,7 @@ const LandingPages = () => {
     }
   });
   const [newButton, setNewButton] = useState({ text: '', url: '' });
+  const [editingButton, setEditingButton] = useState(null);
 
   useEffect(() => {
     fetchPages();
@@ -184,10 +185,20 @@ const LandingPages = () => {
 
   const handleAddButton = () => {
     if (newButton.text && newButton.url) {
-      setNewPage(prev => ({
-        ...prev,
-        buttons: [...prev.buttons, { ...newButton }]
-      }));
+      if (editingButton !== null) {
+        setNewPage(prev => ({
+          ...prev,
+          buttons: prev.buttons.map((button, i) => 
+            i === editingButton.index ? { ...newButton } : button
+          )
+        }));
+        setEditingButton(null);
+      } else {
+        setNewPage(prev => ({
+          ...prev,
+          buttons: [...prev.buttons, { ...newButton }]
+        }));
+      }
       setNewButton({ text: '', url: '' });
     }
   };
@@ -325,6 +336,11 @@ const LandingPages = () => {
         severity: 'error'
       });
     }
+  };
+
+  const handleEditButton = (button, index) => {
+    setEditingButton({ ...button, index });
+    setNewButton({ text: button.text, url: button.url });
   };
 
   // Live Preview Component
@@ -575,7 +591,7 @@ const LandingPages = () => {
                     </Box>
                     <Tooltip title="Åbn preview">
                       <IconButton 
-                        href={`/landing/${page._id}`} 
+                        href={`https://my.tapfeed.dk/landing/${page._id}`} 
                         target="_blank"
                         size="small"
                         color="primary"
@@ -607,6 +623,17 @@ const LandingPages = () => {
                   />
                 </Grid>
                 <Grid item xs={12}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={newPage.showTitle}
+                        onChange={(e) => setNewPage({ ...newPage, showTitle: e.target.checked })}
+                      />
+                    }
+                    label="Vis titel på landing page"
+                  />
+                </Grid>
+                <Grid item xs={12}>
                   <TextField
                     fullWidth
                     label="Beskrivelse"
@@ -617,7 +644,7 @@ const LandingPages = () => {
                   />
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <Box>
+                  <Box sx={{ mb: 4 }}>
                     <Button
                       variant="outlined"
                       component="label"
@@ -643,7 +670,7 @@ const LandingPages = () => {
                   </Box>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <Box>
+                  <Box sx={{ mb: 4 }}>
                     <Button
                       variant="outlined"
                       component="label"
@@ -668,62 +695,68 @@ const LandingPages = () => {
                     )}
                   </Box>
                 </Grid>
-                <Grid container spacing={3}>
-                  <Grid item xs={12} sm={3}>
-                    <FormControl fullWidth>
-                      <InputLabel shrink>Baggrundsfarve</InputLabel>
-                      <input
-                        type="color"
-                        value={newPage.backgroundColor}
-                        onChange={(e) => setNewPage({ ...newPage, backgroundColor: e.target.value })}
-                        style={{ width: '100%', height: '56px', marginTop: '16px' }}
-                      />
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={12} sm={3}>
-                    <FormControl fullWidth>
-                      <InputLabel shrink>Knapfarve</InputLabel>
-                      <input
-                        type="color"
-                        value={newPage.buttonColor}
-                        onChange={(e) => setNewPage({ ...newPage, buttonColor: e.target.value })}
-                        style={{ width: '100%', height: '56px', marginTop: '16px' }}
-                      />
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={12} sm={3}>
-                    <FormControl fullWidth>
-                      <InputLabel shrink>Knap tekstfarve</InputLabel>
-                      <input
-                        type="color"
-                        value={newPage.buttonTextColor}
-                        onChange={(e) => setNewPage({ ...newPage, buttonTextColor: e.target.value })}
-                        style={{ width: '100%', height: '56px', marginTop: '16px' }}
-                      />
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={12} sm={3}>
-                    <FormControl fullWidth>
-                      <InputLabel shrink>Titel farve</InputLabel>
-                      <input
-                        type="color"
-                        value={newPage.titleColor}
-                        onChange={(e) => setNewPage({ ...newPage, titleColor: e.target.value })}
-                        style={{ width: '100%', height: '56px', marginTop: '16px' }}
-                      />
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={12} sm={3}>
-                    <FormControl fullWidth>
-                      <InputLabel shrink>Beskrivelse farve</InputLabel>
-                      <input
-                        type="color"
-                        value={newPage.descriptionColor}
-                        onChange={(e) => setNewPage({ ...newPage, descriptionColor: e.target.value })}
-                        style={{ width: '100%', height: '56px', marginTop: '16px' }}
-                      />
-                    </FormControl>
-                  </Grid>
+                
+                {/* Farvevalg sektion med mere padding */}
+                <Grid item xs={12}>
+                  <Box sx={{ px: 2 }}>
+                    <Grid container spacing={3}>
+                      <Grid item xs={12} sm={3}>
+                        <FormControl fullWidth>
+                          <InputLabel shrink>Baggrundsfarve</InputLabel>
+                          <input
+                            type="color"
+                            value={newPage.backgroundColor}
+                            onChange={(e) => setNewPage({ ...newPage, backgroundColor: e.target.value })}
+                            style={{ width: '100%', height: '56px', marginTop: '16px' }}
+                          />
+                        </FormControl>
+                      </Grid>
+                      <Grid item xs={12} sm={3}>
+                        <FormControl fullWidth>
+                          <InputLabel shrink>Knapfarve</InputLabel>
+                          <input
+                            type="color"
+                            value={newPage.buttonColor}
+                            onChange={(e) => setNewPage({ ...newPage, buttonColor: e.target.value })}
+                            style={{ width: '100%', height: '56px', marginTop: '16px' }}
+                          />
+                        </FormControl>
+                      </Grid>
+                      <Grid item xs={12} sm={3}>
+                        <FormControl fullWidth>
+                          <InputLabel shrink>Knap tekstfarve</InputLabel>
+                          <input
+                            type="color"
+                            value={newPage.buttonTextColor}
+                            onChange={(e) => setNewPage({ ...newPage, buttonTextColor: e.target.value })}
+                            style={{ width: '100%', height: '56px', marginTop: '16px' }}
+                          />
+                        </FormControl>
+                      </Grid>
+                      <Grid item xs={12} sm={3}>
+                        <FormControl fullWidth>
+                          <InputLabel shrink>Titel farve</InputLabel>
+                          <input
+                            type="color"
+                            value={newPage.titleColor}
+                            onChange={(e) => setNewPage({ ...newPage, titleColor: e.target.value })}
+                            style={{ width: '100%', height: '56px', marginTop: '16px' }}
+                          />
+                        </FormControl>
+                      </Grid>
+                      <Grid item xs={12} sm={3}>
+                        <FormControl fullWidth>
+                          <InputLabel shrink>Beskrivelse farve</InputLabel>
+                          <input
+                            type="color"
+                            value={newPage.descriptionColor}
+                            onChange={(e) => setNewPage({ ...newPage, descriptionColor: e.target.value })}
+                            style={{ width: '100%', height: '56px', marginTop: '16px' }}
+                          />
+                        </FormControl>
+                      </Grid>
+                    </Grid>
+                  </Box>
                 </Grid>
 
                 {/* Links sektion */}
@@ -751,12 +784,25 @@ const LandingPages = () => {
                     <Grid item xs={12}>
                       <Button
                         variant="outlined"
-                        startIcon={<AddIcon />}
+                        startIcon={editingButton !== null ? <EditIcon /> : <AddIcon />}
                         onClick={handleAddButton}
                         disabled={!newButton.text || !newButton.url}
+                        sx={{ mr: 1 }}
                       >
-                        Tilføj Link
+                        {editingButton !== null ? 'Opdater Link' : 'Tilføj Link'}
                       </Button>
+                      {editingButton !== null && (
+                        <Button
+                          variant="outlined"
+                          color="secondary"
+                          onClick={() => {
+                            setEditingButton(null);
+                            setNewButton({ text: '', url: '' });
+                          }}
+                        >
+                          Annuller Redigering
+                        </Button>
+                      )}
                     </Grid>
                   </Grid>
 
@@ -768,6 +814,13 @@ const LandingPages = () => {
                           secondary={button.url}
                         />
                         <ListItemSecondaryAction>
+                          <IconButton 
+                            edge="end" 
+                            onClick={() => handleEditButton(button, index)}
+                            sx={{ mr: 1 }}
+                          >
+                            <EditIcon />
+                          </IconButton>
                           <IconButton edge="end" onClick={() => handleRemoveButton(index)}>
                             <DeleteIcon />
                           </IconButton>
@@ -828,18 +881,6 @@ const LandingPages = () => {
                       />
                     </Grid>
                   </Grid>
-                </Grid>
-
-                <Grid item xs={12}>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={newPage.showTitle}
-                        onChange={(e) => setNewPage({ ...newPage, showTitle: e.target.checked })}
-                      />
-                    }
-                    label="Vis titel på landing page"
-                  />
                 </Grid>
               </Grid>
             </Grid>
