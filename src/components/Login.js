@@ -7,7 +7,9 @@ import {
   Paper,
   Link,
   Alert,
-  CircularProgress
+  CircularProgress,
+  Container,
+  useTheme
 } from '@mui/material';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -20,6 +22,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { setIsAuthenticated } = useAuth();
+  const theme = useTheme();
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -57,81 +60,114 @@ const Login = () => {
       sx={{
         minHeight: '100vh',
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#f5f5f5',
-        p: 3
+        flexDirection: 'column',
+        backgroundColor: theme.palette.background.default
       }}
     >
-      <Paper
-        elevation={3}
-        sx={{
-          p: 4,
-          maxWidth: '400px',
-          width: '100%'
-        }}
-      >
-        <Typography variant="h5" component="h1" gutterBottom align="center">
-          Log ind
-        </Typography>
-
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
-
-        <form onSubmit={onSubmit}>
-          <TextField
-            fullWidth
-            label="Brugernavn"
-            variant="outlined"
-            margin="normal"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            disabled={isLoading}
-          />
-          <TextField
-            fullWidth
-            label="Adgangskode"
-            type="password"
-            variant="outlined"
-            margin="normal"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={isLoading}
-          />
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            color="primary"
-            size="large"
-            sx={{ mt: 3, mb: 2 }}
-            disabled={isLoading}
+      <Container maxWidth="sm" sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        <Paper
+          elevation={3}
+          sx={{
+            p: 4,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            backgroundColor: theme.palette.background.paper
+          }}
+        >
+          <Typography 
+            variant="h4" 
+            component="h1" 
+            gutterBottom 
+            sx={{ 
+              mb: 4,
+              color: theme.palette.primary.main,
+              fontWeight: 'bold'
+            }}
           >
-            {isLoading ? <CircularProgress size={24} /> : 'Log ind'}
-          </Button>
-        </form>
+            Log ind
+          </Typography>
 
-        <Box sx={{ mt: 2, textAlign: 'center' }}>
-          <Link
-            component={RouterLink}
-            to="/forgot-password"
-            variant="body2"
-            sx={{ display: 'block', mb: 1 }}
-          >
-            Glemt adgangskode?
-          </Link>
-          <Link
-            component={RouterLink}
-            to="/register"
-            variant="body2"
-          >
-            Har du ikke en konto? Opret dig her
-          </Link>
-        </Box>
-      </Paper>
+          {error && (
+            <Alert severity="error" sx={{ mb: 3, width: '100%' }}>
+              {error}
+            </Alert>
+          )}
+
+          <Box component="form" onSubmit={onSubmit} sx={{ width: '100%' }}>
+            <TextField
+              fullWidth
+              label="Brugernavn"
+              variant="outlined"
+              margin="normal"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              disabled={isLoading}
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              fullWidth
+              label="Adgangskode"
+              type="password"
+              variant="outlined"
+              margin="normal"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={isLoading}
+              sx={{ mb: 3 }}
+            />
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              size="large"
+              disabled={isLoading}
+              sx={{
+                mt: 2,
+                mb: 3,
+                py: 1.5,
+                fontSize: '1.1rem',
+                fontWeight: 'bold'
+              }}
+            >
+              {isLoading ? <CircularProgress size={24} /> : 'Log ind'}
+            </Button>
+          </Box>
+
+          <Box sx={{ mt: 2, textAlign: 'center', width: '100%' }}>
+            <Link
+              component={RouterLink}
+              to="/forgot-password"
+              variant="body1"
+              sx={{
+                display: 'block',
+                mb: 2,
+                color: theme.palette.primary.main,
+                textDecoration: 'none',
+                '&:hover': {
+                  textDecoration: 'underline'
+                }
+              }}
+            >
+              Glemt adgangskode?
+            </Link>
+            <Link
+              component={RouterLink}
+              to="/register"
+              variant="body1"
+              sx={{
+                color: theme.palette.primary.main,
+                textDecoration: 'none',
+                '&:hover': {
+                  textDecoration: 'underline'
+                }
+              }}
+            >
+              Har du ikke en konto? Opret dig her
+            </Link>
+          </Box>
+        </Paper>
+      </Container>
     </Box>
   );
 };
