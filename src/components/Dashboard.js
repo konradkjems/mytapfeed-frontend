@@ -269,6 +269,17 @@ const LocationSelectionDialog = ({ open, onClose, onSelect }) => {
   );
 };
 
+const LoadingButton = ({ loading, disabled, onClick, children, variant = "contained", startIcon }) => (
+  <Button
+    onClick={onClick}
+    disabled={disabled || loading}
+    variant={variant}
+    startIcon={loading ? <CircularProgress size={20} /> : startIcon}
+  >
+    {loading ? 'Uploader...' : children}
+  </Button>
+);
+
 const Dashboard = () => {
   const [stands, setStands] = useState([]);
   const [editingId, setEditingId] = useState(null);
@@ -1415,14 +1426,13 @@ const Dashboard = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setBulkDialog(false)}>Annuller</Button>
-          <Button
+          <LoadingButton
             onClick={handleBulkUpload}
-            disabled={!bulkFile || bulkLoading}
-            variant="contained"
-            startIcon={bulkLoading ? <CircularProgress size={20} /> : null}
+            loading={bulkLoading}
+            disabled={!bulkFile}
           >
-            {bulkLoading ? 'Uploader...' : 'Upload'}
-          </Button>
+            Upload
+          </LoadingButton>
         </DialogActions>
       </Dialog>
 
