@@ -242,6 +242,89 @@ const LandingPages = () => {
     }
   };
 
+  const handleEdit = async (page) => {
+    setSelectedPage(page);
+    setNewPage({
+      title: page.title,
+      description: page.description,
+      logo: null,
+      backgroundImage: null,
+      backgroundColor: page.backgroundColor || '#ffffff',
+      buttonColor: page.buttonColor || '#000000',
+      buttonTextColor: page.buttonTextColor || '#000000',
+      titleColor: page.titleColor || '#000000',
+      buttons: page.buttons || [],
+      showTitle: page.showTitle ?? true,
+      socialLinks: page.socialLinks || {
+        instagram: '',
+        facebook: '',
+        youtube: '',
+        twitter: ''
+      }
+    });
+    setOpenDialog(true);
+  };
+
+  const handleUpdate = async () => {
+    try {
+      const formData = new FormData();
+      
+      console.log('Sender opdateringsdata:', newPage);
+      
+      Object.keys(newPage).forEach(key => {
+        if (key === 'logo' || key === 'backgroundImage') {
+          if (newPage[key]) {
+            console.log(`Tilføjer ${key} fil:`, newPage[key].name);
+            formData.append(key, newPage[key]);
+          }
+        } else if (key === 'buttons' || key === 'socialLinks') {
+          const jsonValue = JSON.stringify(newPage[key]);
+          console.log(`Tilføjer ${key}:`, jsonValue);
+          formData.append(key, jsonValue);
+        } else {
+          console.log(`Tilføjer ${key}:`, newPage[key]);
+          formData.append(key, newPage[key]);
+        }
+      });
+
+      for (let pair of formData.entries()) {
+        console.log('FormData indhold:', pair[0], pair[1]);
+      }
+
+      const response = await fetch(`${API_URL}/landing-pages/${selectedPage._id}`, {
+        method: 'PUT',
+        credentials: 'include',
+        body: formData
+      });
+
+      const responseData = await response.json();
+      console.log('Server response:', responseData);
+
+      if (!response.ok) {
+        throw new Error(responseData.message || 'Fejl ved opdatering af landing page');
+      }
+
+      setAlert({
+        open: true,
+        message: 'Landing page opdateret succesfuldt',
+        severity: 'success'
+      });
+      setOpenDialog(false);
+      resetNewPage();
+      fetchPages();
+    } catch (error) {
+      console.error('Detaljeret fejl ved opdatering af landing page:', {
+        error: error.message,
+        stack: error.stack
+      });
+      setAlert({
+        open: true,
+        message: `Der opstod en fejl: ${error.message}`,
+        severity: 'error'
+      });
+    }
+  };
+
   // Live Preview Component
   const LivePreview = () => (
     <Box
@@ -381,31 +464,119 @@ const LandingPages = () => {
           ) : (
             pages.map(page => (
               <Grid item xs={12} sm={6} md={4} key={page._id}>
-                <Card>
+                <Card sx={{ 
+                  height: '100%', 
+                  display: 'flex', 
+                  flexDirection: 'column',
+                  transition: 'transform 0.2s, box-shadow 0.2s',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: 6
+                  }
+                }}>
                   <CardMedia
-                    component="img"
-                    height="140"
-                    image={page.backgroundImage || '/placeholder.jpg'}
-                    alt={page.title}
-                  />
-                  <CardContent>
-                    <Typography variant="h6" component="div">
+                    component="div"
+                    sx={{
+                      height: 200,
+                      backgroundImage: `url(${page.backgroundImage || '/placeholder.jpg'})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      position: 'relative',
+                      '&::after': {
+                        content: '""',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.7) 100%)'
+                      }
+                    }}
+                  >
+                    {page.logo && (
+                      <Box
+                        component="img"
+                        src={page.logo}
+                        alt="Logo"
+                        sx={{
+                          position: 'absolute',
+                          top: '10px',
+                          left: '10px',
+                          width: '50px',
+                          height: '50px',
+                          objectFit: 'contain',
+                          borderRadius: '4px',
+                          backgroundColor: 'rgba(255,255,255,0.9)',
+                          padding: '4px'
+                        }}
+                      />
+                    )}
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        position: 'absolute',
+                        bottom: '10px',
+                        left: '10px',
+                        right: '10px',
+                        color: 'white',
+                        textShadow: '1px 1px 2px rgba(0,0,0,0.6)',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
                       {page.title}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {page.description}
+                  </CardMedia>
+                  <CardContent sx={{ flexGrow: 1, pb: 1 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      {page.description || 'Ingen beskrivelse'}
                     </Typography>
+                    <Grid container spacing={1}>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">
+                          Links: {page.buttons?.length || 0}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">
+                          Sociale medier: {Object.values(page.socialLinks || {}).filter(Boolean).length}
+                        </Typography>
+                      </Grid>
+                    </Grid>
                   </CardContent>
-                  <CardActions>
-                    <IconButton onClick={() => setSelectedPage(page)}>
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton onClick={() => handleDeletePage(page._id)}>
-                      <DeleteIcon />
-                    </IconButton>
-                    <IconButton href={`/landing/${page._id}`} target="_blank">
-                      <PreviewIcon />
-                    </IconButton>
+                  <Divider />
+                  <CardActions sx={{ justifyContent: 'space-between', px: 2 }}>
+                    <Box>
+                      <Tooltip title="Rediger">
+                        <IconButton 
+                          onClick={() => handleEdit(page)}
+                          size="small"
+                          sx={{ mr: 1 }}
+                        >
+                          <EditIcon />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Slet">
+                        <IconButton 
+                          onClick={() => handleDeletePage(page._id)}
+                          size="small"
+                          sx={{ mr: 1 }}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                    <Tooltip title="Åbn preview">
+                      <IconButton 
+                        href={`/landing/${page._id}`} 
+                        target="_blank"
+                        size="small"
+                        color="primary"
+                      >
+                        <PreviewIcon />
+                      </IconButton>
+                    </Tooltip>
                   </CardActions>
                 </Card>
               </Grid>
@@ -415,7 +586,7 @@ const LandingPages = () => {
       </Box>
 
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="lg" fullWidth>
-        <DialogTitle>Opret ny landing page</DialogTitle>
+        <DialogTitle>{selectedPage ? 'Rediger landing page' : 'Opret ny landing page'}</DialogTitle>
         <DialogContent>
           <Grid container spacing={3} sx={{ mt: 1 }}>
             {/* Venstre side - Indstillinger */}
@@ -693,16 +864,17 @@ const LandingPages = () => {
           <Button onClick={() => {
             setOpenDialog(false);
             resetNewPage();
+            setSelectedPage(null);
           }}>
             Annuller
           </Button>
           <Button
-            onClick={handleCreatePage}
+            onClick={selectedPage ? handleUpdate : handleCreatePage}
             variant="contained"
             color="primary"
             disabled={!newPage.title}
           >
-            Opret
+            {selectedPage ? 'Opdater' : 'Opret'}
           </Button>
         </DialogActions>
       </Dialog>
