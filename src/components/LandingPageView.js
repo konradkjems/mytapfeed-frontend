@@ -14,11 +14,7 @@ import {
   YouTube as YouTubeIcon,
   Twitter as TwitterIcon
 } from '@mui/icons-material';
-
-// Brug den korrekte base URL baseret på miljøet
-const BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://api.tapfeed.dk'
-  : 'http://localhost:3000';
+import API_URL from '../config';
 
 const LandingPageView = () => {
   const { id } = useParams();
@@ -30,18 +26,7 @@ const LandingPageView = () => {
     const fetchPage = async () => {
       try {
         console.log('Henter landing page med ID:', id);
-        console.log('Base URL:', BASE_URL);
-        
-        // Prøv først det offentlige endpoint
-        let response = await fetch(`${BASE_URL}/api/landing/${id}`);
-        console.log('Første forsøg response:', response.status, response.statusText);
-        
-        // Hvis det ikke virker, prøv preview endpointet
-        if (!response.ok) {
-          console.log('Prøver preview endpoint...');
-          response = await fetch(`${BASE_URL}/api/landing-pages/preview/${id}`);
-          console.log('Andet forsøg response:', response.status, response.statusText);
-        }
+        const response = await fetch(`${API_URL}/api/landing-pages/${id}`);
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);

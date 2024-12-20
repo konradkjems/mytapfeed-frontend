@@ -82,7 +82,7 @@ const LandingPages = () => {
   const fetchPages = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`${API_URL}/landing-pages`, {
+      const response = await fetch(`${API_URL}/api/landing-pages`, {
         credentials: 'include'
       });
       if (response.ok) {
@@ -127,7 +127,7 @@ const LandingPages = () => {
         console.log('FormData indhold:', pair[0], pair[1]);
       }
 
-      const response = await fetch(`${API_URL}/landing-pages`, {
+      const response = await fetch(`${API_URL}/api/landing-pages`, {
         method: 'POST',
         credentials: 'include',
         body: formData
@@ -231,7 +231,7 @@ const LandingPages = () => {
   const handleDeletePage = async (id) => {
     if (window.confirm('Er du sikker på, at du vil slette denne landing page?')) {
       try {
-        const response = await fetch(`${API_URL}/landing-pages/${id}`, {
+        const response = await fetch(`${API_URL}/api/landing-pages/${id}`, {
           method: 'DELETE',
           credentials: 'include'
         });
@@ -304,7 +304,7 @@ const LandingPages = () => {
         console.log('FormData indhold:', pair[0], pair[1]);
       }
 
-      const response = await fetch(`${API_URL}/landing-pages/${selectedPage._id}`, {
+      const response = await fetch(`${API_URL}/api/landing-pages/${selectedPage._id}`, {
         method: 'PUT',
         credentials: 'include',
         body: formData
