@@ -344,7 +344,7 @@ const LandingPages = () => {
   };
 
   const handlePreview = (id) => {
-    window.open(`/landing-pages/view/${id}`, '_blank');
+    window.open(`/landing/${id}`, '_blank');
   };
 
   // Live Preview Component

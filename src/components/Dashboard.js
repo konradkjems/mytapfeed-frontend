@@ -319,7 +319,27 @@ const Dashboard = () => {
         setIsLoading(true);
         setIsLoadingReviews(true);
 
-        // Hent data parallelt
+        // Tjek først sessionStorage for cached data
+        const cachedStands = sessionStorage.getItem('dashboardStands');
+        const cachedReviews = sessionStorage.getItem('dashboardReviews');
+        const cachedBusinessData = sessionStorage.getItem('dashboardBusiness');
+        const cacheTimestamp = sessionStorage.getItem('dashboardCacheTimestamp');
+
+        // Tjek om cache er gyldig (mindre end 5 minutter gammel)
+        const isCacheValid = cacheTimestamp && (Date.now() - parseInt(cacheTimestamp)) < 5 * 60 * 1000;
+
+        if (isCacheValid && cachedStands && cachedReviews && cachedBusinessData) {
+          console.log('Bruger cached dashboard data');
+          setStands(JSON.parse(cachedStands));
+          setReviews(JSON.parse(cachedReviews));
+          setBusinessData(JSON.parse(cachedBusinessData));
+          setIsLoading(false);
+          setIsLoadingReviews(false);
+          setIsInitialLoad(false);
+          return;
+        }
+
+        // Hvis ingen gyldig cache, hent ny data
         const [standsResponse, reviewsResponse] = await Promise.all([
           fetch(`${API_URL}/stands`, {
             credentials: 'include'
@@ -332,13 +352,20 @@ const Dashboard = () => {
         if (standsResponse.ok) {
           const standsData = await standsResponse.json();
           setStands(standsData);
+          sessionStorage.setItem('dashboardStands', JSON.stringify(standsData));
         }
 
         if (reviewsResponse.ok) {
           const reviewsData = await reviewsResponse.json();
           setBusinessData(reviewsData.business);
           setReviews(reviewsData.reviews);
+          sessionStorage.setItem('dashboardReviews', JSON.stringify(reviewsData.reviews));
+          sessionStorage.setItem('dashboardBusiness', JSON.stringify(reviewsData.business));
         }
+
+        // Gem timestamp for cachen
+        sessionStorage.setItem('dashboardCacheTimestamp', Date.now().toString());
+
       } catch (error) {
         console.error('Fejl ved indlæsning af data:', error);
         setAlert({
@@ -358,6 +385,18 @@ const Dashboard = () => {
     }
   }, [isInitialLoad]);
 
+  // Funktion til at tvinge genindlæsning af data
+  const handleRefreshData = async () => {
+    // Ryd cache
+    sessionStorage.removeItem('dashboardStands');
+    sessionStorage.removeItem('dashboardReviews');
+    sessionStorage.removeItem('dashboardBusiness');
+    sessionStorage.removeItem('dashboardCacheTimestamp');
+    
+    // Sæt isInitialLoad til true for at tvinge genindlæsning
+    setIsInitialLoad(true);
+  };
+
   // Opdater kun Google reviews når locationDialog lukkes
   useEffect(() => {
     let isSubscribed = true;
@@ -368,27 +407,18 @@ const Dashboard = () => {
         const response = await fetch(`${API_URL}/business/google-reviews`, {
           credentials: 'include',
           headers: {
-            'Cache-Control': 'no-cache'
+            'Content-Type': 'application/json'
           }
         });
-
-        if (response.status === 429) {
-          console.log('Rate limit nået for Google Reviews API');
-          // Vent 5 minutter før næste forsøg
-          setTimeout(fetchGoogleReviews, 5 * 60 * 1000);
-          return;
-        }
-
+        
         if (!response.ok) {
-          throw new Error('Kunne ikke hente Google anmeldelser');
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-
+        
         const data = await response.json();
         setBusinessData(data);
       } catch (error) {
         console.error('Fejl ved hentning af Google anmeldelser:', error);
-        // Hvis der er en fejl, prøv igen om 30 sekunder
-        setTimeout(fetchGoogleReviews, 30 * 1000);
       }
     };
 
@@ -719,6 +749,15 @@ const Dashboard = () => {
 
   return (
     <Layout title="Dashboard">
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+        <Button
+          startIcon={<RefreshIcon />}
+          onClick={handleRefreshData}
+          variant="outlined"
+        >
+          Opdater data
+        </Button>
+      </Box>
       <Grid container spacing={3}>
         {/* Statistik sektion */}
         <Grid item xs={12}>

@@ -26,7 +26,7 @@ const LandingPageView = () => {
     const fetchPage = async () => {
       try {
         console.log('Henter landing page med ID:', id);
-        const response = await fetch(`${API_URL}/landing-pages/view/${id}`);
+        const response = await fetch(`${API_URL}/api/landing-pages/${id}`);
         
         console.log('Server response:', response.status, response.statusText);
         const contentType = response.headers.get("content-type");
@@ -50,7 +50,7 @@ const LandingPageView = () => {
         setPage(data);
       } catch (err) {
         console.error('Fejl ved hentning af landing page:', err);
-        setError(`Fejl: ${err.message}. URL: ${API_URL}/landing-pages/view/${id}`);
+        setError(`Fejl: ${err.message}`);
       } finally {
         setLoading(false);
       }
@@ -93,8 +93,6 @@ const LandingPageView = () => {
       }}>
         <Typography color="error" align="center">
           {error}
-          <br />
-          <small>ID: {id}</small>
         </Typography>
       </Box>
     );
