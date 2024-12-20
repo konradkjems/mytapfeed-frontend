@@ -544,6 +544,11 @@ const Dashboard = () => {
         message: `Google Maps integration opsat succesfuldt for "${location.name}"`,
         severity: 'success'
       });
+      
+      // Luk dialogen efter vi har sat dataen
+      setTimeout(() => {
+        setLocationDialog(false);
+      }, 100);
     } catch (error) {
       console.error('Fejl ved opsætning af Google Maps:', error);
       setAlert({
@@ -553,7 +558,6 @@ const Dashboard = () => {
       });
     } finally {
       setIsLoadingReviews(false);
-      setLocationDialog(false);
     }
   };
 
