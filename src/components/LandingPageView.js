@@ -26,7 +26,7 @@ const LandingPageView = () => {
     const fetchPage = async () => {
       try {
         console.log('Henter landing page med ID:', id);
-        const response = await fetch(`${API_URL}/api/landing-pages/${id}`);
+        const response = await fetch(`${API_URL}/api/landing/${id}`);
         
         console.log('Server response:', response.status, response.statusText);
         const contentType = response.headers.get("content-type");
