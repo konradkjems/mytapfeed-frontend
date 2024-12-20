@@ -710,7 +710,7 @@ const Dashboard = () => {
               xAxis={[{
                 scaleType: 'band',
                 data: prepareChartData(stands).map(item => item.month),
-                label: 'Måneder',
+                label: 'Dage',
                 tickLabelStyle: { 
                   fill: mode === 'dark' ? 'white' : 'black'
                 },

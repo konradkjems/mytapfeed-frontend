@@ -17,7 +17,8 @@ import {
   Person as PersonIcon,
   AdminPanelSettings as AdminIcon,
   DarkMode as DarkModeIcon,
-  LightMode as LightModeIcon
+  LightMode as LightModeIcon,
+  Web as WebIcon
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -64,13 +65,19 @@ const Sidebar = ({ open }) => {
       onClick: () => navigate('/dashboard')
     },
     {
+      text: 'Landing Pages',
+      icon: <WebIcon />,
+      path: '/landing-pages',
+      onClick: () => navigate('/landing-pages')
+    },
+    {
       text: 'Statistik',
       icon: <BarChartIcon />,
       path: '/statistics',
       onClick: () => navigate('/statistics')
     },
     {
-      text: 'Min konto',
+      text: 'Min Profil',
       icon: <PersonIcon />,
       path: '/profile',
       onClick: () => navigate('/profile')

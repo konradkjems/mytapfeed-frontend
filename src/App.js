@@ -12,6 +12,8 @@ import RequestReset from './components/RequestReset';
 import ResetPassword from './components/ResetPassword';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import LandingPages from './components/LandingPages';
+import LandingPageView from './components/LandingPageView';
 
 function App() {
   return (
@@ -45,6 +47,12 @@ function App() {
                   <Admin />
                 </ProtectedRoute>
               } />
+              <Route path="/landing-pages" element={
+                <ProtectedRoute>
+                  <LandingPages />
+                </ProtectedRoute>
+              } />
+              <Route path="/landing/:id" element={<LandingPageView />} />
             </Routes>
           </div>
         </Router>
