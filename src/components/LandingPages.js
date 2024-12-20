@@ -60,7 +60,8 @@ const LandingPages = () => {
     backgroundImage: null,
     backgroundColor: '#ffffff',
     buttonColor: '#000000',
-    buttonTextColor: '#ffffff',
+    buttonTextColor: '#000000',
+    titleColor: '#000000',
     buttons: [],
     showTitle: true,
     socialLinks: {
@@ -151,7 +152,8 @@ const LandingPages = () => {
       backgroundImage: null,
       backgroundColor: '#ffffff',
       buttonColor: '#000000',
-      buttonTextColor: '#ffffff',
+      buttonTextColor: '#000000',
+      titleColor: '#000000',
       buttons: [],
       showTitle: true,
       socialLinks: {
@@ -234,11 +236,17 @@ const LandingPages = () => {
         backgroundImage: newPage.backgroundImage ? `url(${URL.createObjectURL(newPage.backgroundImage)})` : 'none',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
         padding: 3,
         borderRadius: 1,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center'
+        alignItems: 'center',
+        position: 'relative',
+        '@media (max-width: 600px)': {
+          minHeight: '100vh',
+          padding: 2
+        }
       }}
     >
       {newPage.logo && (
@@ -260,7 +268,7 @@ const LandingPages = () => {
         <Typography
           variant="h5"
           sx={{
-            color: newPage.buttonTextColor,
+            color: newPage.titleColor,
             textAlign: 'center',
             marginBottom: 2
           }}
@@ -417,79 +425,102 @@ const LandingPages = () => {
                   />
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <Button
-                    variant="outlined"
-                    component="label"
-                    startIcon={<ImageIcon />}
-                    fullWidth
-                  >
-                    Upload Logo
-                    <input
-                      type="file"
-                      hidden
-                      accept="image/*"
-                      onChange={(e) => handleFileChange(e, 'logo')}
-                    />
-                  </Button>
-                  {newPage.logo && (
-                    <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-                      Valgt fil: {newPage.logo.name}
+                  <Box>
+                    <Button
+                      variant="outlined"
+                      component="label"
+                      startIcon={<ImageIcon />}
+                      fullWidth
+                    >
+                      Upload Logo
+                      <input
+                        type="file"
+                        hidden
+                        accept="image/*"
+                        onChange={(e) => handleFileChange(e, 'logo')}
+                      />
+                    </Button>
+                    <Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: 'block' }}>
+                      Anbefalet størrelse: 500x500 pixels. Maksimal filstørrelse: 5MB
                     </Typography>
-                  )}
+                    {newPage.logo && (
+                      <Typography variant="caption" display="block" sx={{ mt: 1 }}>
+                        Valgt fil: {newPage.logo.name}
+                      </Typography>
+                    )}
+                  </Box>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <Button
-                    variant="outlined"
-                    component="label"
-                    startIcon={<ImageIcon />}
-                    fullWidth
-                  >
-                    Upload Baggrundsbillede
-                    <input
-                      type="file"
-                      hidden
-                      accept="image/*"
-                      onChange={(e) => handleFileChange(e, 'backgroundImage')}
-                    />
-                  </Button>
-                  {newPage.backgroundImage && (
-                    <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-                      Valgt fil: {newPage.backgroundImage.name}
+                  <Box>
+                    <Button
+                      variant="outlined"
+                      component="label"
+                      startIcon={<ImageIcon />}
+                      fullWidth
+                    >
+                      Upload Baggrundsbillede
+                      <input
+                        type="file"
+                        hidden
+                        accept="image/*"
+                        onChange={(e) => handleFileChange(e, 'backgroundImage')}
+                      />
+                    </Button>
+                    <Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: 'block' }}>
+                      Anbefalet størrelse: 1080x1920 pixels (9:16 format). For bedste visning på mobil. Maksimal filstørrelse: 5MB
                     </Typography>
-                  )}
+                    {newPage.backgroundImage && (
+                      <Typography variant="caption" display="block" sx={{ mt: 1 }}>
+                        Valgt fil: {newPage.backgroundImage.name}
+                      </Typography>
+                    )}
+                  </Box>
                 </Grid>
-                <Grid item xs={12} sm={4}>
-                  <FormControl fullWidth>
-                    <InputLabel shrink>Baggrundsfarve</InputLabel>
-                    <input
-                      type="color"
-                      value={newPage.backgroundColor}
-                      onChange={(e) => setNewPage({ ...newPage, backgroundColor: e.target.value })}
-                      style={{ width: '100%', height: '56px', marginTop: '16px' }}
-                    />
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                  <FormControl fullWidth>
-                    <InputLabel shrink>Knapfarve</InputLabel>
-                    <input
-                      type="color"
-                      value={newPage.buttonColor}
-                      onChange={(e) => setNewPage({ ...newPage, buttonColor: e.target.value })}
-                      style={{ width: '100%', height: '56px', marginTop: '16px' }}
-                    />
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                  <FormControl fullWidth>
-                    <InputLabel shrink>Knap tekstfarve</InputLabel>
-                    <input
-                      type="color"
-                      value={newPage.buttonTextColor}
-                      onChange={(e) => setNewPage({ ...newPage, buttonTextColor: e.target.value })}
-                      style={{ width: '100%', height: '56px', marginTop: '16px' }}
-                    />
-                  </FormControl>
+                <Grid container spacing={3}>
+                  <Grid item xs={12} sm={3}>
+                    <FormControl fullWidth>
+                      <InputLabel shrink>Baggrundsfarve</InputLabel>
+                      <input
+                        type="color"
+                        value={newPage.backgroundColor}
+                        onChange={(e) => setNewPage({ ...newPage, backgroundColor: e.target.value })}
+                        style={{ width: '100%', height: '56px', marginTop: '16px' }}
+                      />
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={12} sm={3}>
+                    <FormControl fullWidth>
+                      <InputLabel shrink>Knapfarve</InputLabel>
+                      <input
+                        type="color"
+                        value={newPage.buttonColor}
+                        onChange={(e) => setNewPage({ ...newPage, buttonColor: e.target.value })}
+                        style={{ width: '100%', height: '56px', marginTop: '16px' }}
+                      />
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={12} sm={3}>
+                    <FormControl fullWidth>
+                      <InputLabel shrink>Knap tekstfarve</InputLabel>
+                      <input
+                        type="color"
+                        value={newPage.buttonTextColor}
+                        onChange={(e) => setNewPage({ ...newPage, buttonTextColor: e.target.value })}
+                        style={{ width: '100%', height: '56px', marginTop: '16px' }}
+                      />
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={12} sm={3}>
+                    <FormControl fullWidth>
+                      <InputLabel shrink>Titel farve</InputLabel>
+                      <input
+                        type="color"
+                        value={newPage.titleColor}
+                        onChange={(e) => setNewPage({ ...newPage, titleColor: e.target.value })}
+                        style={{ width: '100%', height: '56px', marginTop: '16px' }}
+                      />
+                    </FormControl>
+                  </Grid>
                 </Grid>
 
                 {/* Links sektion */}
@@ -617,13 +648,26 @@ const LandingPages = () => {
                 sx={{
                   height: '700px',
                   overflow: 'hidden',
-                  position: 'relative'
+                  position: 'relative',
+                  '@media (max-width: 600px)': {
+                    height: '600px'
+                  }
                 }}
               >
                 <Typography variant="h6" gutterBottom sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-                  Live Preview
+                  Live Preview (Mobil format)
                 </Typography>
-                <Box sx={{ height: 'calc(100% - 48px)', overflow: 'auto' }}>
+                <Box 
+                  sx={{ 
+                    height: 'calc(100% - 48px)', 
+                    overflow: 'auto',
+                    maxWidth: '375px',  // Standard mobil bredde
+                    margin: '0 auto',   // Centrer preview
+                    border: '1px solid rgba(0, 0, 0, 0.12)', // Tilføj en ramme
+                    borderRadius: '8px', // Afrundede hjørner
+                    backgroundColor: '#f5f5f5' // Lysegrå baggrund omkring preview
+                  }}
+                >
                   <LivePreview />
                 </Box>
               </Paper>
