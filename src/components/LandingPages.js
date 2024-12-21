@@ -105,27 +105,22 @@ const LandingPages = () => {
   const handleCreatePage = async () => {
     try {
       const formData = new FormData();
-      
-      console.log('Sender data:', newPage);
-      
-      Object.keys(newPage).forEach(key => {
-        if (key === 'logo' || key === 'backgroundImage') {
-          if (newPage[key]) {
-            console.log(`Tilføjer ${key} fil:`, newPage[key].name);
-            formData.append(key, newPage[key]);
-          }
-        } else if (key === 'buttons' || key === 'socialLinks') {
-          const jsonValue = JSON.stringify(newPage[key]);
-          console.log(`Tilføjer ${key}:`, jsonValue);
-          formData.append(key, jsonValue);
-        } else {
-          console.log(`Tilføjer ${key}:`, newPage[key]);
-          formData.append(key, newPage[key]);
-        }
-      });
+      formData.append('title', newPage.title);
+      formData.append('description', newPage.description);
+      formData.append('backgroundColor', newPage.backgroundColor);
+      formData.append('buttonColor', newPage.buttonColor);
+      formData.append('buttonTextColor', newPage.buttonTextColor);
+      formData.append('titleColor', newPage.titleColor);
+      formData.append('descriptionColor', newPage.descriptionColor);
+      formData.append('showTitle', newPage.showTitle);
+      formData.append('buttons', JSON.stringify(newPage.buttons));
+      formData.append('socialLinks', JSON.stringify(newPage.socialLinks));
 
-      for (let pair of formData.entries()) {
-        console.log('FormData indhold:', pair[0], pair[1]);
+      if (newPage.logo) {
+        formData.append('logo', newPage.logo);
+      }
+      if (newPage.backgroundImage) {
+        formData.append('backgroundImage', newPage.backgroundImage);
       }
 
       const response = await fetch(`${API_URL}/landing-pages`, {
@@ -134,29 +129,23 @@ const LandingPages = () => {
         body: formData
       });
 
-      const responseData = await response.json();
-      console.log('Server response:', responseData);
-
-      if (!response.ok) {
-        throw new Error(responseData.message || 'Fejl ved oprettelse af landing page');
+      if (response.ok) {
+        setAlert({
+          open: true,
+          message: 'Landing page oprettet',
+          severity: 'success'
+        });
+        setOpenDialog(false);
+        resetNewPage();
+        fetchPages();
+      } else {
+        throw new Error('Fejl ved oprettelse af landing page');
       }
-
-      setAlert({
-        open: true,
-        message: 'Landing page oprettet succesfuldt',
-        severity: 'success'
-      });
-      setOpenDialog(false);
-      resetNewPage();
-      fetchPages();
     } catch (error) {
-      console.error('Detaljeret fejl ved oprettelse af landing page:', {
-        error: error.message,
-        stack: error.stack
-      });
+      console.error('Fejl ved oprettelse af landing page:', error);
       setAlert({
         open: true,
-        message: `Der opstod en fejl: ${error.message}`,
+        message: 'Der opstod en fejl ved oprettelse af landing page',
         severity: 'error'
       });
     }
@@ -224,7 +213,7 @@ const LandingPages = () => {
       ...prev,
       socialLinks: {
         ...prev.socialLinks,
-        [platform]: value
+        [platform]: value.trim()
       }
     }));
   };
@@ -269,11 +258,11 @@ const LandingPages = () => {
       descriptionColor: page.descriptionColor || '#000000',
       buttons: page.buttons || [],
       showTitle: page.showTitle ?? true,
-      socialLinks: page.socialLinks || {
-        instagram: '',
-        facebook: '',
-        youtube: '',
-        twitter: ''
+      socialLinks: {
+        instagram: page.socialLinks?.instagram || '',
+        facebook: page.socialLinks?.facebook || '',
+        youtube: page.socialLinks?.youtube || '',
+        twitter: page.socialLinks?.twitter || ''
       }
     });
     setOpenDialog(true);
@@ -282,27 +271,22 @@ const LandingPages = () => {
   const handleUpdate = async () => {
     try {
       const formData = new FormData();
-      
-      console.log('Sender opdateringsdata:', newPage);
-      
-      Object.keys(newPage).forEach(key => {
-        if (key === 'logo' || key === 'backgroundImage') {
-          if (newPage[key]) {
-            console.log(`Tilføjer ${key} fil:`, newPage[key].name);
-            formData.append(key, newPage[key]);
-          }
-        } else if (key === 'buttons' || key === 'socialLinks') {
-          const jsonValue = JSON.stringify(newPage[key]);
-          console.log(`Tilføjer ${key}:`, jsonValue);
-          formData.append(key, jsonValue);
-        } else {
-          console.log(`Tilføjer ${key}:`, newPage[key]);
-          formData.append(key, newPage[key]);
-        }
-      });
+      formData.append('title', newPage.title);
+      formData.append('description', newPage.description);
+      formData.append('backgroundColor', newPage.backgroundColor);
+      formData.append('buttonColor', newPage.buttonColor);
+      formData.append('buttonTextColor', newPage.buttonTextColor);
+      formData.append('titleColor', newPage.titleColor);
+      formData.append('descriptionColor', newPage.descriptionColor);
+      formData.append('showTitle', newPage.showTitle);
+      formData.append('buttons', JSON.stringify(newPage.buttons));
+      formData.append('socialLinks', JSON.stringify(newPage.socialLinks));
 
-      for (let pair of formData.entries()) {
-        console.log('FormData indhold:', pair[0], pair[1]);
+      if (newPage.logo instanceof File) {
+        formData.append('logo', newPage.logo);
+      }
+      if (newPage.backgroundImage instanceof File) {
+        formData.append('backgroundImage', newPage.backgroundImage);
       }
 
       const response = await fetch(`${API_URL}/landing-pages/${selectedPage._id}`, {
@@ -311,29 +295,24 @@ const LandingPages = () => {
         body: formData
       });
 
-      const responseData = await response.json();
-      console.log('Server response:', responseData);
-
-      if (!response.ok) {
-        throw new Error(responseData.message || 'Fejl ved opdatering af landing page');
+      if (response.ok) {
+        setAlert({
+          open: true,
+          message: 'Landing page opdateret',
+          severity: 'success'
+        });
+        setOpenDialog(false);
+        resetNewPage();
+        setSelectedPage(null);
+        fetchPages();
+      } else {
+        throw new Error('Fejl ved opdatering af landing page');
       }
-
-      setAlert({
-        open: true,
-        message: 'Landing page opdateret succesfuldt',
-        severity: 'success'
-      });
-      setOpenDialog(false);
-      resetNewPage();
-      fetchPages();
     } catch (error) {
-      console.error('Detaljeret fejl ved opdatering af landing page:', {
-        error: error.message,
-        stack: error.stack
-      });
+      console.error('Fejl ved opdatering af landing page:', error);
       setAlert({
         open: true,
-        message: `Der opstod en fejl: ${error.message}`,
+        message: 'Der opstod en fejl ved opdatering af landing page',
         severity: 'error'
       });
     }
@@ -354,6 +333,9 @@ const LandingPages = () => {
       if (typeof image === 'string') return image;
       return URL.createObjectURL(image);
     };
+
+    const socialLinks = newPage.socialLinks || selectedPage?.socialLinks || {};
+    const activeSocialLinks = Object.entries(socialLinks).filter(([_, url]) => url && url.trim() !== '');
 
     return (
       <Box
@@ -435,27 +417,39 @@ const LandingPages = () => {
           ))}
         </Stack>
 
-        <Box sx={{ mt: 'auto', pt: 3 }}>
-          <Stack direction="row" spacing={2} justifyContent="center">
-            {Object.entries(newPage.socialLinks || selectedPage?.socialLinks || {}).map(([platform, url]) => {
-              if (!url) return null;
-              const Icon = {
-                instagram: InstagramIcon,
-                facebook: FacebookIcon,
-                youtube: YouTubeIcon,
-                twitter: TwitterIcon
-              }[platform];
-              return Icon ? (
-                <IconButton
-                  key={platform}
-                  sx={{ color: newPage.buttonColor }}
-                >
-                  <Icon />
-                </IconButton>
-              ) : null;
-            })}
-          </Stack>
-        </Box>
+        {activeSocialLinks.length > 0 && (
+          <Box sx={{ mt: 'auto', pt: 3 }}>
+            <Stack direction="row" spacing={2} justifyContent="center">
+              {activeSocialLinks.map(([platform, url]) => {
+                const Icon = {
+                  instagram: InstagramIcon,
+                  facebook: FacebookIcon,
+                  youtube: YouTubeIcon,
+                  twitter: TwitterIcon
+                }[platform];
+                
+                return Icon && (
+                  <IconButton
+                    key={platform}
+                    component="a"
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    sx={{ 
+                      color: newPage.buttonColor,
+                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                      '&:hover': {
+                        backgroundColor: 'rgba(255, 255, 255, 1)'
+                      }
+                    }}
+                  >
+                    <Icon />
+                  </IconButton>
+                );
+              })}
+            </Stack>
+          </Box>
+        )}
       </Box>
     );
   };
@@ -900,7 +894,7 @@ const LandingPages = () => {
               <Paper
                 elevation={3}
                 sx={{
-                  height: '800px',
+                  height: '850px',
                   overflow: 'hidden',
                   position: 'relative',
                   '@media (max-width: 600px)': {
