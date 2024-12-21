@@ -16,13 +16,17 @@ import {
   Select,
   MenuItem,
   FormControl,
-  InputLabel
+  InputLabel,
+  Button,
+  IconButton,
+  Tooltip
 } from '@mui/material';
 import { BarChart } from '@mui/x-charts';
 import { LineChart } from '@mui/x-charts';
 import { useTheme } from '../context/ThemeContext';
 import Layout from './Layout';
 import API_URL from '../config';
+import RefreshIcon from '@mui/icons-material/Refresh';
 
 const PRODUCT_TYPES = {
   STANDER: { value: 'stander', label: 'Stander' },
@@ -36,14 +40,20 @@ const Statistics = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTimeRange, setSelectedTimeRange] = useState('week');
   const [selectedProductType, setSelectedProductType] = useState('all');
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const { mode } = useTheme();
 
   useEffect(() => {
     fetchStands();
   }, []);
 
-  const fetchStands = async () => {
+  const fetchStands = async (forceRefresh = false) => {
+    if (!forceRefresh && stands.length > 0) {
+      return; // Brug cached data hvis det findes og vi ikke tvinger refresh
+    }
+
     try {
+      setIsRefreshing(true);
       const response = await fetch(`${API_URL}/stands`, {
         credentials: 'include'
       });
@@ -57,6 +67,7 @@ const Statistics = () => {
       console.error('Fejl ved hentning af produkter:', error);
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
   };
 
@@ -72,27 +83,30 @@ const Statistics = () => {
       ? stands 
       : stands.filter(stand => stand.productType === selectedProductType);
 
-    const data = Array(days).fill(0);
-    const labels = Array(days).fill('');
-
-    filteredStands.forEach(stand => {
-      (stand.clickHistory || []).forEach(click => {
-        const clickDate = new Date(click.timestamp);
-        const diffDays = Math.floor((now - clickDate) / (1000 * 60 * 60 * 24));
-        if (diffDays < days) {
-          data[days - diffDays - 1]++;
-        }
-      });
+    // Opret array med datoer
+    const dates = [...Array(days)].map((_, i) => {
+      const d = new Date(now);
+      d.setDate(d.getDate() - (days - i - 1));
+      return d.toISOString().split('T')[0];
     });
 
-    for (let i = 0; i < days; i++) {
-      const date = new Date(now);
-      date.setDate(date.getDate() - (days - i - 1));
-      labels[i] = date.toLocaleDateString('da-DK', { 
+    // Beregn klik for hver dato
+    const data = dates.map(date => {
+      return filteredStands.reduce((total, stand) => {
+        return total + (stand.clickHistory || []).filter(click => 
+          click.timestamp.split('T')[0] === date
+        ).length;
+      }, 0);
+    });
+
+    // Formater labels
+    const labels = dates.map(date => {
+      const d = new Date(date);
+      return d.toLocaleDateString('da-DK', { 
         month: 'short', 
         day: 'numeric'
       });
-    }
+    });
 
     return { data, labels };
   };
@@ -142,9 +156,9 @@ const Statistics = () => {
   return (
     <Layout title="Statistik">
       <Grid container spacing={3}>
-        {/* Filtre */}
+        {/* Filtre og Refresh knap */}
         <Grid item xs={12}>
-          <Paper sx={{ p: 2, display: 'flex', gap: 2 }}>
+          <Paper sx={{ p: 2, display: 'flex', gap: 2, alignItems: 'center' }}>
             <FormControl sx={{ minWidth: 200 }}>
               <InputLabel>Tidsperiode</InputLabel>
               <Select
@@ -172,6 +186,15 @@ const Statistics = () => {
                 ))}
               </Select>
             </FormControl>
+            <Tooltip title="Opdater data">
+              <IconButton 
+                onClick={() => fetchStands(true)}
+                disabled={isRefreshing}
+                sx={{ ml: 'auto' }}
+              >
+                <RefreshIcon />
+              </IconButton>
+            </Tooltip>
           </Paper>
         </Grid>
 

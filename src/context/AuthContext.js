@@ -4,149 +4,90 @@ import API_URL from '../config';
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
-    const [userData, setUserData] = useState(null);
-    const [error, setError] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-    const fetchUserData = async () => {
-        try {
-            setIsLoading(true);
-            const response = await fetch(`${API_URL}/user/profile`, {
-                credentials: 'include'
-            });
-            
-            const contentType = response.headers.get("content-type");
-            if (!contentType || !contentType.includes("application/json")) {
-                throw new Error('Serveren returnerede ikke JSON data');
-            }
+  const fetchUserData = async () => {
+    try {
+      const response = await fetch(`${API_URL}/auth/user`, {
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        const userData = await response.json();
+        setUser(userData);
+        setIsAuthenticated(true);
+      } else {
+        setIsAuthenticated(false);
+        setUser(null);
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      setIsAuthenticated(false);
+      setUser(null);
+    }
+  };
 
-            if (response.ok) {
-                const data = await response.json();
-                setUserData(data);
-                setError(null);
-            } else {
-                let errorMessage = 'Kunne ikke hente brugerdata';
-                try {
-                    const errorData = await response.json();
-                    errorMessage = errorData.message || errorMessage;
-                } catch (e) {
-                    console.error('Kunne ikke parse fejlbesked:', e);
-                }
-                throw new Error(errorMessage);
-            }
-        } catch (error) {
-            console.error('Fejl ved hentning af brugerdata:', error);
-            setError(error.message);
-            setUserData(null);
-        } finally {
-            setIsLoading(false);
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      try {
+        const response = await fetch(`${API_URL}/auth/status`, {
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          await fetchUserData();
         }
+      } catch (error) {
+        console.error('Auth check error:', error);
+        setIsAuthenticated(false);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    useEffect(() => {
-        let isMounted = true;
+    checkAuthStatus();
+  }, []);
 
-        const checkAuthStatus = async () => {
-            try {
-                const response = await fetch(`${API_URL}/auth/status`, {
-                    credentials: 'include'
-                });
-                
-                const contentType = response.headers.get("content-type");
-                if (!contentType || !contentType.includes("application/json")) {
-                    throw new Error('Serveren returnerede ikke JSON data');
-                }
+  const logout = async () => {
+    try {
+      await fetch(`${API_URL}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+      setIsAuthenticated(false);
+      setUser(null);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
-                const data = await response.json();
-                
-                if (isMounted) {
-                    setIsAuthenticated(data.isAuthenticated);
-                }
-            } catch (error) {
-                console.error('Auth check failed:', error);
-                if (isMounted) {
-                    setIsAuthenticated(false);
-                    setError('Kunne ikke verificere login status');
-                }
-            }
-        };
+  if (loading) {
+    return null;
+  }
 
-        checkAuthStatus();
-
-        return () => {
-            isMounted = false;
-        };
-    }, []);
-
-    useEffect(() => {
-        let isMounted = true;
-
-        const loadUserData = async () => {
-            if (isAuthenticated) {
-                try {
-                    await fetchUserData();
-                } catch (error) {
-                    if (isMounted) {
-                        console.error('Fejl ved indlæsning af brugerdata:', error);
-                    }
-                }
-            } else {
-                setUserData(null);
-            }
-            if (isMounted) {
-                setIsLoading(false);
-            }
-        };
-
-        loadUserData();
-
-        return () => {
-            isMounted = false;
-        };
-    }, [isAuthenticated]);
-
-    const logout = async () => {
-        try {
-            const response = await fetch(`${API_URL}/auth/logout`, {
-                method: 'POST',
-                credentials: 'include'
-            });
-            
-            if (response.ok) {
-                setIsAuthenticated(false);
-                setUserData(null);
-            } else {
-                throw new Error('Kunne ikke logge ud');
-            }
-        } catch (error) {
-            console.error('Fejl ved logout:', error);
-            throw error;
-        }
-    };
-
-    const value = {
-        isAuthenticated,
-        setIsAuthenticated,
-        isLoading,
-        userData,
-        setUserData,
-        fetchUserData,
-        error,
-        logout
-    };
-
-    return (
-        <AuthContext.Provider value={value}>
-            {!isLoading && children}
-        </AuthContext.Provider>
-    );
+  return (
+    <AuthContext.Provider value={{
+      isAuthenticated,
+      setIsAuthenticated,
+      user,
+      setUser,
+      logout,
+      fetchUserData
+    }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => {
-    const context = useContext(AuthContext);
-    if (context === null) {
-        throw new Error('useAuth must be used within an AuthProvider');
-    }
-    return context;
-}; 
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
+export default AuthContext; 
