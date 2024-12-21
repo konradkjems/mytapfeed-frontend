@@ -3,63 +3,61 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Login from './components/Login';
 import Register from './components/Register';
 import Dashboard from './components/Dashboard';
+import Home from './components/Home';
 import Profile from './components/Profile';
+import ProtectedRoute from './components/ProtectedRoute';
+import Admin from './components/Admin';
 import Statistics from './components/Statistics';
 import RequestReset from './components/RequestReset';
 import ResetPassword from './components/ResetPassword';
-import LandingPages from './components/LandingPages';
-import LandingPageView from './components/LandingPageView';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
-import PrivateRoute from './components/PrivateRoute';
+import LandingPages from './components/LandingPages';
+import LandingPageView from './components/LandingPageView';
 
 function App() {
   return (
-    <Router>
-      <ThemeProvider>
-        <AuthProvider>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/request-reset" element={<RequestReset />} />
-            <Route path="/reset-password/:token" element={<ResetPassword />} />
-            <Route path="/landing-pages/view/:id" element={<LandingPageView />} />
-            <Route
-              path="/"
-              element={
-                <PrivateRoute>
+    <ThemeProvider>
+      <AuthProvider>
+        <Router>
+          <div className="App">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/reset-password" element={<RequestReset />} />
+              <Route path="/reset-password/:token" element={<ResetPassword />} />
+              <Route path="/dashboard" element={
+                <ProtectedRoute>
                   <Dashboard />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/profile"
-              element={
-                <PrivateRoute>
-                  <Profile />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/statistics"
-              element={
-                <PrivateRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/statistics" element={
+                <ProtectedRoute>
                   <Statistics />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/landing-pages"
-              element={
-                <PrivateRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/profile" element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin" element={
+                <ProtectedRoute>
+                  <Admin />
+                </ProtectedRoute>
+              } />
+              <Route path="/landing-pages" element={
+                <ProtectedRoute>
                   <LandingPages />
-                </PrivateRoute>
-              }
-            />
-          </Routes>
-        </AuthProvider>
-      </ThemeProvider>
-    </Router>
+                </ProtectedRoute>
+              } />
+              <Route path="/landing/:id" element={<LandingPageView />} />
+            </Routes>
+          </div>
+        </Router>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 
