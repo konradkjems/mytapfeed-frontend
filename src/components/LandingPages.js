@@ -349,6 +349,12 @@ const LandingPages = () => {
   };
 
   const LivePreview = () => {
+    const getImageUrl = (image) => {
+      if (!image) return '';
+      if (typeof image === 'string') return image;
+      return URL.createObjectURL(image);
+    };
+
     return (
       <Box
         sx={{
@@ -358,16 +364,17 @@ const LandingPages = () => {
           alignItems: 'center',
           position: 'relative',
           backgroundColor: newPage.backgroundColor,
-          backgroundImage: newPage.backgroundImage ? `url(${URL.createObjectURL(newPage.backgroundImage)})` : 'none',
+          backgroundImage: newPage.backgroundImage ? `url(${getImageUrl(newPage.backgroundImage)})` : 
+                         selectedPage?.backgroundImage ? `url(${selectedPage.backgroundImage})` : 'none',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           padding: '20px'
         }}
       >
-        {newPage.logo && (
+        {(newPage.logo || selectedPage?.logo) && (
           <Box
             component="img"
-            src={URL.createObjectURL(newPage.logo)}
+            src={newPage.logo ? getImageUrl(newPage.logo) : selectedPage?.logo}
             alt="Logo"
             sx={{
               width: 'auto',
@@ -390,11 +397,11 @@ const LandingPages = () => {
               wordBreak: 'break-word'
             }}
           >
-            {newPage.title}
+            {newPage.title || selectedPage?.title || ''}
           </Typography>
         )}
 
-        {newPage.description && (
+        {(newPage.description || selectedPage?.description) && (
           <Typography 
             variant="body1" 
             align="center"
@@ -404,12 +411,12 @@ const LandingPages = () => {
               wordBreak: 'break-word'
             }}
           >
-            {newPage.description}
+            {newPage.description || selectedPage?.description || ''}
           </Typography>
         )}
 
         <Stack spacing={2} sx={{ width: '100%', maxWidth: '300px' }}>
-          {newPage.buttons.map((button, index) => (
+          {(newPage.buttons || selectedPage?.buttons || []).map((button, index) => (
             <Button
               key={index}
               variant="contained"
@@ -430,7 +437,7 @@ const LandingPages = () => {
 
         <Box sx={{ mt: 'auto', pt: 3 }}>
           <Stack direction="row" spacing={2} justifyContent="center">
-            {Object.entries(newPage.socialLinks).map(([platform, url]) => {
+            {Object.entries(newPage.socialLinks || selectedPage?.socialLinks || {}).map(([platform, url]) => {
               if (!url) return null;
               const Icon = {
                 instagram: InstagramIcon,
@@ -893,11 +900,11 @@ const LandingPages = () => {
               <Paper
                 elevation={3}
                 sx={{
-                  height: '700px',
+                  height: '800px',
                   overflow: 'hidden',
                   position: 'relative',
                   '@media (max-width: 600px)': {
-                    height: '600px'
+                    height: '700px'
                   }
                 }}
               >
@@ -911,7 +918,8 @@ const LandingPages = () => {
                     justifyContent: 'center',
                     alignItems: 'center',
                     position: 'relative',
-                    p: 2
+                    p: 4,
+                    mt: 2
                   }}
                 >
                   <Box
@@ -922,20 +930,10 @@ const LandingPages = () => {
                       overflow: 'hidden',
                       borderRadius: '40px',
                       boxShadow: '0 0 20px rgba(0,0,0,0.3)',
-                      '&::before': {
-                        content: '""',
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        backgroundImage: `url(${iPhoneBezel})`,
-                        backgroundSize: 'contain',
-                        backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'center',
-                        pointerEvents: 'none',
-                        zIndex: 2
-                      }
+                      backgroundImage: `url(${iPhoneBezel})`,
+                      backgroundSize: 'contain',
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'center',
                     }}
                   >
                     <Box 
@@ -947,7 +945,12 @@ const LandingPages = () => {
                         bottom: '12px',
                         overflow: 'auto',
                         borderRadius: '30px',
-                        zIndex: 1
+                        backgroundColor: '#fff',
+                        '&::-webkit-scrollbar': {
+                          display: 'none'
+                        },
+                        scrollbarWidth: 'none',
+                        msOverflowStyle: 'none'
                       }}
                     >
                       <LivePreview />
