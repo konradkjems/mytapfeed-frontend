@@ -3,10 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Login from './components/Login';
 import Register from './components/Register';
 import Dashboard from './components/Dashboard';
-import Products from './components/Products';
 import Profile from './components/Profile';
-import ProtectedRoute from './components/ProtectedRoute';
-import Admin from './components/Admin';
 import Statistics from './components/Statistics';
 import RequestReset from './components/RequestReset';
 import ResetPassword from './components/ResetPassword';
@@ -32,14 +29,6 @@ function App() {
               element={
                 <PrivateRoute>
                   <Dashboard />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/products"
-              element={
-                <PrivateRoute>
-                  <Products />
                 </PrivateRoute>
               }
             />
