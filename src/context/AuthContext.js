@@ -10,7 +10,7 @@ export const AuthProvider = ({ children }) => {
 
   const fetchUserData = async () => {
     try {
-      const response = await fetch(`${API_URL}/auth/user`, {
+      const response = await fetch(`${API_URL}/api/auth/user`, {
         credentials: 'include'
       });
       
@@ -32,7 +32,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        const response = await fetch(`${API_URL}/auth/status`, {
+        const response = await fetch(`${API_URL}/api/auth/status`, {
           credentials: 'include'
         });
         
@@ -53,7 +53,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await fetch(`${API_URL}/auth/logout`, {
+      await fetch(`${API_URL}/api/auth/logout`, {
         method: 'POST',
         credentials: 'include'
       });
