@@ -772,13 +772,14 @@ const Dashboard = () => {
 
   return (
     <Layout title="Dashboard">
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3, mb: 2 }}>
         <Button
-          startIcon={<RefreshIcon />}
+          variant="contained"
           onClick={handleRefreshData}
-          variant="outlined"
+          disabled={isLoading}
+          startIcon={<RefreshIcon />}
         >
-          Opdater data
+          {isLoading ? 'Opdaterer...' : 'Opdater data'}
         </Button>
       </Box>
       <Grid container spacing={3}>

@@ -38,7 +38,8 @@ const RequestReset = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch(`${API_URL}/api/request-reset`, {
+      console.log('Sender anmodning til:', `${API_URL}/api/request-password-reset`);
+      const response = await fetch(`${API_URL}/api/request-password-reset`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -46,8 +47,10 @@ const RequestReset = () => {
         credentials: 'include',
         body: JSON.stringify({ email }),
       });
+      console.log('Response status:', response.status);
 
       const data = await response.json();
+      console.log('Response data:', data);
 
       if (response.ok) {
         setSuccess(true);

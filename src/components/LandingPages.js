@@ -355,7 +355,7 @@ const LandingPages = () => {
 
   const handlePreview = (id) => {
     const baseUrl = process.env.NODE_ENV === 'production' 
-      ? 'https://tapfeed.dk'
+      ? 'https://my.tapfeed.dk'
       : 'http://localhost:3001';
     window.open(`${baseUrl}/landing/${id}`, '_blank');
   };
@@ -492,24 +492,18 @@ const LandingPages = () => {
 
   return (
     <Layout title="Landing Pages">
+      <Box sx={{ mt: 3, mb: 3 }}>
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<AddIcon />}
+          onClick={() => setOpenDialog(true)}
+        >
+          Opret ny landing page
+        </Button>
+      </Box>
       <Box sx={{ mb: 4 }}>
         <Grid container spacing={3}>
-          <Grid item xs={12}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-              <Typography variant="h4" component="h1">
-                Landing Pages
-              </Typography>
-              <Button
-                variant="contained"
-                color="primary"
-                startIcon={<AddIcon />}
-                onClick={() => setOpenDialog(true)}
-              >
-                Opret ny landing page
-              </Button>
-            </Box>
-          </Grid>
-
           {isLoading ? (
             <Grid item xs={12}>
               <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
