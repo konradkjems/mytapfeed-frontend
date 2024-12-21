@@ -61,7 +61,7 @@ const LandingPages = () => {
     backgroundImage: null,
     backgroundColor: '#ffffff',
     buttonColor: '#000000',
-    buttonTextColor: '#000000',
+    buttonTextColor: '#ffffff',
     titleColor: '#000000',
     descriptionColor: '#000000',
     buttons: [],
@@ -159,7 +159,7 @@ const LandingPages = () => {
       backgroundImage: null,
       backgroundColor: '#ffffff',
       buttonColor: '#000000',
-      buttonTextColor: '#000000',
+      buttonTextColor: '#ffffff',
       titleColor: '#000000',
       descriptionColor: '#000000',
       buttons: [],
@@ -253,7 +253,7 @@ const LandingPages = () => {
       backgroundImage: null,
       backgroundColor: page.backgroundColor || '#ffffff',
       buttonColor: page.buttonColor || '#000000',
-      buttonTextColor: page.buttonTextColor || '#000000',
+      buttonTextColor: page.buttonTextColor || '#ffffff',
       titleColor: page.titleColor || '#000000',
       descriptionColor: page.descriptionColor || '#000000',
       buttons: page.buttons || [],
@@ -324,7 +324,7 @@ const LandingPages = () => {
   };
 
   const handlePreview = (id) => {
-    window.open(`/landing/${id}`, '_blank');
+    window.open(`/landing-pages/view/${id}`, '_blank');
   };
 
   const LivePreview = () => {

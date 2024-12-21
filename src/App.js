@@ -3,61 +3,74 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Login from './components/Login';
 import Register from './components/Register';
 import Dashboard from './components/Dashboard';
-import Home from './components/Home';
+import Products from './components/Products';
 import Profile from './components/Profile';
 import ProtectedRoute from './components/ProtectedRoute';
 import Admin from './components/Admin';
 import Statistics from './components/Statistics';
 import RequestReset from './components/RequestReset';
 import ResetPassword from './components/ResetPassword';
-import { AuthProvider } from './context/AuthContext';
-import { ThemeProvider } from './context/ThemeContext';
 import LandingPages from './components/LandingPages';
 import LandingPageView from './components/LandingPageView';
+import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
+import PrivateRoute from './components/PrivateRoute';
 
 function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <Router>
-          <div className="App">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/reset-password" element={<RequestReset />} />
-              <Route path="/reset-password/:token" element={<ResetPassword />} />
-              <Route path="/dashboard" element={
-                <ProtectedRoute>
+    <Router>
+      <ThemeProvider>
+        <AuthProvider>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/request-reset" element={<RequestReset />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
+            <Route path="/landing-pages/view/:id" element={<LandingPageView />} />
+            <Route
+              path="/"
+              element={
+                <PrivateRoute>
                   <Dashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/statistics" element={
-                <ProtectedRoute>
-                  <Statistics />
-                </ProtectedRoute>
-              } />
-              <Route path="/profile" element={
-                <ProtectedRoute>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/products"
+              element={
+                <PrivateRoute>
+                  <Products />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <PrivateRoute>
                   <Profile />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin" element={
-                <ProtectedRoute>
-                  <Admin />
-                </ProtectedRoute>
-              } />
-              <Route path="/landing-pages" element={
-                <ProtectedRoute>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/statistics"
+              element={
+                <PrivateRoute>
+                  <Statistics />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/landing-pages"
+              element={
+                <PrivateRoute>
                   <LandingPages />
-                </ProtectedRoute>
-              } />
-              <Route path="/landing/:id" element={<LandingPageView />} />
-            </Routes>
-          </div>
-        </Router>
-      </AuthProvider>
-    </ThemeProvider>
+                </PrivateRoute>
+              }
+            />
+          </Routes>
+        </AuthProvider>
+      </ThemeProvider>
+    </Router>
   );
 }
 

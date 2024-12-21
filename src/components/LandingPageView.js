@@ -5,8 +5,8 @@ import {
   Typography,
   Button,
   IconButton,
-  CircularProgress,
-  Stack
+  Stack,
+  CircularProgress
 } from '@mui/material';
 import {
   Instagram as InstagramIcon,
@@ -19,97 +19,73 @@ import API_URL from '../config';
 const LandingPageView = () => {
   const { id } = useParams();
   const [page, setPage] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchPage = async () => {
       try {
-        console.log('Henter landing page med ID:', id);
-        const response = await fetch(`${API_URL}/landing-pages/${id}`);
-        
+        setIsLoading(true);
+        const response = await fetch(`${API_URL}/landing-pages/view/${id}`);
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          throw new Error('Landing page ikke fundet');
         }
-        
         const data = await response.json();
-        console.log('Modtaget data:', data);
-        
-        if (!data) {
-          throw new Error('Ingen data modtaget fra serveren');
-        }
-        
         setPage(data);
-      } catch (err) {
-        console.error('Detaljeret fejl ved hentning af landing page:', {
-          error: err.message,
-          stack: err.stack
-        });
-        setError(`Fejl ved hentning af landing page: ${err.message}`);
+      } catch (error) {
+        console.error('Fejl ved hentning af landing page:', error);
+        setError(error.message);
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
-    if (id) {
-      fetchPage();
-    }
+    fetchPage();
   }, [id]);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <Box sx={{ 
         display: 'flex', 
-        flexDirection: 'column',
         justifyContent: 'center', 
         alignItems: 'center', 
-        minHeight: '100vh',
-        bgcolor: '#fff',
-        gap: 2,
-        p: 3
+        minHeight: '100vh' 
       }}>
         <CircularProgress />
-        <Typography>Indlæser landing page...</Typography>
       </Box>
     );
   }
 
-  if (error) {
+  if (error || !page) {
     return (
       <Box sx={{ 
         display: 'flex', 
-        flexDirection: 'column',
         justifyContent: 'center', 
         alignItems: 'center', 
-        minHeight: '100vh',
-        bgcolor: '#fff',
-        gap: 2,
-        p: 3
+        minHeight: '100vh' 
       }}>
-        <Typography color="error" align="center">
-          {error}
+        <Typography color="error">
+          {error || 'Landing page ikke fundet'}
         </Typography>
       </Box>
     );
   }
 
-  if (!page) {
-    return null;
-  }
+  const activeSocialLinks = Object.entries(page.socialLinks || {})
+    .filter(([_, url]) => url && url.trim() !== '');
 
   return (
     <Box
       sx={{
         minHeight: '100vh',
-        backgroundColor: page.backgroundColor || '#ffffff',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        backgroundColor: page.backgroundColor,
         backgroundImage: page.backgroundImage ? `url(${page.backgroundImage})` : 'none',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        padding: 3,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center'
+        padding: '20px'
       }}
     >
       {page.logo && (
@@ -119,21 +95,23 @@ const LandingPageView = () => {
           alt="Logo"
           sx={{
             width: 'auto',
-            maxWidth: '150px',
+            maxWidth: '200px',
             height: 'auto',
-            maxHeight: '150px',
-            marginBottom: 2
+            maxHeight: '100px',
+            mb: 2
           }}
         />
       )}
-
+      
       {page.showTitle && (
-        <Typography
-          variant="h4"
-          sx={{
-            color: page.titleColor || '#000000',
-            textAlign: 'center',
-            marginBottom: 3
+        <Typography 
+          variant="h4" 
+          component="h1" 
+          align="center"
+          sx={{ 
+            mb: 2,
+            color: page.titleColor,
+            wordBreak: 'break-word'
           }}
         >
           {page.title}
@@ -141,13 +119,13 @@ const LandingPageView = () => {
       )}
 
       {page.description && (
-        <Typography
-          variant="body1"
-          sx={{
-            color: page.descriptionColor || '#000000',
-            textAlign: 'center',
-            marginBottom: 4,
-            maxWidth: '600px'
+        <Typography 
+          variant="body1" 
+          align="center"
+          sx={{ 
+            mb: 3,
+            color: page.descriptionColor,
+            wordBreak: 'break-word'
           }}
         >
           {page.description}
@@ -155,18 +133,19 @@ const LandingPageView = () => {
       )}
 
       <Stack spacing={2} sx={{ width: '100%', maxWidth: '300px' }}>
-        {page.buttons?.map((button, index) => (
+        {(page.buttons || []).map((button, index) => (
           <Button
             key={index}
             variant="contained"
+            fullWidth
             href={button.url}
             target="_blank"
             rel="noopener noreferrer"
             sx={{
-              backgroundColor: page.buttonColor || '#000000',
-              color: page.buttonTextColor || '#ffffff',
+              backgroundColor: page.buttonColor,
+              color: page.buttonTextColor,
               '&:hover': {
-                backgroundColor: page.buttonColor || '#000000',
+                backgroundColor: page.buttonColor,
                 opacity: 0.9
               }
             }}
@@ -176,48 +155,39 @@ const LandingPageView = () => {
         ))}
       </Stack>
 
-      <Box sx={{ marginTop: 'auto', display: 'flex', gap: 2, padding: 2 }}>
-        {page.socialLinks?.instagram && (
-          <IconButton
-            href={page.socialLinks.instagram}
-            target="_blank"
-            rel="noopener noreferrer"
-            sx={{ color: page.buttonColor || '#000000' }}
-          >
-            <InstagramIcon />
-          </IconButton>
-        )}
-        {page.socialLinks?.facebook && (
-          <IconButton
-            href={page.socialLinks.facebook}
-            target="_blank"
-            rel="noopener noreferrer"
-            sx={{ color: page.buttonColor || '#000000' }}
-          >
-            <FacebookIcon />
-          </IconButton>
-        )}
-        {page.socialLinks?.youtube && (
-          <IconButton
-            href={page.socialLinks.youtube}
-            target="_blank"
-            rel="noopener noreferrer"
-            sx={{ color: page.buttonColor || '#000000' }}
-          >
-            <YouTubeIcon />
-          </IconButton>
-        )}
-        {page.socialLinks?.twitter && (
-          <IconButton
-            href={page.socialLinks.twitter}
-            target="_blank"
-            rel="noopener noreferrer"
-            sx={{ color: page.buttonColor || '#000000' }}
-          >
-            <TwitterIcon />
-          </IconButton>
-        )}
-      </Box>
+      {activeSocialLinks.length > 0 && (
+        <Box sx={{ mt: 'auto', pt: 3 }}>
+          <Stack direction="row" spacing={2} justifyContent="center">
+            {activeSocialLinks.map(([platform, url]) => {
+              const Icon = {
+                instagram: InstagramIcon,
+                facebook: FacebookIcon,
+                youtube: YouTubeIcon,
+                twitter: TwitterIcon
+              }[platform];
+              
+              return Icon && (
+                <IconButton
+                  key={platform}
+                  component="a"
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  sx={{ 
+                    color: page.buttonColor,
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                    '&:hover': {
+                      backgroundColor: 'rgba(255, 255, 255, 1)'
+                    }
+                  }}
+                >
+                  <Icon />
+                </IconButton>
+              );
+            })}
+          </Stack>
+        </Box>
+      )}
     </Box>
   );
 };
