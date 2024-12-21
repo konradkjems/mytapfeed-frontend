@@ -130,10 +130,13 @@ const LandingPageView = () => {
       {page.showTitle && (
         <Typography
           variant="h4"
+          component="h1"
           sx={{
             color: page.titleColor || '#000000',
             textAlign: 'center',
-            marginBottom: 3
+            marginBottom: 3,
+            maxWidth: '600px',
+            fontFamily: page.titleFont || 'Roboto'
           }}
         >
           {page.title}
@@ -147,7 +150,8 @@ const LandingPageView = () => {
             color: page.descriptionColor || '#000000',
             textAlign: 'center',
             marginBottom: 4,
-            maxWidth: '600px'
+            maxWidth: '600px',
+            fontFamily: page.descriptionFont || 'Roboto'
           }}
         >
           {page.description}
@@ -165,6 +169,7 @@ const LandingPageView = () => {
             sx={{
               backgroundColor: page.buttonColor || '#000000',
               color: page.buttonTextColor || '#ffffff',
+              fontFamily: page.buttonFont || 'Roboto',
               '&:hover': {
                 backgroundColor: page.buttonColor || '#000000',
                 opacity: 0.9

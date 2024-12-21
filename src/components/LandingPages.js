@@ -64,6 +64,9 @@ const LandingPages = () => {
     buttonTextColor: '#ffffff',
     titleColor: '#000000',
     descriptionColor: '#000000',
+    titleFont: 'Inter',
+    descriptionFont: 'Inter',
+    buttonFont: 'Inter',
     buttons: [],
     showTitle: true,
     socialLinks: {
@@ -183,6 +186,9 @@ const LandingPages = () => {
       buttonTextColor: '#ffffff',
       titleColor: '#000000',
       descriptionColor: '#000000',
+      titleFont: 'Inter',
+      descriptionFont: 'Inter',
+      buttonFont: 'Inter',
       buttons: [],
       showTitle: true,
       socialLinks: {
@@ -277,6 +283,9 @@ const LandingPages = () => {
       buttonTextColor: page.buttonTextColor || '#ffffff',
       titleColor: page.titleColor || '#000000',
       descriptionColor: page.descriptionColor || '#000000',
+      titleFont: page.titleFont || 'Inter',
+      descriptionFont: page.descriptionFont || 'Inter',
+      buttonFont: page.buttonFont || 'Inter',
       buttons: page.buttons || [],
       showTitle: page.showTitle ?? true,
       socialLinks: {
@@ -397,7 +406,8 @@ const LandingPages = () => {
             sx={{ 
               mb: 2,
               color: newPage.titleColor,
-              wordBreak: 'break-word'
+              wordBreak: 'break-word',
+              fontFamily: newPage.titleFont
             }}
           >
             {newPage.title || selectedPage?.title || ''}
@@ -411,7 +421,8 @@ const LandingPages = () => {
             sx={{ 
               mb: 3,
               color: newPage.descriptionColor,
-              wordBreak: 'break-word'
+              wordBreak: 'break-word',
+              fontFamily: newPage.descriptionFont
             }}
           >
             {newPage.description || selectedPage?.description || ''}
@@ -427,6 +438,7 @@ const LandingPages = () => {
               sx={{
                 backgroundColor: newPage.buttonColor,
                 color: newPage.buttonTextColor,
+                fontFamily: newPage.buttonFont,
                 '&:hover': {
                   backgroundColor: newPage.buttonColor,
                   opacity: 0.9
@@ -906,6 +918,66 @@ const LandingPages = () => {
                       />
                     </Grid>
                   </Grid>
+                </Grid>
+
+                <Grid item xs={12}>
+                  <FormControl fullWidth>
+                    <InputLabel>Titel Font</InputLabel>
+                    <Select
+                      value={newPage.titleFont}
+                      onChange={(e) => setNewPage({ ...newPage, titleFont: e.target.value })}
+                      label="Titel Font"
+                    >
+                      <MenuItem value="Inter">Inter (Standard)</MenuItem>
+                      <MenuItem value="Roboto">Roboto</MenuItem>
+                      <MenuItem value="Playfair Display">Playfair Display</MenuItem>
+                      <MenuItem value="Montserrat">Montserrat</MenuItem>
+                      <MenuItem value="Lato">Lato</MenuItem>
+                      <MenuItem value="Open Sans">Open Sans</MenuItem>
+                      <MenuItem value="Raleway">Raleway</MenuItem>
+                      <MenuItem value="Poppins">Poppins</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                <Grid item xs={12}>
+                  <FormControl fullWidth>
+                    <InputLabel>Beskrivelse Font</InputLabel>
+                    <Select
+                      value={newPage.descriptionFont}
+                      onChange={(e) => setNewPage({ ...newPage, descriptionFont: e.target.value })}
+                      label="Beskrivelse Font"
+                    >
+                      <MenuItem value="Inter">Inter (Standard)</MenuItem>
+                      <MenuItem value="Roboto">Roboto</MenuItem>
+                      <MenuItem value="Playfair Display">Playfair Display</MenuItem>
+                      <MenuItem value="Montserrat">Montserrat</MenuItem>
+                      <MenuItem value="Lato">Lato</MenuItem>
+                      <MenuItem value="Open Sans">Open Sans</MenuItem>
+                      <MenuItem value="Raleway">Raleway</MenuItem>
+                      <MenuItem value="Poppins">Poppins</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                <Grid item xs={12}>
+                  <FormControl fullWidth>
+                    <InputLabel>Knap Font</InputLabel>
+                    <Select
+                      value={newPage.buttonFont}
+                      onChange={(e) => setNewPage({ ...newPage, buttonFont: e.target.value })}
+                      label="Knap Font"
+                    >
+                      <MenuItem value="Inter">Inter (Standard)</MenuItem>
+                      <MenuItem value="Roboto">Roboto</MenuItem>
+                      <MenuItem value="Playfair Display">Playfair Display</MenuItem>
+                      <MenuItem value="Montserrat">Montserrat</MenuItem>
+                      <MenuItem value="Lato">Lato</MenuItem>
+                      <MenuItem value="Open Sans">Open Sans</MenuItem>
+                      <MenuItem value="Raleway">Raleway</MenuItem>
+                      <MenuItem value="Poppins">Poppins</MenuItem>
+                    </Select>
+                  </FormControl>
                 </Grid>
               </Grid>
             </Grid>
