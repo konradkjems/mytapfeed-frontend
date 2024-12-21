@@ -76,6 +76,8 @@ const Statistics = () => {
 
   const prepareTimeSeriesData = () => {
     const now = new Date();
+    now.setHours(0, 0, 0, 0);
+
     const timeRanges = {
       week: 7,
       month: 30,
@@ -89,31 +91,39 @@ const Statistics = () => {
     const data = Array(days).fill(0);
     const labels = Array(days).fill('');
 
-    const clicksPerDay = new Map();
+    const dateArray = Array.from({ length: days }, (_, i) => {
+      const date = new Date(now);
+      date.setDate(date.getDate() - (days - i - 1));
+      return date;
+    });
 
     filteredStands.forEach(stand => {
       (stand.clickHistory || []).forEach(click => {
         const clickDate = new Date(click.timestamp);
-        const diffTime = now - clickDate;
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        
-        if (diffDays < days) {
-          const dayIndex = days - diffDays - 1;
-          if (dayIndex >= 0 && dayIndex < days) {
-            data[dayIndex]++;
-          }
+        clickDate.setHours(0, 0, 0, 0);
+
+        const dateIndex = dateArray.findIndex(date => 
+          date.getFullYear() === clickDate.getFullYear() &&
+          date.getMonth() === clickDate.getMonth() &&
+          date.getDate() === clickDate.getDate()
+        );
+
+        if (dateIndex !== -1) {
+          data[dateIndex]++;
         }
       });
     });
 
-    for (let i = 0; i < days; i++) {
-      const date = new Date(now);
-      date.setDate(date.getDate() - (days - i - 1));
-      labels[i] = date.toLocaleDateString('da-DK', { 
+    labels = dateArray.map(date => 
+      date.toLocaleDateString('da-DK', { 
         day: 'numeric',
         month: 'short'
-      });
-    }
+      })
+    );
+
+    console.log('Dato array:', dateArray.map(d => d.toISOString()));
+    console.log('Data array:', data);
+    console.log('Labels:', labels);
 
     return { data, labels };
   };
