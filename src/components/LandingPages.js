@@ -354,7 +354,10 @@ const LandingPages = () => {
   };
 
   const handlePreview = (id) => {
-    window.open(`/landing/${id}`, '_blank');
+    const baseUrl = process.env.NODE_ENV === 'production' 
+      ? 'https://tapfeed.dk'
+      : 'http://localhost:3001';
+    window.open(`${baseUrl}/landing/${id}`, '_blank');
   };
 
   const LivePreview = () => {
