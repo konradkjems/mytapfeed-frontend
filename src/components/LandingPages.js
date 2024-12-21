@@ -46,6 +46,7 @@ import {
 } from '@mui/icons-material';
 import Layout from './Layout';
 import API_URL from '../config';
+import iPhoneBezel from '../assets/@Iphone bezel.png';
 
 const LandingPages = () => {
   const [pages, setPages] = useState([]);
@@ -906,16 +907,49 @@ const LandingPages = () => {
                 </Typography>
                 <Box 
                   sx={{ 
-                    height: 'calc(100% - 48px)', 
-                    overflow: 'auto',
-                    maxWidth: '375px',  // Standard mobil bredde
-                    margin: '0 auto',   // Centrer preview
-                    border: '1px solid rgba(0, 0, 0, 0.12)', // Tilføj en ramme
-                    borderRadius: '8px', // Afrundede hjørner
-                    backgroundColor: '#f5f5f5' // Lysegrå baggrund omkring preview
+                    height: 'calc(100% - 48px)',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    position: 'relative'
                   }}
                 >
-                  <LivePreview />
+                  <Box
+                    sx={{
+                      width: '375px',
+                      height: '812px',
+                      position: 'relative',
+                      '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundImage: `url(${iPhoneBezel})`,
+                        backgroundSize: 'contain',
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'center',
+                        pointerEvents: 'none',
+                        zIndex: 2
+                      }
+                    }}
+                  >
+                    <Box 
+                      sx={{ 
+                        position: 'absolute',
+                        top: '12px',
+                        left: '12px',
+                        right: '12px',
+                        bottom: '12px',
+                        overflow: 'auto',
+                        borderRadius: '40px',
+                        backgroundColor: '#f5f5f5'
+                      }}
+                    >
+                      <LivePreview />
+                    </Box>
+                  </Box>
                 </Box>
               </Paper>
             </Grid>
