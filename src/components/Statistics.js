@@ -89,7 +89,7 @@ const Statistics = () => {
       : stands.filter(stand => stand.productType === selectedProductType);
 
     const data = Array(days).fill(0);
-    const labels = Array(days).fill('');
+    let labels = Array(days).fill('');
 
     const dateArray = Array.from({ length: days }, (_, i) => {
       const date = new Date(now);
