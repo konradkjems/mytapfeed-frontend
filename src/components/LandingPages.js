@@ -348,111 +348,110 @@ const LandingPages = () => {
     window.open(`/landing/${id}`, '_blank');
   };
 
-  // Live Preview Component
-  const LivePreview = () => (
-    <Box
-      sx={{
-        height: '100%',
-        backgroundColor: newPage.backgroundColor,
-        backgroundImage: newPage.backgroundImage 
-          ? `url(${URL.createObjectURL(newPage.backgroundImage)})` 
-          : selectedPage?.backgroundImage 
-            ? `url(${selectedPage.backgroundImage})`
-            : 'none',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        padding: 3,
-        borderRadius: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        position: 'relative',
-        '@media (max-width: 600px)': {
-          minHeight: '100vh',
-          padding: 2
-        }
-      }}
-    >
-      {(newPage.logo || selectedPage?.logo) && (
-        <Box
-          component="img"
-          src={newPage.logo ? URL.createObjectURL(newPage.logo) : selectedPage?.logo}
-          alt="Logo"
-          sx={{
-            width: 'auto',
-            maxWidth: '150px',
-            height: 'auto',
-            maxHeight: '150px',
-            marginBottom: 2
-          }}
-        />
-      )}
-
-      {newPage.showTitle && (
-        <Typography
-          variant="h5"
-          sx={{
-            color: newPage.titleColor,
-            textAlign: 'center',
-            marginBottom: 3
-          }}
-        >
-          {newPage.title || 'Din titel her'}
-        </Typography>
-      )}
-
-      <Typography
-        variant="body1"
+  const LivePreview = () => {
+    return (
+      <Box
         sx={{
-          color: newPage.descriptionColor,
-          textAlign: 'center',
-          marginBottom: 4
+          minHeight: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          position: 'relative',
+          backgroundColor: newPage.backgroundColor,
+          backgroundImage: newPage.backgroundImage ? `url(${URL.createObjectURL(newPage.backgroundImage)})` : 'none',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          padding: '20px'
         }}
       >
-        {newPage.description || 'Din beskrivelse her'}
-      </Typography>
-
-      <Stack spacing={2} sx={{ width: '100%', maxWidth: '300px' }}>
-        {newPage.buttons.map((button, index) => (
-          <Button
-            key={index}
-            variant="contained"
+        {newPage.logo && (
+          <Box
+            component="img"
+            src={URL.createObjectURL(newPage.logo)}
+            alt="Logo"
             sx={{
-              backgroundColor: newPage.buttonColor,
-              color: newPage.buttonTextColor,
-              '&:hover': {
-                backgroundColor: newPage.buttonColor,
-                opacity: 0.9
-              }
+              width: 'auto',
+              maxWidth: '200px',
+              height: 'auto',
+              maxHeight: '100px',
+              mb: 2
+            }}
+          />
+        )}
+        
+        {newPage.showTitle && (
+          <Typography 
+            variant="h4" 
+            component="h1" 
+            align="center"
+            sx={{ 
+              mb: 2,
+              color: newPage.titleColor,
+              wordBreak: 'break-word'
             }}
           >
-            {button.text}
-          </Button>
-        ))}
-      </Stack>
+            {newPage.title}
+          </Typography>
+        )}
 
-      <Box sx={{ marginTop: 'auto', display: 'flex', gap: 2 }}>
-        {Object.entries(newPage.socialLinks).map(([platform, url]) => {
-          if (!url) return null;
-          const Icon = {
-            instagram: InstagramIcon,
-            facebook: FacebookIcon,
-            youtube: YouTubeIcon,
-            twitter: TwitterIcon
-          }[platform];
-          return (
-            <IconButton
-              key={platform}
-              sx={{ color: newPage.buttonColor }}
+        {newPage.description && (
+          <Typography 
+            variant="body1" 
+            align="center"
+            sx={{ 
+              mb: 3,
+              color: newPage.descriptionColor,
+              wordBreak: 'break-word'
+            }}
+          >
+            {newPage.description}
+          </Typography>
+        )}
+
+        <Stack spacing={2} sx={{ width: '100%', maxWidth: '300px' }}>
+          {newPage.buttons.map((button, index) => (
+            <Button
+              key={index}
+              variant="contained"
+              fullWidth
+              sx={{
+                backgroundColor: newPage.buttonColor,
+                color: newPage.buttonTextColor,
+                '&:hover': {
+                  backgroundColor: newPage.buttonColor,
+                  opacity: 0.9
+                }
+              }}
             >
-              <Icon />
-            </IconButton>
-          );
-        })}
+              {button.text}
+            </Button>
+          ))}
+        </Stack>
+
+        <Box sx={{ mt: 'auto', pt: 3 }}>
+          <Stack direction="row" spacing={2} justifyContent="center">
+            {Object.entries(newPage.socialLinks).map(([platform, url]) => {
+              if (!url) return null;
+              const Icon = {
+                instagram: InstagramIcon,
+                facebook: FacebookIcon,
+                youtube: YouTubeIcon,
+                twitter: TwitterIcon
+              }[platform];
+              return Icon ? (
+                <IconButton
+                  key={platform}
+                  sx={{ color: newPage.buttonColor }}
+                >
+                  <Icon />
+                </IconButton>
+              ) : null;
+            })}
+          </Stack>
+        </Box>
       </Box>
-    </Box>
-  );
+    );
+  };
 
   return (
     <Layout title="Landing Pages">
@@ -911,7 +910,8 @@ const LandingPages = () => {
                     display: 'flex',
                     justifyContent: 'center',
                     alignItems: 'center',
-                    position: 'relative'
+                    position: 'relative',
+                    p: 2
                   }}
                 >
                   <Box
@@ -919,6 +919,9 @@ const LandingPages = () => {
                       width: '375px',
                       height: '812px',
                       position: 'relative',
+                      overflow: 'hidden',
+                      borderRadius: '40px',
+                      boxShadow: '0 0 20px rgba(0,0,0,0.3)',
                       '&::before': {
                         content: '""',
                         position: 'absolute',
@@ -943,8 +946,8 @@ const LandingPages = () => {
                         right: '12px',
                         bottom: '12px',
                         overflow: 'auto',
-                        borderRadius: '40px',
-                        backgroundColor: '#f5f5f5'
+                        borderRadius: '30px',
+                        zIndex: 1
                       }}
                     >
                       <LivePreview />
