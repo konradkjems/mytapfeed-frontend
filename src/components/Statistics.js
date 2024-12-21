@@ -44,12 +44,26 @@ const Statistics = () => {
 
   const fetchStands = async () => {
     try {
+      const cachedData = sessionStorage.getItem('statisticsData');
+      const cacheTimestamp = sessionStorage.getItem('statisticsCacheTimestamp');
+      const isCacheValid = cacheTimestamp && (Date.now() - parseInt(cacheTimestamp)) < 5 * 60 * 1000;
+
+      if (isCacheValid && cachedData) {
+        console.log('Bruger cached statistik data');
+        setStands(JSON.parse(cachedData));
+        setIsLoading(false);
+        return;
+      }
+
+      setIsLoading(true);
       const response = await fetch(`${API_URL}/stands`, {
         credentials: 'include'
       });
       if (response.ok) {
         const data = await response.json();
         setStands(data);
+        sessionStorage.setItem('statisticsData', JSON.stringify(data));
+        sessionStorage.setItem('statisticsCacheTimestamp', Date.now().toString());
       } else {
         throw new Error('Kunne ikke hente produkter');
       }
@@ -75,12 +89,19 @@ const Statistics = () => {
     const data = Array(days).fill(0);
     const labels = Array(days).fill('');
 
+    const clicksPerDay = new Map();
+
     filteredStands.forEach(stand => {
       (stand.clickHistory || []).forEach(click => {
         const clickDate = new Date(click.timestamp);
-        const diffDays = Math.floor((now - clickDate) / (1000 * 60 * 60 * 24));
+        const diffTime = now - clickDate;
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        
         if (diffDays < days) {
-          data[days - diffDays - 1]++;
+          const dayIndex = days - diffDays - 1;
+          if (dayIndex >= 0 && dayIndex < days) {
+            data[dayIndex]++;
+          }
         }
       });
     });
@@ -89,8 +110,8 @@ const Statistics = () => {
       const date = new Date(now);
       date.setDate(date.getDate() - (days - i - 1));
       labels[i] = date.toLocaleDateString('da-DK', { 
-        month: 'short', 
-        day: 'numeric'
+        day: 'numeric',
+        month: 'short'
       });
     }
 
