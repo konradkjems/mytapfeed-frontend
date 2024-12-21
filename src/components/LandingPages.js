@@ -46,7 +46,7 @@ import {
 } from '@mui/icons-material';
 import Layout from './Layout';
 import API_URL from '../config';
-import iPhoneBezel from '../assets/@Iphone bezel.png';
+import iPhoneBezel from '../assets/Iphone bezel.png';
 
 const LandingPages = () => {
   const [pages, setPages] = useState([]);
