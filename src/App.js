@@ -14,7 +14,6 @@ import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import LandingPages from './components/LandingPages';
 import LandingPageView from './components/LandingPageView';
-import { SpeedInsights } from '@vercel/speed-insights/react';
 
 function App() {
   return (
@@ -57,7 +56,6 @@ function App() {
             </Routes>
           </div>
         </Router>
-        <SpeedInsights />
       </AuthProvider>
     </ThemeProvider>
   );
