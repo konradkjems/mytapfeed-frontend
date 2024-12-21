@@ -26,7 +26,7 @@ const LandingPageView = () => {
     const fetchPage = async () => {
       try {
         console.log('Henter landing page med ID:', id);
-        const response = await fetch(`${API_URL}/landing-pages/${id}`);
+        const response = await fetch(`${API_URL}/api/landing-pages/${id}`);
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);

@@ -53,7 +53,7 @@ const Profile = () => {
     }
 
     try {
-      const response = await fetch(`${API_URL}/user/change-password`, {
+      const response = await fetch(`${API_URL}/api/user/change-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -98,7 +98,7 @@ const Profile = () => {
     formData.append('image', file);
 
     try {
-      const response = await fetch(`${API_URL}/user/profile-image`, {
+      const response = await fetch(`${API_URL}/api/user/profile-image`, {
         method: 'POST',
         credentials: 'include',
         body: formData

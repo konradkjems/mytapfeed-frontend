@@ -12,7 +12,7 @@ export const AuthProvider = ({ children }) => {
     const fetchUserData = async () => {
         try {
             setIsLoading(true);
-            const response = await fetch(`${API_URL}/user/profile`, {
+            const response = await fetch(`${API_URL}/api/user/profile`, {
                 credentials: 'include'
             });
             
@@ -49,7 +49,7 @@ export const AuthProvider = ({ children }) => {
 
         const checkAuthStatus = async () => {
             try {
-                const response = await fetch(`${API_URL}/auth/status`, {
+                const response = await fetch(`${API_URL}/api/auth/status`, {
                     credentials: 'include'
                 });
                 
@@ -108,7 +108,7 @@ export const AuthProvider = ({ children }) => {
 
     const logout = async () => {
         try {
-            const response = await fetch(`${API_URL}/auth/logout`, {
+            const response = await fetch(`${API_URL}/api/auth/logout`, {
                 method: 'POST',
                 credentials: 'include'
             });

@@ -38,7 +38,7 @@ const Admin = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch(`${API_URL}/admin/users`, {
+      const response = await fetch(`${API_URL}/api/admin/users`, {
         credentials: 'include'
       });
       if (response.ok) {
@@ -61,7 +61,7 @@ const Admin = () => {
 
   const handleBlockUser = async (userId, isBlocked) => {
     try {
-      const response = await fetch(`${API_URL}/admin/users/${userId}/${isBlocked ? 'unblock' : 'block'}`, {
+      const response = await fetch(`${API_URL}/api/admin/users/${userId}/${isBlocked ? 'unblock' : 'block'}`, {
         method: 'PUT',
         credentials: 'include'
       });

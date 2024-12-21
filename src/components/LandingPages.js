@@ -83,18 +83,39 @@ const LandingPages = () => {
   const fetchPages = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`${API_URL}/landing-pages`, {
+      console.log('Henter landing pages...');
+      
+      const response = await fetch(`${API_URL}/api/landing-pages`, {
         credentials: 'include'
       });
-      if (response.ok) {
-        const data = await response.json();
-        setPages(data);
+      
+      console.log('Landing pages response:', {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries())
+      });
+
+      if (response.status === 429) {
+        console.log('Rate limit nået, venter 60 sekunder...');
+        await new Promise(resolve => setTimeout(resolve, 60000));
+        return await fetchPages();
       }
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('Landing pages data:', data);
+      setPages(data);
     } catch (error) {
-      console.error('Fejl ved hentning af landing pages:', error);
+      console.error('Detaljeret fejl ved hentning af landing pages:', {
+        error: error.message,
+        stack: error.stack
+      });
       setAlert({
         open: true,
-        message: 'Der opstod en fejl ved hentning af landing pages',
+        message: `Der opstod en fejl ved hentning af landing pages: ${error.message}`,
         severity: 'error'
       });
     } finally {
@@ -123,7 +144,7 @@ const LandingPages = () => {
         formData.append('backgroundImage', newPage.backgroundImage);
       }
 
-      const response = await fetch(`${API_URL}/landing-pages`, {
+      const response = await fetch(`${API_URL}/api/landing-pages`, {
         method: 'POST',
         credentials: 'include',
         body: formData
@@ -221,7 +242,7 @@ const LandingPages = () => {
   const handleDeletePage = async (id) => {
     if (window.confirm('Er du sikker på, at du vil slette denne landing page?')) {
       try {
-        const response = await fetch(`${API_URL}/landing-pages/${id}`, {
+        const response = await fetch(`${API_URL}/api/landing-pages/${id}`, {
           method: 'DELETE',
           credentials: 'include'
         });
@@ -289,7 +310,7 @@ const LandingPages = () => {
         formData.append('backgroundImage', newPage.backgroundImage);
       }
 
-      const response = await fetch(`${API_URL}/landing-pages/${selectedPage._id}`, {
+      const response = await fetch(`${API_URL}/api/landing-pages/${selectedPage._id}`, {
         method: 'PUT',
         credentials: 'include',
         body: formData

@@ -140,7 +140,7 @@ const LocationSelectionDialog = ({ open, onClose, onSelect }) => {
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch(`${API_URL}/business/search?searchQuery=${encodeURIComponent(query)}`, {
+      const response = await fetch(`${API_URL}/api/business/search?searchQuery=${encodeURIComponent(query)}`, {
         credentials: 'include',
         headers: {
           'Accept': 'application/json',
@@ -341,10 +341,10 @@ const Dashboard = () => {
 
         // Hvis ingen gyldig cache, hent ny data
         const [standsResponse, reviewsResponse] = await Promise.all([
-          fetch(`${API_URL}/stands`, {
+          fetch(`${API_URL}/api/stands`, {
             credentials: 'include'
           }),
-          fetch(`${API_URL}/business/google-reviews`, {
+          fetch(`${API_URL}/api/business/google-reviews`, {
             credentials: 'include'
           })
         ]);
@@ -404,21 +404,44 @@ const Dashboard = () => {
 
     const fetchGoogleReviews = async () => {
       try {
-        const response = await fetch(`${API_URL}/business/google-reviews`, {
+        const response = await fetch(`${API_URL}/api/business/google-reviews`, {
           credentials: 'include',
           headers: {
             'Content-Type': 'application/json'
           }
         });
         
+        if (response.status === 429) {
+          // Vent 60 sekunder før næste forsøg ved rate limiting
+          console.log('Rate limit nået, venter 60 sekunder...');
+          await new Promise(resolve => setTimeout(resolve, 60000));
+          return await fetchGoogleReviews();
+        }
+        
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         
         const data = await response.json();
-        setBusinessData(data);
+        if (data.business) {
+          setBusinessData(data.business);
+          setReviews(data.reviews);
+          
+          // Gem i sessionStorage
+          sessionStorage.setItem('dashboardReviews', JSON.stringify(data.reviews));
+          sessionStorage.setItem('dashboardBusiness', JSON.stringify(data.business));
+          sessionStorage.setItem('dashboardCacheTimestamp', Date.now().toString());
+        }
       } catch (error) {
         console.error('Fejl ved hentning af Google anmeldelser:', error);
+        // Vis ikke fejl hvis der ikke er tilknyttet en virksomhed
+        if (error.message !== 'HTTP error! status: 404') {
+          setAlert({
+            open: true,
+            message: 'Der opstod en fejl ved hentning af anmeldelser. Prøver igen om lidt...',
+            severity: 'error'
+          });
+        }
       }
     };
 
@@ -440,7 +463,7 @@ const Dashboard = () => {
 
   const handleAddStand = async () => {
     try {
-      const response = await fetch(`${API_URL}/stands`, {
+      const response = await fetch(`${API_URL}/api/stands`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -464,7 +487,7 @@ const Dashboard = () => {
         });
         
         // Hent opdateret liste af stands
-        const standsResponse = await fetch(`${API_URL}/stands`, {
+        const standsResponse = await fetch(`${API_URL}/api/stands`, {
           credentials: 'include'
         });
         if (standsResponse.ok) {
@@ -494,7 +517,7 @@ const Dashboard = () => {
       const stand = stands.find(s => s._id === id);
       if (!stand) return;
 
-      const response = await fetch(`${API_URL}/stands/${id}`, {
+      const response = await fetch(`${API_URL}/api/stands/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -517,7 +540,7 @@ const Dashboard = () => {
         setEditingId(null);
         
         // Hent opdateret liste af stands
-        const standsResponse = await fetch(`${API_URL}/stands`, {
+        const standsResponse = await fetch(`${API_URL}/api/stands`, {
           credentials: 'include'
         });
         if (standsResponse.ok) {
@@ -541,7 +564,7 @@ const Dashboard = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Er du sikker på, at du vil slette dette produkt?')) {
       try {
-        const response = await fetch(`${API_URL}/stands/${id}`, {
+        const response = await fetch(`${API_URL}/api/stands/${id}`, {
           method: 'DELETE',
           credentials: 'include'
         });
@@ -554,7 +577,7 @@ const Dashboard = () => {
           });
           
           // Hent opdateret liste af stands
-          const standsResponse = await fetch(`${API_URL}/stands`, {
+          const standsResponse = await fetch(`${API_URL}/api/stands`, {
             credentials: 'include'
           });
           if (standsResponse.ok) {
@@ -608,7 +631,7 @@ const Dashboard = () => {
   const handleLocationSelect = async (location) => {
     try {
       setIsLoadingReviews(true);
-      const response = await fetch(`${API_URL}/business/setup-google-maps`, {
+      const response = await fetch(`${API_URL}/api/business/setup-google-maps`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -657,7 +680,7 @@ const Dashboard = () => {
 
   const handleLogoutBusiness = async () => {
     try {
-      const response = await fetch(`${API_URL}/business/logout`, {
+      const response = await fetch(`${API_URL}/api/business/logout`, {
         method: 'POST',
         credentials: 'include'
       });
@@ -688,7 +711,7 @@ const Dashboard = () => {
   const fetchStands = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`${API_URL}/stands`, {
+      const response = await fetch(`${API_URL}/api/stands`, {
         credentials: 'include'
       });
       if (response.ok) {
@@ -715,7 +738,7 @@ const Dashboard = () => {
     formData.append('file', bulkFile);
 
     try {
-      const response = await fetch(`${API_URL}/stands/bulk`, {
+      const response = await fetch(`${API_URL}/api/stands/bulk`, {
         method: 'POST',
         credentials: 'include',
         body: formData

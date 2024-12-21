@@ -56,7 +56,7 @@ const Statistics = () => {
       }
 
       setIsLoading(true);
-      const response = await fetch(`${API_URL}/stands`, {
+      const response = await fetch(`${API_URL}/api/stands`, {
         credentials: 'include'
       });
       if (response.ok) {
