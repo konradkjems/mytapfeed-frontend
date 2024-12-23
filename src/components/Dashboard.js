@@ -42,6 +42,7 @@ import {
   ListItemIcon,
   Tooltip,
   FormHelperText,
+  CardMedia,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -65,6 +66,9 @@ import {
   ContentCopy as ContentCopyIcon,
   CloudUpload as CloudUploadIcon,
   AttachFile as AttachFileIcon,
+  MenuBook as GuideIcon,
+  Star as StarIcon,
+  Link as LinkIcon,
 } from '@mui/icons-material';
 import { BarChart } from '@mui/x-charts/BarChart';
 import { useAuth } from '../context/AuthContext';
@@ -305,6 +309,8 @@ const Dashboard = () => {
   const [bulkDialog, setBulkDialog] = useState(false);
   const [bulkFile, setBulkFile] = useState(null);
   const [bulkLoading, setBulkLoading] = useState(false);
+  const [selectedGuide, setSelectedGuide] = useState(null);
+  const [timeRange, setTimeRange] = useState('week'); // 'week', 'month', 'year'
 
   const PRODUCT_TYPES = {
     STANDER: { value: 'stander', label: 'Stander' },
@@ -313,77 +319,115 @@ const Dashboard = () => {
     PLATE: { value: 'plate', label: 'Plate' }
   };
 
-  useEffect(() => {
-    const fetchInitialData = async () => {
-      try {
-        setIsLoading(true);
-        setIsLoadingReviews(true);
+  const prepareTimeSeriesData = () => {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
 
-        // Tjek først sessionStorage for cached data
-        const cachedStands = sessionStorage.getItem('dashboardStands');
-        const cachedReviews = sessionStorage.getItem('dashboardReviews');
-        const cachedBusinessData = sessionStorage.getItem('dashboardBusiness');
-        const cacheTimestamp = sessionStorage.getItem('dashboardCacheTimestamp');
+    const ranges = {
+      week: 7,
+      month: 30,
+      year: 365
+    };
+    const days = ranges[timeRange];
 
-        // Tjek om cache er gyldig (mindre end 5 minutter gammel)
-        const isCacheValid = cacheTimestamp && (Date.now() - parseInt(cacheTimestamp)) < 5 * 60 * 1000;
+    // Initialiser arrays med dage og klik
+    const data = Array(days).fill(0);
+    const labels = Array.from({ length: days }, (_, i) => {
+      const date = new Date(now);
+      date.setDate(date.getDate() - (days - i - 1));
+      return date.toLocaleDateString('da-DK', { 
+        day: 'numeric',
+        month: 'short'
+      });
+    });
 
-        if (isCacheValid && cachedStands && cachedReviews && cachedBusinessData) {
-          console.log('Bruger cached dashboard data');
-          setStands(JSON.parse(cachedStands));
-          setReviews(JSON.parse(cachedReviews));
-          setBusinessData(JSON.parse(cachedBusinessData));
-          setIsLoading(false);
-          setIsLoadingReviews(false);
-          setIsInitialLoad(false);
-          return;
+    // Tæl klik for hver dag
+    stands.forEach(stand => {
+      (stand.clickHistory || []).forEach(click => {
+        const clickDate = new Date(click.timestamp);
+        clickDate.setHours(0, 0, 0, 0);
+        const diffDays = Math.floor((now - clickDate) / (1000 * 60 * 60 * 24));
+        
+        if (diffDays < days) {
+          data[days - diffDays - 1]++;
         }
+      });
+    });
 
-        // Hvis ingen gyldig cache, hent ny data
-        const [standsResponse, reviewsResponse] = await Promise.all([
-          fetch(`${API_URL}/api/stands`, {
-            credentials: 'include'
-          }),
-          fetch(`${API_URL}/api/business/google-reviews`, {
-            credentials: 'include'
-          })
-        ]);
+    return { data, labels };
+  };
 
-        if (standsResponse.ok) {
-          const standsData = await standsResponse.json();
-          setStands(standsData);
-          sessionStorage.setItem('dashboardStands', JSON.stringify(standsData));
-        }
+  const timeSeriesData = prepareTimeSeriesData();
 
-        if (reviewsResponse.ok) {
-          const reviewsData = await reviewsResponse.json();
-          setBusinessData(reviewsData.business);
-          setReviews(reviewsData.reviews);
-          sessionStorage.setItem('dashboardReviews', JSON.stringify(reviewsData.reviews));
-          sessionStorage.setItem('dashboardBusiness', JSON.stringify(reviewsData.business));
-        }
+  const fetchInitialData = async () => {
+    try {
+      setIsLoading(true);
+      setIsLoadingReviews(true);
 
-        // Gem timestamp for cachen
-        sessionStorage.setItem('dashboardCacheTimestamp', Date.now().toString());
+      // Tjek først sessionStorage for cached data
+      const cachedStands = sessionStorage.getItem('dashboardStands');
+      const cachedReviews = sessionStorage.getItem('dashboardReviews');
+      const cachedBusinessData = sessionStorage.getItem('dashboardBusiness');
+      const cacheTimestamp = sessionStorage.getItem('dashboardCacheTimestamp');
 
-      } catch (error) {
-        console.error('Fejl ved indlæsning af data:', error);
-        setAlert({
-          open: true,
-          message: 'Der opstod en fejl ved indlæsning af data',
-          severity: 'error'
-        });
-      } finally {
+      // Tjek om cache er gyldig (mindre end 5 minutter gammel)
+      const isCacheValid = cacheTimestamp && (Date.now() - parseInt(cacheTimestamp)) < 5 * 60 * 1000;
+
+      if (isCacheValid && cachedStands && cachedReviews && cachedBusinessData) {
+        console.log('Bruger cached dashboard data');
+        setStands(JSON.parse(cachedStands));
+        setReviews(JSON.parse(cachedReviews));
+        setBusinessData(JSON.parse(cachedBusinessData));
         setIsLoading(false);
         setIsLoadingReviews(false);
         setIsInitialLoad(false);
+        return;
       }
-    };
 
-    if (isInitialLoad) {
-      fetchInitialData();
+      // Hvis ingen gyldig cache, hent ny data
+      const [standsResponse, reviewsResponse] = await Promise.all([
+        fetch(`${API_URL}/api/stands`, {
+          credentials: 'include'
+        }),
+        fetch(`${API_URL}/api/business/google-reviews`, {
+          credentials: 'include'
+        })
+      ]);
+
+      if (standsResponse.ok) {
+        const standsData = await standsResponse.json();
+        setStands(standsData);
+        sessionStorage.setItem('dashboardStands', JSON.stringify(standsData));
+      }
+
+      if (reviewsResponse.ok) {
+        const reviewsData = await reviewsResponse.json();
+        setBusinessData(reviewsData.business);
+        setReviews(reviewsData.reviews);
+        sessionStorage.setItem('dashboardReviews', JSON.stringify(reviewsData.reviews));
+        sessionStorage.setItem('dashboardBusiness', JSON.stringify(reviewsData.business));
+      }
+
+      // Gem timestamp for cachen
+      sessionStorage.setItem('dashboardCacheTimestamp', Date.now().toString());
+
+    } catch (error) {
+      console.error('Fejl ved indlæsning af data:', error);
+      setAlert({
+        open: true,
+        message: 'Der opstod en fejl ved indlæsning af data',
+        severity: 'error'
+      });
+    } finally {
+      setIsLoading(false);
+      setIsLoadingReviews(false);
+      setIsInitialLoad(false);
     }
-  }, [isInitialLoad]);
+  };
+
+  useEffect(() => {
+    fetchInitialData();
+  }, []);
 
   // Funktion til at tvinge genindlæsning af data
   const handleRefreshData = async () => {
@@ -770,72 +814,137 @@ const Dashboard = () => {
     }
   };
 
+  const guides = [
+    {
+      id: 'reviews',
+      title: 'Få flere Google anmeldelser',
+      description: 'Lær hvordan du kan bruge TapFeed til at få flere positive anmeldelser på Google.',
+      thumbnail: 'https://images.pexels.com/photos/6894066/pexels-photo-6894066.jpeg',
+      icon: <StarIcon />,
+      content: (
+        <>
+          <Typography variant="h6" gutterBottom>
+            Sådan får du flere Google anmeldelser med TapFeed
+          </Typography>
+          
+          <List>
+            <ListItem>
+              <ListItemIcon>
+                <BusinessIcon />
+              </ListItemIcon>
+              <ListItemText 
+                primary="1. Find dit Produkt ID" 
+                secondary="Lokaliser det unikke Produkt ID på dit TapFeed produkt (f.eks. 'XYZ123'). Dette ID er trykt på produktet."
+              />
+            </ListItem>
+            
+            <ListItem>
+              <ListItemIcon>
+                <LinkIcon />
+              </ListItemIcon>
+              <ListItemText 
+                primary="2. Tilføj din Google anmeldelsesside" 
+                secondary="Find din virksomheds Google anmeldelsesside under 'Google Maps Anmeldelser' på dit dashboard. Her kan du kopiere linket direkte og indsætte det i 'Redirect URL' feltet når du opretter eller redigerer et produkt."
+              />
+            </ListItem>
+            
+            <ListItem>
+              <ListItemIcon>
+                <LocationIcon />
+              </ListItemIcon>
+              <ListItemText 
+                primary="3. Placer produktet strategisk" 
+                secondary="Placer dit TapFeed produkt hvor dine kunder naturligt vil se det, f.eks. ved udgangen, på bordene eller ved kassen."
+              />
+            </ListItem>
+            
+            <ListItem>
+              <ListItemIcon>
+                <RateReviewIcon />
+              </ListItemIcon>
+              <ListItemText 
+                primary="4. Aktiver kunderne" 
+                secondary="Opfordr dine kunder til at bruge TapFeed produktet ved at scanne QR koden eller holde deres telefon mod NFC chippen for at dele deres oplevelse på Google."
+              />
+            </ListItem>
+          </List>
+          
+          <Box sx={{ mt: 3 }}>
+            <Typography variant="subtitle1" gutterBottom>
+              Tips til succes:
+            </Typography>
+            <List>
+              <ListItem>
+                <ListItemText 
+                  secondary="• Placer flere TapFeed produkter forskellige steder i din virksomhed"
+                />
+              </ListItem>
+              <ListItem>
+                <ListItemText 
+                  secondary="• Følg op på nye anmeldelser og svar på dem"
+                />
+              </ListItem>
+              <ListItem>
+                <ListItemText 
+                  secondary="• Brug statistikken til at se hvilke placeringer der virker bedst"
+                />
+              </ListItem>
+              <ListItem>
+                <ListItemText 
+                  secondary="• Opdater jævnligt placeringen af dine TapFeed produkter for maksimal effekt"
+                />
+              </ListItem>
+            </List>
+          </Box>
+        </>
+      )
+    }
+  ];
+
   return (
     <Layout title="Dashboard">
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3, mb: 2 }}>
-        <Button
-          variant="contained"
-          onClick={handleRefreshData}
-          disabled={isLoading}
-          startIcon={<RefreshIcon />}
-        >
-          {isLoading ? 'Opdaterer...' : 'Opdater data'}
-        </Button>
-      </Box>
       <Grid container spacing={3}>
         {/* Statistik sektion */}
         <Grid item xs={12}>
-          <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', height: 360 }}>
-            <Typography component="h2" variant="h6" color="primary" gutterBottom>
-              Samlet trafik oversigt
-            </Typography>
+          <Paper sx={{ p: 2 }}>
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mb: 2
+            }}>
+              <Typography variant="h6" color="primary" gutterBottom>
+                Statistik
+              </Typography>
+              <Box sx={{ mt: 3 }}>
+                <Button
+                  variant="contained"
+                  onClick={fetchInitialData}
+                  startIcon={<RefreshIcon />}
+                  disabled={isLoading || isLoadingReviews}
+                >
+                  Opdater data
+                </Button>
+              </Box>
+            </Box>
             <BarChart
               xAxis={[{
                 scaleType: 'band',
-                data: prepareChartData(stands).map(item => item.month),
-                label: 'Dage',
+                data: timeSeriesData.labels,
                 tickLabelStyle: { 
-                  fill: mode === 'dark' ? 'white' : 'black'
-                },
-                labelStyle: { 
-                  fill: mode === 'dark' ? 'white' : 'black'
-                }
-              }]}
-              yAxis={[{
-                tickLabelStyle: { 
-                  fill: mode === 'dark' ? 'white' : 'black'
-                },
-                labelStyle: { 
                   fill: mode === 'dark' ? 'white' : 'black'
                 }
               }]}
               series={[{
-                data: prepareChartData(stands).map(item => item.clicks),
-                label: 'Antal klik',
+                data: timeSeriesData.data,
                 color: mode === 'dark' ? '#4CAF50' : '#2E7D32'
               }]}
               height={300}
-              sx={{
-                '.MuiChartsAxis-label': { 
-                  fill: mode === 'dark' ? 'white' : 'black'
-                },
-                '.MuiChartsAxis-tick': { 
-                  fill: mode === 'dark' ? 'white' : 'black'
-                },
-                '.MuiChartsAxis-line': { 
-                  stroke: mode === 'dark' ? 'white' : 'black'
-                },
-                '.MuiChartsLegend-label': { 
-                  fill: mode === 'dark' ? 'white' : 'black'
-                },
-                '.MuiChartsLegend-root': { 
-                  color: mode === 'dark' ? 'white' : 'black'
-                }
-              }}
             />
           </Paper>
         </Grid>
 
+        {/* Google Maps Anmeldelser sektion */}
         <Grid item xs={12}>
           <Paper sx={{ p: 2 }}>
             <Typography variant="h6" color="primary" gutterBottom>
@@ -1076,298 +1185,253 @@ const Dashboard = () => {
           </Paper>
         </Grid>
 
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2 }}>
-            <Typography component="h2" variant="h6" color="primary" gutterBottom>
-              Top 5 mest besøgte produkter
-            </Typography>
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Produkttype</TableCell>
-                    <TableCell>Kaldenavn</TableCell>
-                    <TableCell align="right">Produkt ID</TableCell>
-                    <TableCell align="right">Antal klik</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {stands
-                    .sort((a, b) => (b.clicks || 0) - (a.clicks || 0))
-                    .slice(0, 5)
-                    .map(stand => (
-                      <TableRow key={stand._id}>
-                        <TableCell>
-                          <Tooltip title={stand.nickname || 'Intet kaldenavn'} arrow>
-                            <Box component="span" sx={{ cursor: 'help' }}>
-                              {PRODUCT_TYPES[stand.productType.toUpperCase()]?.label || stand.productType}
-                            </Box>
-                          </Tooltip>
-                        </TableCell>
-                        <TableCell>{stand.nickname || '-'}</TableCell>
-                        <TableCell align="right">
-                          <Tooltip title={stand.nickname || 'Intet kaldenavn'} arrow>
-                            <Box component="span" sx={{ cursor: 'help' }}>
-                              {stand.standerId}
-                            </Box>
-                          </Tooltip>
-                        </TableCell>
-                        <TableCell align="right">{stand.clicks || 0}</TableCell>
-                      </TableRow>
-                    ))
-                  }
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Paper>
-        </Grid>
-
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2 }}>
-            <Typography component="h2" variant="h6" color="primary" gutterBottom>
-              Klik per produkttype
-            </Typography>
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Produkttype</TableCell>
-                    <TableCell align="right">Antal produkter</TableCell>
-                    <TableCell align="right">Samlet antal klik</TableCell>
-                    <TableCell align="right">Gennemsnit</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {Object.values(PRODUCT_TYPES).map(type => {
-                    const productsOfType = stands.filter(s => s.productType === type.value);
-                    const totalClicks = productsOfType.reduce((sum, stand) => sum + (stand.clicks || 0), 0);
-                    const avgClicks = productsOfType.length ? (totalClicks / productsOfType.length).toFixed(1) : 0;
-                    
-                    return (
-                      <TableRow key={type.value}>
-                        <TableCell>
-                          <Tooltip 
-                            title={
-                              productsOfType.length > 0 
-                                ? `Produkter: ${productsOfType.map(p => p.nickname || p.standerId).join(', ')}` 
-                                : 'Ingen produkter'
-                            } 
-                            arrow
-                          >
-                            <Box component="span" sx={{ cursor: 'help' }}>
-                              {type.label}
-                            </Box>
-                          </Tooltip>
-                        </TableCell>
-                        <TableCell align="right">{productsOfType.length}</TableCell>
-                        <TableCell align="right">{totalClicks}</TableCell>
-                        <TableCell align="right">{avgClicks}</TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Paper>
-        </Grid>
-
         {/* Produkter sektion */}
         <Grid item xs={12}>
-          <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography component="h2" variant="h6" color="primary">
+          <Paper sx={{ p: 2 }}>
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              mb: 2 
+            }}>
+              <Typography variant="h6" color="primary">
                 Produkter
               </Typography>
-              <Box sx={{ display: 'flex', gap: 1 }}>
+              <Box>
                 <Button
                   variant="outlined"
-                  color="primary"
-                  startIcon={<CloudUploadIcon />}
                   onClick={() => setBulkDialog(true)}
+                  startIcon={<CloudUploadIcon />}
+                  sx={{ mr: 1 }}
                 >
                   Bulk Upload
                 </Button>
                 <Button
                   variant="contained"
-                  color="primary"
-                  startIcon={<AddIcon />}
                   onClick={() => setOpenDialog(true)}
+                  startIcon={<AddIcon />}
                 >
-                  Tilføj Produkt
+                  Tilføj nyt produkt
                 </Button>
               </Box>
             </Box>
-            {isLoading ? (
-              <CircularProgress />
-            ) : stands.length === 0 ? (
-              <Typography>Ingen produkter tilføjet endnu</Typography>
-            ) : (
-              <TableContainer>
-                <Table>
-                  <TableHead>
-                    <TableRow>
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>
+                      <Tooltip title="Et unikt ID for dit produkt" arrow placement="top">
+                        <Box component="span" sx={{ cursor: 'help' }}>
+                          Produkt ID
+                        </Box>
+                      </Tooltip>
+                    </TableCell>
+                    <TableCell>
+                      <Tooltip title="Et valgfrit navn til at identificere dit produkt" arrow placement="top">
+                        <Box component="span" sx={{ cursor: 'help' }}>
+                          Kaldenavn
+                        </Box>
+                      </Tooltip>
+                    </TableCell>
+                    <TableCell>
+                      <Tooltip title="Den URL som QR koden peger på" arrow placement="top">
+                        <Box component="span" sx={{ cursor: 'help' }}>
+                          TapFeed URL
+                        </Box>
+                      </Tooltip>
+                    </TableCell>
+                    <TableCell>
+                      <Tooltip title="Den URL som brugeren bliver sendt videre til" arrow placement="top">
+                        <Box component="span" sx={{ cursor: 'help' }}>
+                          Redirect URL
+                        </Box>
+                      </Tooltip>
+                    </TableCell>
+                    <TableCell>
+                      <Tooltip title="Typen af fysisk produkt" arrow placement="top">
+                        <Box component="span" sx={{ cursor: 'help' }}>
+                          Produkttype
+                        </Box>
+                      </Tooltip>
+                    </TableCell>
+                    <TableCell>
+                      <Tooltip title="Antal gange QR koden er blevet scannet" arrow placement="top">
+                        <Box component="span" sx={{ cursor: 'help' }}>
+                          Antal Klik
+                        </Box>
+                      </Tooltip>
+                    </TableCell>
+                    <TableCell>Handlinger</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {stands.map((stand) => (
+                    <TableRow key={stand._id}>
+                      <TableCell>{stand.standerId}</TableCell>
                       <TableCell>
-                        <Tooltip title="Et unikt ID for dit produkt" arrow placement="top">
-                          <Box component="span" sx={{ cursor: 'help' }}>
-                            Produkt ID
-                          </Box>
-                        </Tooltip>
+                        {editingId === stand._id ? (
+                          <TextField
+                            value={stand.nickname || ''}
+                            onChange={(e) => {
+                              const updatedStands = stands.map(s =>
+                                s._id === stand._id ? { ...s, nickname: e.target.value } : s
+                              );
+                              setStands(updatedStands);
+                            }}
+                            fullWidth
+                            placeholder="Tilføj kaldenavn"
+                          />
+                        ) : (
+                          stand.nickname || '-'
+                        )}
                       </TableCell>
                       <TableCell>
-                        <Tooltip title="Et valgfrit navn til at identificere dit produkt" arrow placement="top">
-                          <Box component="span" sx={{ cursor: 'help' }}>
-                            Kaldenavn
-                          </Box>
-                        </Tooltip>
+                        <Link
+                          href={`https://api.tapfeed.dk/${stand.standerId}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          api.tapfeed.dk/{stand.standerId}
+                        </Link>
                       </TableCell>
                       <TableCell>
-                        <Tooltip title="Den URL som QR koden peger på" arrow placement="top">
-                          <Box component="span" sx={{ cursor: 'help' }}>
-                            TapFeed URL
-                          </Box>
-                        </Tooltip>
-                      </TableCell>
-                      <TableCell>
-                        <Tooltip title="Den URL som brugeren bliver sendt videre til" arrow placement="top">
-                          <Box component="span" sx={{ cursor: 'help' }}>
-                            Redirect URL
-                          </Box>
-                        </Tooltip>
-                      </TableCell>
-                      <TableCell>
-                        <Tooltip title="Typen af fysisk produkt" arrow placement="top">
-                          <Box component="span" sx={{ cursor: 'help' }}>
-                            Produkttype
-                          </Box>
-                        </Tooltip>
-                      </TableCell>
-                      <TableCell>
-                        <Tooltip title="Antal gange QR koden er blevet scannet" arrow placement="top">
-                          <Box component="span" sx={{ cursor: 'help' }}>
-                            Antal Klik
-                          </Box>
-                        </Tooltip>
-                      </TableCell>
-                      <TableCell>Handlinger</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {stands.map((stand) => (
-                      <TableRow key={stand._id}>
-                        <TableCell>{stand.standerId}</TableCell>
-                        <TableCell>
-                          {editingId === stand._id ? (
-                            <TextField
-                              value={stand.nickname || ''}
-                              onChange={(e) => {
-                                const updatedStands = stands.map(s =>
-                                  s._id === stand._id ? { ...s, nickname: e.target.value } : s
-                                );
-                                setStands(updatedStands);
-                              }}
-                              fullWidth
-                              placeholder="Tilføj kaldenavn"
-                            />
-                          ) : (
-                            stand.nickname || '-'
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <Link
-                            href={`https://api.tapfeed.dk/${stand.standerId}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            api.tapfeed.dk/{stand.standerId}
+                        {editingId === stand._id ? (
+                          <TextField
+                            value={stand.redirectUrl}
+                            onChange={(e) => {
+                              const updatedStands = stands.map(s =>
+                                s._id === stand._id ? { ...s, redirectUrl: e.target.value } : s
+                              );
+                              setStands(updatedStands);
+                            }}
+                            fullWidth
+                          />
+                        ) : (
+                          <Link href={ensureHttps(stand.redirectUrl)} target="_blank" rel="noopener noreferrer">
+                            {stand.redirectUrl}
                           </Link>
-                        </TableCell>
-                        <TableCell>
-                          {editingId === stand._id ? (
-                            <TextField
-                              value={stand.redirectUrl}
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {editingId === stand._id ? (
+                          <FormControl fullWidth>
+                            <Select
+                              value={stand.productType}
                               onChange={(e) => {
                                 const updatedStands = stands.map(s =>
-                                  s._id === stand._id ? { ...s, redirectUrl: e.target.value } : s
+                                  s._id === stand._id ? { ...s, productType: e.target.value } : s
                                 );
                                 setStands(updatedStands);
                               }}
-                              fullWidth
-                            />
-                          ) : (
-                            <Link href={ensureHttps(stand.redirectUrl)} target="_blank" rel="noopener noreferrer">
-                              {stand.redirectUrl}
-                            </Link>
-                          )}
-                        </TableCell>
-                        <TableCell>
+                            >
+                              {Object.values(PRODUCT_TYPES).map(type => (
+                                <MenuItem key={type.value} value={type.value}>
+                                  {type.label}
+                                </MenuItem>
+                              ))}
+                            </Select>
+                          </FormControl>
+                        ) : (
+                          PRODUCT_TYPES[stand.productType.toUpperCase()]?.label || stand.productType
+                        )}
+                      </TableCell>
+                      <TableCell>{stand.clicks || 0}</TableCell>
+                      <TableCell>
+                        <ButtonGroup>
                           {editingId === stand._id ? (
-                            <FormControl fullWidth>
-                              <Select
-                                value={stand.productType}
-                                onChange={(e) => {
-                                  const updatedStands = stands.map(s =>
-                                    s._id === stand._id ? { ...s, productType: e.target.value } : s
-                                  );
-                                  setStands(updatedStands);
-                                }}
+                            <Tooltip title="Gem ændringer" arrow>
+                              <IconButton
+                                onClick={() => handleSave(stand._id)}
+                                color="primary"
                               >
-                                {Object.values(PRODUCT_TYPES).map(type => (
-                                  <MenuItem key={type.value} value={type.value}>
-                                    {type.label}
-                                  </MenuItem>
-                                ))}
-                              </Select>
-                            </FormControl>
+                                <SaveIcon />
+                              </IconButton>
+                            </Tooltip>
                           ) : (
-                            PRODUCT_TYPES[stand.productType.toUpperCase()]?.label || stand.productType
+                            <Tooltip title="Rediger produkt" arrow>
+                              <IconButton
+                                onClick={() => handleEdit(stand._id)}
+                                color="primary"
+                              >
+                                <EditIcon />
+                              </IconButton>
+                            </Tooltip>
                           )}
-                        </TableCell>
-                        <TableCell>{stand.clicks || 0}</TableCell>
-                        <TableCell>
-                          <ButtonGroup>
-                            {editingId === stand._id ? (
-                              <Tooltip title="Gem ændringer" arrow>
-                                <IconButton
-                                  onClick={() => handleSave(stand._id)}
-                                  color="primary"
-                                >
-                                  <SaveIcon />
-                                </IconButton>
-                              </Tooltip>
-                            ) : (
-                              <Tooltip title="Rediger produkt" arrow>
-                                <IconButton
-                                  onClick={() => handleEdit(stand._id)}
-                                  color="primary"
-                                >
-                                  <EditIcon />
-                                </IconButton>
-                              </Tooltip>
-                            )}
-                            <Tooltip title="Download QR kode" arrow>
-                              <IconButton
-                                onClick={() => handleQrDownload(stand.standerId)}
-                                color="secondary"
-                              >
-                                <QrCodeIcon />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Slet produkt" arrow>
-                              <IconButton
-                                onClick={() => handleDelete(stand._id)}
-                                color="error"
-                              >
-                                <DeleteIcon />
-                              </IconButton>
-                            </Tooltip>
-                          </ButtonGroup>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            )}
+                          <Tooltip title="Download QR kode" arrow>
+                            <IconButton
+                              onClick={() => handleQrDownload(stand.standerId)}
+                              color="secondary"
+                            >
+                              <QrCodeIcon />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Slet produkt" arrow>
+                            <IconButton
+                              onClick={() => handleDelete(stand._id)}
+                              color="error"
+                            >
+                              <DeleteIcon />
+                            </IconButton>
+                          </Tooltip>
+                        </ButtonGroup>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Paper>
+        </Grid>
+
+        {/* Guides sektion - nu placeret sidst */}
+        <Grid item xs={12}>
+          <Paper sx={{ p: 3, mt: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+              <GuideIcon sx={{ mr: 2, color: 'primary.main' }} />
+              <Typography variant="h6">
+                Guides & Tips
+              </Typography>
+            </Box>
+            
+            <Grid container spacing={3}>
+              {guides.map((guide) => (
+                <Grid item xs={12} sm={6} md={4} key={guide.id}>
+                  <Card 
+                    sx={{ 
+                      cursor: 'pointer',
+                      transition: 'transform 0.2s',
+                      '&:hover': {
+                        transform: 'scale(1.02)',
+                        boxShadow: (theme) => theme.shadows[4]
+                      }
+                    }}
+                    onClick={() => setSelectedGuide(guide)}
+                  >
+                    <CardMedia
+                      component="img"
+                      height="200"
+                      image={guide.thumbnail}
+                      alt={guide.title}
+                      sx={{
+                        objectFit: 'cover',
+                        objectPosition: 'center'
+                      }}
+                    />
+                    <CardContent>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        {guide.icon}
+                        <Typography variant="h6" sx={{ ml: 1 }}>
+                          {guide.title}
+                        </Typography>
+                      </Box>
+                      <Typography color="text.secondary">
+                        {guide.description}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
           </Paper>
         </Grid>
       </Grid>
@@ -1554,6 +1618,31 @@ const Dashboard = () => {
           {alert.message}
         </Alert>
       </Snackbar>
+
+      {/* Guide dialog */}
+      <Dialog
+        open={!!selectedGuide}
+        onClose={() => setSelectedGuide(null)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            {selectedGuide?.icon}
+            <Typography variant="h6" sx={{ ml: 1 }}>
+              {selectedGuide?.title}
+            </Typography>
+          </Box>
+        </DialogTitle>
+        <DialogContent dividers>
+          {selectedGuide?.content}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setSelectedGuide(null)}>
+            Luk
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Layout>
   );
 };

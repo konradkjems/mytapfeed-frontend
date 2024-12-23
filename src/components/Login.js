@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link as RouterLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import logo from '../assets/tapfeed logo white wide transparent.svg';
 import {
@@ -55,6 +55,54 @@ const Login = () => {
   const navigate = useNavigate();
   const { setIsAuthenticated } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const location = useLocation();
+
+  useEffect(() => {
+    // Check if we're returning from Google OAuth
+    const checkGoogleAuth = async () => {
+      try {
+        console.log('Checking auth status after Google redirect');
+        const response = await fetch(`${API_URL}/api/auth/status`, {
+          credentials: 'include',
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+        
+        console.log('Auth status response:', {
+          status: response.status,
+          headers: Object.fromEntries(response.headers.entries())
+        });
+
+        const data = await response.json();
+        console.log('Auth status data:', data);
+        
+        if (data.isAuthenticated) {
+          console.log('User is authenticated, redirecting to dashboard');
+          setIsAuthenticated(true);
+          navigate('/dashboard', { replace: true });
+        } else {
+          console.log('User is not authenticated');
+          const urlParams = new URLSearchParams(location.search);
+          if (urlParams.has('error')) {
+            setError(`Login fejlede: ${urlParams.get('error')}`);
+          }
+        }
+      } catch (error) {
+        console.error('Error checking auth status:', error);
+        setError('Der opstod en fejl ved login. Prøv igen.');
+      }
+    };
+
+    // Check auth status hvis vi har en session ID eller kommer fra Google OAuth
+    const params = new URLSearchParams(location.search);
+    if (params.has('sessionId') || params.has('code') || params.has('error')) {
+      console.log('Detected auth redirect with params:', 
+        Object.fromEntries(params.entries())
+      );
+      checkGoogleAuth();
+    }
+  }, [location, navigate, setIsAuthenticated]);
 
   const handleChange = (e) => {
     setFormData({
@@ -97,7 +145,14 @@ const Login = () => {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = `${API_URL}/api/auth/google`;
+    console.log('Initiating Google login');
+    // I udvikling skal vi bruge samme origin som frontend
+    const baseUrl = process.env.NODE_ENV === 'production'
+      ? 'https://api.tapfeed.dk'
+      : window.location.origin;
+    const googleAuthUrl = `${baseUrl}/api/auth/google`;
+    console.log('Redirecting to:', googleAuthUrl);
+    window.location.href = googleAuthUrl;
   };
 
   return (

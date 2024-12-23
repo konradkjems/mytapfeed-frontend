@@ -9,6 +9,17 @@ module.exports = function(app) {
       secure: false,
       headers: {
         Connection: 'keep-alive'
+      },
+      onProxyReq: function(proxyReq, req, res) {
+        // Log proxy request
+        console.log('Proxying:', {
+          method: req.method,
+          path: req.path,
+          target: 'http://localhost:3000' + req.path
+        });
+      },
+      onError: function(err, req, res) {
+        console.error('Proxy error:', err);
       }
     })
   );
