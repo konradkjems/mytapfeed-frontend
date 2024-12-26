@@ -14,6 +14,7 @@ import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import LandingPages from './components/LandingPages';
 import LandingPageView from './components/LandingPageView';
+import ClaimProduct from './components/ClaimProduct';
 
 function App() {
   return (
@@ -53,6 +54,7 @@ function App() {
                 </ProtectedRoute>
               } />
               <Route path="/landing/:id" element={<LandingPageView />} />
+              <Route path="/claim/:standerId" element={<ClaimProduct />} />
             </Routes>
           </div>
         </Router>

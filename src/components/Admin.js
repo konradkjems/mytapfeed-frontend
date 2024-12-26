@@ -31,7 +31,11 @@ import {
   ListItemText,
   ListItemSecondaryAction,
   FormControlLabel,
-  Switch
+  Switch,
+  Tooltip,
+  FormHelperText,
+  Link,
+  Checkbox,
 } from '@mui/material';
 import {
   Block as BlockIcon,
@@ -40,11 +44,20 @@ import {
   Delete as DeleteIcon,
   Edit as EditIcon,
   Key as KeyIcon,
-  Visibility as ViewIcon
+  Visibility as ViewIcon,
+  Add as AddIcon,
+  Download as DownloadIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import Layout from './Layout';
 import API_URL from '../config';
+
+const PRODUCT_TYPES = {
+  STANDER: { value: 'stander', label: 'Stander' },
+  STICKER: { value: 'sticker', label: 'Sticker' },
+  KORT: { value: 'kort', label: 'Kort' },
+  PLATE: { value: 'plate', label: 'Plate' }
+};
 
 const Admin = () => {
   const [users, setUsers] = useState([]);
@@ -61,10 +74,27 @@ const Admin = () => {
     email: '',
     isAdmin: false
   });
+  const [openProductDialog, setOpenProductDialog] = useState(false);
+  const [newProduct, setNewProduct] = useState({
+    standerId: '',
+    productType: 'stander'
+  });
+  const [bulkCreate, setBulkCreate] = useState({
+    startId: '',
+    count: 1,
+    productType: 'stander'
+  });
+  const [bulkDialog, setBulkDialog] = useState(false);
+  const [unclaimedProducts, setUnclaimedProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedProducts, setSelectedProducts] = useState([]);
+  const [deleteUnclaimedDialog, setDeleteUnclaimedDialog] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchUsers();
+    fetchUnclaimedProducts();
   }, []);
 
   const fetchUsers = async () => {
@@ -87,6 +117,20 @@ const Admin = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchUnclaimedProducts = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/stands/unclaimed`, {
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Kunne ikke hente unclaimed produkter');
+      const data = await response.json();
+      setUnclaimedProducts(data);
+    } catch (error) {
+      console.error('Fejl ved hentning af unclaimed produkter:', error);
+      setError('Kunne ikke hente unclaimed produkter');
     }
   };
 
@@ -224,6 +268,160 @@ const Admin = () => {
     }
   };
 
+  const handleAddProduct = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/stands`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          ...newProduct,
+          status: 'unclaimed'
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Kunne ikke oprette produkt');
+      }
+
+      setAlert({
+        open: true,
+        message: 'Produkt oprettet succesfuldt',
+        severity: 'success'
+      });
+      setOpenProductDialog(false);
+      setNewProduct({
+        standerId: '',
+        productType: 'stander'
+      });
+    } catch (error) {
+      console.error('Fejl ved oprettelse af produkt:', error);
+      setAlert({
+        open: true,
+        message: error.message || 'Der opstod en fejl ved oprettelse af produkt',
+        severity: 'error'
+      });
+    }
+  };
+
+  const handleBulkCreate = async () => {
+    try {
+      const { startId, count, productType } = bulkCreate;
+      const baseId = startId.replace(/\d+$/, ''); // Fjern eventuelle tal fra slutningen
+      const startNumber = parseInt(startId.match(/\d+$/)?.[0] || '1'); // Find startnummer eller brug 1
+
+      const products = Array.from({ length: count }, (_, index) => ({
+        standerId: `${baseId}${(startNumber + index).toString().padStart(3, '0')}`,
+        productType,
+        status: 'unclaimed'
+      }));
+
+      const response = await fetch(`${API_URL}/api/stands/bulk`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({ products })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Kunne ikke oprette produkter');
+      }
+
+      setAlert({
+        open: true,
+        message: `${count} produkter oprettet succesfuldt`,
+        severity: 'success'
+      });
+      setBulkDialog(false);
+      setBulkCreate({
+        startId: '',
+        count: 1,
+        productType: 'stander'
+      });
+    } catch (error) {
+      console.error('Fejl ved oprettelse af produkter:', error);
+      setAlert({
+        open: true,
+        message: error.message || 'Der opstod en fejl ved oprettelse af produkter',
+        severity: 'error'
+      });
+    }
+  };
+
+  const handleDownloadCSV = () => {
+    if (selectedProducts.length === 0) {
+        setAlert({
+            open: true,
+            message: 'Vælg mindst ét produkt at downloade',
+            severity: 'warning'
+        });
+        return;
+    }
+    const ids = selectedProducts.join(',');
+    window.location.href = `${API_URL}/api/stands/unclaimed/csv?ids=${ids}`;
+  };
+
+  const handleDownloadQR = () => {
+    if (selectedProducts.length === 0) {
+        setAlert({
+            open: true,
+            message: 'Vælg mindst ét produkt at downloade',
+            severity: 'warning'
+        });
+        return;
+    }
+    const ids = selectedProducts.join(',');
+    window.location.href = `${API_URL}/api/stands/unclaimed/qr-codes?ids=${ids}`;
+  };
+
+  const confirmDeleteUnclaimed = () => {
+    setDeleteUnclaimedDialog(true);
+  };
+
+  const handleDeleteUnclaimed = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/admin/stands/unclaimed`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({ 
+          ids: selectedProducts.length > 0 ? selectedProducts : undefined 
+        })
+      });
+
+      if (!response.ok) throw new Error('Kunne ikke slette produkter');
+      
+      const data = await response.json();
+      setAlert({
+        open: true,
+        message: data.message,
+        severity: 'success'
+      });
+      
+      // Opdater listen af unclaimed produkter
+      await fetchUnclaimedProducts();
+      // Nulstil valgte produkter
+      setSelectedProducts([]);
+      // Luk dialogen
+      setDeleteUnclaimedDialog(false);
+    } catch (error) {
+      console.error('Fejl ved sletning af produkter:', error);
+      setAlert({
+        open: true,
+        message: 'Der opstod en fejl ved sletning af produkter',
+        severity: 'error'
+      });
+    }
+  };
+
   return (
     <Layout title="Admin Panel">
       <Grid container spacing={3}>
@@ -328,6 +526,118 @@ const Admin = () => {
                 </Table>
               </TableContainer>
             )}
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12}>
+          <Paper sx={{ p: 3 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="h6">
+                Unclaimed Produkter
+              </Typography>
+              <Box>
+                <ButtonGroup variant="contained" sx={{ mr: 1 }}>
+                  <Button
+                    onClick={handleDownloadCSV}
+                    startIcon={<DownloadIcon />}
+                    disabled={unclaimedProducts.length === 0}
+                  >
+                    Download CSV
+                  </Button>
+                  <Button
+                    onClick={handleDownloadQR}
+                    startIcon={<DownloadIcon />}
+                    disabled={unclaimedProducts.length === 0}
+                  >
+                    Download QR
+                  </Button>
+                  <Button
+                    onClick={confirmDeleteUnclaimed}
+                    startIcon={<DeleteIcon />}
+                    disabled={unclaimedProducts.length === 0}
+                    color="error"
+                  >
+                    {selectedProducts.length > 0 
+                      ? `Slet ${selectedProducts.length} valgte` 
+                      : 'Slet alle'}
+                  </Button>
+                </ButtonGroup>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  startIcon={<AddIcon />}
+                  onClick={() => setOpenProductDialog(true)}
+                  sx={{ mr: 1 }}
+                >
+                  Tilføj Produkt
+                </Button>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  startIcon={<AddIcon />}
+                  onClick={() => setBulkDialog(true)}
+                >
+                  Opret Flere Produkter
+                </Button>
+              </Box>
+            </Box>
+            
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              Her kan du oprette nye produkter som endnu ikke er tilknyttet en bruger. 
+              Når en bruger scanner produktet første gang, vil de få mulighed for at aktivere det.
+            </Typography>
+
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell padding="checkbox">
+                      <Checkbox
+                        checked={selectedProducts.length === unclaimedProducts.length}
+                        indeterminate={selectedProducts.length > 0 && selectedProducts.length < unclaimedProducts.length}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedProducts(unclaimedProducts.map(p => p._id));
+                          } else {
+                            setSelectedProducts([]);
+                          }
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell>Produkt ID</TableCell>
+                    <TableCell>Type</TableCell>
+                    <TableCell>Oprettet</TableCell>
+                    <TableCell>TapFeed URL</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {unclaimedProducts.map((product) => (
+                    <TableRow key={product._id}>
+                      <TableCell padding="checkbox">
+                        <Checkbox
+                          checked={selectedProducts.includes(product._id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedProducts([...selectedProducts, product._id]);
+                            } else {
+                              setSelectedProducts(selectedProducts.filter(id => id !== product._id));
+                            }
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell>{product.standerId}</TableCell>
+                      <TableCell>{PRODUCT_TYPES[product.productType.toUpperCase()]?.label || product.productType}</TableCell>
+                      <TableCell>{new Date(product.createdAt).toLocaleString('da-DK')}</TableCell>
+                      <TableCell>
+                        <Link href={`${API_URL}/${product.standerId}`} target="_blank">
+                          {`${API_URL}/${product.standerId}`}
+                        </Link>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
           </Paper>
         </Grid>
       </Grid>
@@ -470,6 +780,150 @@ const Admin = () => {
           </Button>
           <Button onClick={handleDeleteUser} variant="contained" color="error">
             Slet Bruger
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog til oprettelse af unclaimed produkter */}
+      <Dialog open={openProductDialog} onClose={() => setOpenProductDialog(false)}>
+        <DialogTitle>Opret Nyt Unclaimed Produkt</DialogTitle>
+        <DialogContent>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid item xs={12}>
+              <Tooltip title="Indtast det unikke ID som er trykt på TapFeed produktet" arrow placement="top-start">
+                <TextField
+                  fullWidth
+                  label="Produkt ID"
+                  value={newProduct.standerId}
+                  onChange={(e) => setNewProduct({ ...newProduct, standerId: e.target.value })}
+                  required
+                  helperText="Det unikke ID der er trykt på produktet"
+                />
+              </Tooltip>
+            </Grid>
+            <Grid item xs={12}>
+              <Tooltip title="Vælg hvilken type TapFeed produkt det er" arrow placement="top-start">
+                <FormControl fullWidth>
+                  <InputLabel>Produkttype</InputLabel>
+                  <Select
+                    value={newProduct.productType}
+                    onChange={(e) => setNewProduct({ ...newProduct, productType: e.target.value })}
+                  >
+                    {Object.values(PRODUCT_TYPES).map(type => (
+                      <MenuItem key={type.value} value={type.value}>
+                        {type.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  <FormHelperText>Vælg den type fysisk produkt</FormHelperText>
+                </FormControl>
+              </Tooltip>
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenProductDialog(false)}>Annuller</Button>
+          <Button onClick={handleAddProduct} variant="contained">Opret</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog til bulk oprettelse af produkter */}
+      <Dialog open={bulkDialog} onClose={() => setBulkDialog(false)}>
+        <DialogTitle>Opret Flere Unclaimed Produkter</DialogTitle>
+        <DialogContent>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid item xs={12}>
+              <Tooltip title="Indtast start ID'et for produkterne (f.eks. 'TF001')" arrow placement="top-start">
+                <TextField
+                  fullWidth
+                  label="Start ID"
+                  value={bulkCreate.startId}
+                  onChange={(e) => setBulkCreate({ ...bulkCreate, startId: e.target.value })}
+                  required
+                  helperText="De efterfølgende produkter vil få fortløbende numre"
+                />
+              </Tooltip>
+            </Grid>
+            <Grid item xs={12}>
+              <Tooltip title="Antal produkter der skal oprettes" arrow placement="top-start">
+                <TextField
+                  fullWidth
+                  label="Antal produkter"
+                  type="number"
+                  value={bulkCreate.count}
+                  onChange={(e) => setBulkCreate({ ...bulkCreate, count: parseInt(e.target.value) || 1 })}
+                  required
+                  inputProps={{ min: 1, max: 1000 }}
+                  helperText="Vælg hvor mange produkter der skal oprettes (max 1000)"
+                />
+              </Tooltip>
+            </Grid>
+            <Grid item xs={12}>
+              <Tooltip title="Vælg hvilken type TapFeed produkt det er" arrow placement="top-start">
+                <FormControl fullWidth>
+                  <InputLabel sx={{ mt: -1 }}>Produkttype</InputLabel>
+                  <Select
+                    value={bulkCreate.productType}
+                    onChange={(e) => setBulkCreate({ ...bulkCreate, productType: e.target.value })}
+                  >
+                    {Object.values(PRODUCT_TYPES).map(type => (
+                      <MenuItem key={type.value} value={type.value}>
+                        {type.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  <FormHelperText>Vælg den type fysisk produkt</FormHelperText>
+                </FormControl>
+              </Tooltip>
+            </Grid>
+            <Grid item xs={12}>
+              <Alert severity="info">
+                Dette vil oprette {bulkCreate.count} produkter med ID'er fra {bulkCreate.startId} til {
+                  (() => {
+                    const baseId = bulkCreate.startId.replace(/\d+$/, '');
+                    const startNumber = parseInt(bulkCreate.startId.match(/\d+$/)?.[0] || '1');
+                    const endNumber = startNumber + bulkCreate.count - 1;
+                    return `${baseId}${endNumber.toString().padStart(3, '0')}`;
+                  })()
+                }
+              </Alert>
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setBulkDialog(false)}>Annuller</Button>
+          <Button 
+            onClick={handleBulkCreate} 
+            variant="contained"
+            disabled={!bulkCreate.startId || bulkCreate.count < 1}
+          >
+            Opret Produkter
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Bekræft sletning af unclaimed produkter */}
+      <Dialog
+        open={deleteUnclaimedDialog}
+        onClose={() => setDeleteUnclaimedDialog(false)}
+      >
+        <DialogTitle>Bekræft Sletning</DialogTitle>
+        <DialogContent>
+          <Typography>
+            {selectedProducts.length > 0 
+              ? `Er du sikker på at du vil slette ${selectedProducts.length} valgte produkter?`
+              : 'Er du sikker på at du vil slette alle unclaimed produkter?'}
+          </Typography>
+          <Typography color="error" sx={{ mt: 2 }}>
+            Denne handling kan ikke fortrydes.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteUnclaimedDialog(false)}>
+            Annuller
+          </Button>
+          <Button onClick={handleDeleteUnclaimed} variant="contained" color="error">
+            Slet
           </Button>
         </DialogActions>
       </Dialog>

@@ -16,7 +16,10 @@ import {
   Select,
   MenuItem,
   FormControl,
-  InputLabel
+  InputLabel,
+  Button,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import { BarChart } from '@mui/x-charts';
 import { LineChart } from '@mui/x-charts';
@@ -37,6 +40,7 @@ const Statistics = () => {
   const [selectedTimeRange, setSelectedTimeRange] = useState('week');
   const [selectedProductType, setSelectedProductType] = useState('all');
   const { mode } = useTheme();
+  const [alert, setAlert] = useState({ open: false, message: '', severity: 'success' });
 
   useEffect(() => {
     fetchStands();
@@ -157,6 +161,31 @@ const Statistics = () => {
     };
   };
 
+  const handleRefreshData = async () => {
+    try {
+      setIsLoading(true);
+      // Ryd cache
+      sessionStorage.removeItem('statisticsData');
+      sessionStorage.removeItem('statisticsCacheTimestamp');
+      
+      // Hent ny data
+      await fetchStands();
+      
+      setAlert({
+        open: true,
+        message: 'Data opdateret succesfuldt',
+        severity: 'success'
+      });
+    } catch (error) {
+      console.error('Fejl ved opdatering af data:', error);
+      setAlert({
+        open: true,
+        message: 'Der opstod en fejl ved opdatering af data',
+        severity: 'error'
+      });
+    }
+  };
+
   const stats = calculateStatistics();
   const timeSeriesData = prepareTimeSeriesData();
 
@@ -173,36 +202,46 @@ const Statistics = () => {
   return (
     <Layout title="Statistik">
       <Grid container spacing={3}>
-        {/* Filtre */}
+        {/* Filtre og Opdater Data knap */}
         <Grid item xs={12}>
-          <Paper sx={{ p: 2, display: 'flex', gap: 2 }}>
-            <FormControl sx={{ minWidth: 200 }}>
-              <InputLabel>Tidsperiode</InputLabel>
-              <Select
-                value={selectedTimeRange}
-                label="Tidsperiode"
-                onChange={(e) => setSelectedTimeRange(e.target.value)}
-              >
-                <MenuItem value="week">Sidste 7 dage</MenuItem>
-                <MenuItem value="month">Sidste 30 dage</MenuItem>
-                <MenuItem value="year">Sidste år</MenuItem>
-              </Select>
-            </FormControl>
-            <FormControl sx={{ minWidth: 200 }}>
-              <InputLabel>Produkttype</InputLabel>
-              <Select
-                value={selectedProductType}
-                label="Produkttype"
-                onChange={(e) => setSelectedProductType(e.target.value)}
-              >
-                <MenuItem value="all">Alle produkter</MenuItem>
-                {Object.values(PRODUCT_TYPES).map(type => (
-                  <MenuItem key={type.value} value={type.value}>
-                    {type.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+          <Paper sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <FormControl sx={{ minWidth: 200 }}>
+                <InputLabel>Tidsperiode</InputLabel>
+                <Select
+                  value={selectedTimeRange}
+                  label="Tidsperiode"
+                  onChange={(e) => setSelectedTimeRange(e.target.value)}
+                >
+                  <MenuItem value="week">Sidste 7 dage</MenuItem>
+                  <MenuItem value="month">Sidste 30 dage</MenuItem>
+                  <MenuItem value="year">Sidste år</MenuItem>
+                </Select>
+              </FormControl>
+              <FormControl sx={{ minWidth: 200 }}>
+                <InputLabel>Produkttype</InputLabel>
+                <Select
+                  value={selectedProductType}
+                  label="Produkttype"
+                  onChange={(e) => setSelectedProductType(e.target.value)}
+                >
+                  <MenuItem value="all">Alle produkter</MenuItem>
+                  {Object.values(PRODUCT_TYPES).map(type => (
+                    <MenuItem key={type.value} value={type.value}>
+                      {type.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+            <Button
+              variant="outlined"
+              onClick={handleRefreshData}
+              disabled={isLoading}
+              startIcon={isLoading ? <CircularProgress size={20} /> : null}
+            >
+              {isLoading ? 'Opdaterer...' : 'Opdater Data'}
+            </Button>
           </Paper>
         </Grid>
 
@@ -339,6 +378,20 @@ const Statistics = () => {
           </Paper>
         </Grid>
       </Grid>
+
+      <Snackbar
+        open={alert.open}
+        autoHideDuration={6000}
+        onClose={() => setAlert({ ...alert, open: false })}
+      >
+        <Alert
+          onClose={() => setAlert({ ...alert, open: false })}
+          severity={alert.severity}
+          sx={{ width: '100%' }}
+        >
+          {alert.message}
+        </Alert>
+      </Snackbar>
     </Layout>
   );
 };

@@ -69,6 +69,16 @@ import {
   MenuBook as GuideIcon,
   Star as StarIcon,
   Link as LinkIcon,
+  Web as WebIcon,
+  Title as TitleIcon,
+  Description as DescriptionIcon,
+  Image as ImageIcon,
+  TouchApp as TouchAppIcon,
+  BarChart as BarChartIcon,
+  Timeline as TimelineIcon,
+  CompareArrows as CompareArrowsIcon,
+  TrendingUp as TrendingUpIcon,
+  Update as UpdateIcon,
 } from '@mui/icons-material';
 import { BarChart } from '@mui/x-charts/BarChart';
 import { useAuth } from '../context/AuthContext';
@@ -285,6 +295,7 @@ const LoadingButton = ({ loading, disabled, onClick, children, variant = "contai
 );
 
 const Dashboard = () => {
+  const { userData } = useAuth();
   const [stands, setStands] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
@@ -361,67 +372,69 @@ const Dashboard = () => {
 
   const fetchInitialData = async () => {
     try {
-      setIsLoading(true);
-      setIsLoadingReviews(true);
+        setIsLoading(true);
+        setIsLoadingReviews(true);
 
-      // Tjek først sessionStorage for cached data
-      const cachedStands = sessionStorage.getItem('dashboardStands');
-      const cachedReviews = sessionStorage.getItem('dashboardReviews');
-      const cachedBusinessData = sessionStorage.getItem('dashboardBusiness');
-      const cacheTimestamp = sessionStorage.getItem('dashboardCacheTimestamp');
+        // Tjek først sessionStorage for cached data
+        const cachedStands = sessionStorage.getItem('dashboardStands');
+        const cachedReviews = sessionStorage.getItem('dashboardReviews');
+        const cachedBusinessData = sessionStorage.getItem('dashboardBusiness');
+        const cacheTimestamp = sessionStorage.getItem('dashboardCacheTimestamp');
 
-      // Tjek om cache er gyldig (mindre end 5 minutter gammel)
-      const isCacheValid = cacheTimestamp && (Date.now() - parseInt(cacheTimestamp)) < 5 * 60 * 1000;
+        // Tjek om cache er gyldig (mindre end 5 minutter gammel)
+        const isCacheValid = cacheTimestamp && (Date.now() - parseInt(cacheTimestamp)) < 5 * 60 * 1000;
 
-      if (isCacheValid && cachedStands && cachedReviews && cachedBusinessData) {
-        console.log('Bruger cached dashboard data');
-        setStands(JSON.parse(cachedStands));
-        setReviews(JSON.parse(cachedReviews));
-        setBusinessData(JSON.parse(cachedBusinessData));
-        setIsLoading(false);
-        setIsLoadingReviews(false);
-        setIsInitialLoad(false);
-        return;
-      }
+        if (isCacheValid && cachedStands && cachedReviews && cachedBusinessData) {
+            console.log('Bruger cached dashboard data');
+            setStands(JSON.parse(cachedStands));
+            setReviews(JSON.parse(cachedReviews));
+            setBusinessData(JSON.parse(cachedBusinessData));
+            setIsLoading(false);
+            setIsLoadingReviews(false);
+            return;
+        }
 
-      // Hvis ingen gyldig cache, hent ny data
-      const [standsResponse, reviewsResponse] = await Promise.all([
-        fetch(`${API_URL}/api/stands`, {
-          credentials: 'include'
-        }),
-        fetch(`${API_URL}/api/business/google-reviews`, {
-          credentials: 'include'
-        })
-      ]);
+        // Hvis ingen gyldig cache, hent ny data
+        const [standsResponse, reviewsResponse] = await Promise.all([
+            fetch(`${API_URL}/api/stands`, {
+                credentials: 'include'
+            }),
+            fetch(`${API_URL}/api/business/google-reviews`, {
+                credentials: 'include'
+            })
+        ]);
 
-      if (standsResponse.ok) {
+        if (!standsResponse.ok) throw new Error('Kunne ikke hente produkter');
         const standsData = await standsResponse.json();
         setStands(standsData);
         sessionStorage.setItem('dashboardStands', JSON.stringify(standsData));
-      }
 
-      if (reviewsResponse.ok) {
-        const reviewsData = await reviewsResponse.json();
-        setBusinessData(reviewsData.business);
-        setReviews(reviewsData.reviews);
-        sessionStorage.setItem('dashboardReviews', JSON.stringify(reviewsData.reviews));
-        sessionStorage.setItem('dashboardBusiness', JSON.stringify(reviewsData.business));
-      }
+        if (reviewsResponse.ok) {
+            const reviewsData = await reviewsResponse.json();
+            setBusinessData(reviewsData.business);
+            setReviews(reviewsData.reviews);
+            sessionStorage.setItem('dashboardReviews', JSON.stringify(reviewsData.reviews));
+            sessionStorage.setItem('dashboardBusiness', JSON.stringify(reviewsData.business));
+        }
 
-      // Gem timestamp for cachen
-      sessionStorage.setItem('dashboardCacheTimestamp', Date.now().toString());
+        // Gem timestamp for cachen
+        sessionStorage.setItem('dashboardCacheTimestamp', Date.now().toString());
 
+        setAlert({
+            open: true,
+            message: 'Data opdateret succesfuldt',
+            severity: 'success'
+        });
     } catch (error) {
-      console.error('Fejl ved indlæsning af data:', error);
-      setAlert({
-        open: true,
-        message: 'Der opstod en fejl ved indlæsning af data',
-        severity: 'error'
-      });
+        console.error('Fejl ved hentning af data:', error);
+        setAlert({
+            open: true,
+            message: 'Der opstod en fejl ved opdatering af data',
+            severity: 'error'
+        });
     } finally {
-      setIsLoading(false);
-      setIsLoadingReviews(false);
-      setIsInitialLoad(false);
+        setIsLoading(false);
+        setIsLoadingReviews(false);
     }
   };
 
@@ -429,16 +442,33 @@ const Dashboard = () => {
     fetchInitialData();
   }, []);
 
-  // Funktion til at tvinge genindlæsning af data
   const handleRefreshData = async () => {
-    // Ryd cache
-    sessionStorage.removeItem('dashboardStands');
-    sessionStorage.removeItem('dashboardReviews');
-    sessionStorage.removeItem('dashboardBusiness');
-    sessionStorage.removeItem('dashboardCacheTimestamp');
-    
-    // Sæt isInitialLoad til true for at tvinge genindlæsning
-    setIsInitialLoad(true);
+    setIsLoading(true);
+    try {
+      // Ryd cache
+      sessionStorage.removeItem('dashboardStands');
+      sessionStorage.removeItem('dashboardReviews');
+      sessionStorage.removeItem('dashboardBusiness');
+      sessionStorage.removeItem('dashboardCacheTimestamp');
+
+      // Hent ny data
+      await fetchInitialData();
+
+      setAlert({
+        open: true,
+        message: 'Data opdateret succesfuldt',
+        severity: 'success'
+      });
+    } catch (error) {
+      console.error('Fejl ved opdatering af data:', error);
+      setAlert({
+        open: true,
+        message: 'Der opstod en fejl ved opdatering af data',
+        severity: 'error'
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Opdater kun Google reviews når locationDialog lukkes
@@ -513,7 +543,11 @@ const Dashboard = () => {
           'Content-Type': 'application/json'
         },
         credentials: 'include',
-        body: JSON.stringify(newStand)
+        body: JSON.stringify({
+          ...newStand,
+          status: userData?.isAdmin ? 'unclaimed' : 'claimed',
+          ownerId: userData?.isAdmin ? null : userData?._id
+        })
       });
 
       if (response.ok) {
@@ -531,13 +565,7 @@ const Dashboard = () => {
         });
         
         // Hent opdateret liste af stands
-        const standsResponse = await fetch(`${API_URL}/api/stands`, {
-          credentials: 'include'
-        });
-        if (standsResponse.ok) {
-          const standsData = await standsResponse.json();
-          setStands(standsData);
-        }
+        fetchStands();
       } else {
         const error = await response.json();
         throw new Error(error.message || 'Kunne ikke tilføje produkt');
@@ -898,6 +926,174 @@ const Dashboard = () => {
           </Box>
         </>
       )
+    },
+    {
+      id: 'landing-pages',
+      title: 'Opret effektive landing pages',
+      description: 'Få tips til at lave engagerende landing pages der konverterer besøgende til kunder.',
+      thumbnail: 'https://images.pexels.com/photos/196644/pexels-photo-196644.jpeg',
+      icon: <WebIcon />,
+      content: (
+        <>
+          <Typography variant="h6" gutterBottom>
+            Guide til at lave effektive landing pages
+          </Typography>
+          
+          <List>
+            <ListItem>
+              <ListItemIcon>
+                <TitleIcon />
+              </ListItemIcon>
+              <ListItemText 
+                primary="1. Skriv en fængende titel" 
+                secondary="Brug en klar og handlingsorienteret titel der fortæller hvad besøgende kan få eller opnå."
+              />
+            </ListItem>
+            
+            <ListItem>
+              <ListItemIcon>
+                <DescriptionIcon />
+              </ListItemIcon>
+              <ListItemText 
+                primary="2. Lav en overbevisende beskrivelse" 
+                secondary="Forklar kort og præcist værditilbuddet og hvorfor besøgende skal vælge din virksomhed."
+              />
+            </ListItem>
+            
+            <ListItem>
+              <ListItemIcon>
+                <ImageIcon />
+              </ListItemIcon>
+              <ListItemText 
+                primary="3. Tilføj visuelt indhold" 
+                secondary="Upload et professionelt logo og et relevant baggrundsbillede der understøtter dit budskab."
+              />
+            </ListItem>
+            
+            <ListItem>
+              <ListItemIcon>
+                <TouchAppIcon />
+              </ListItemIcon>
+              <ListItemText 
+                primary="4. Skab tydelige handlingsknapper" 
+                secondary="Tilføj knapper med klare opfordringer til handling, f.eks. 'Book nu' eller 'Se menu'."
+              />
+            </ListItem>
+          </List>
+          
+          <Box sx={{ mt: 3 }}>
+            <Typography variant="subtitle1" gutterBottom>
+              Tips til optimering:
+            </Typography>
+            <List>
+              <ListItem>
+                <ListItemText 
+                  secondary="• Hold designet enkelt og fokuseret på ét primært mål"
+                />
+              </ListItem>
+              <ListItem>
+                <ListItemText 
+                  secondary="• Brug farver der matcher din brandidentitet"
+                />
+              </ListItem>
+              <ListItem>
+                <ListItemText 
+                  secondary="• Test forskellige versioner for at se hvad der virker bedst"
+                />
+              </ListItem>
+              <ListItem>
+                <ListItemText 
+                  secondary="• Tilføj sociale medier for at øge troværdigheden"
+                />
+              </ListItem>
+            </List>
+          </Box>
+        </>
+      )
+    },
+    {
+      id: 'statistics',
+      title: 'Forstå din statistik',
+      description: 'Lær at analysere din data og optimere dine resultater med TapFeed statistik.',
+      thumbnail: 'https://images.pexels.com/photos/590022/pexels-photo-590022.jpeg',
+      icon: <BarChartIcon />,
+      content: (
+        <>
+          <Typography variant="h6" gutterBottom>
+            Sådan bruger du TapFeed statistik
+          </Typography>
+          
+          <List>
+            <ListItem>
+              <ListItemIcon>
+                <TimelineIcon />
+              </ListItemIcon>
+              <ListItemText 
+                primary="1. Følg dine klik over tid" 
+                secondary="Se hvordan antallet af interaktioner udvikler sig dag for dag, uge for uge eller måned for måned."
+              />
+            </ListItem>
+            
+            <ListItem>
+              <ListItemIcon>
+                <CompareArrowsIcon />
+              </ListItemIcon>
+              <ListItemText 
+                primary="2. Sammenlign produkter" 
+                secondary="Analyser hvilke produkter og placeringer der genererer flest interaktioner."
+              />
+            </ListItem>
+            
+            <ListItem>
+              <ListItemIcon>
+                <TrendingUpIcon />
+              </ListItemIcon>
+              <ListItemText 
+                primary="3. Identificer trends" 
+                secondary="Find mønstre i brugeradfærd og identificer de mest effektive tidspunkter og placeringer."
+              />
+            </ListItem>
+            
+            <ListItem>
+              <ListItemIcon>
+                <UpdateIcon />
+              </ListItemIcon>
+              <ListItemText 
+                primary="4. Optimer løbende" 
+                secondary="Brug indsigterne til at justere dine produkters placering og strategi."
+              />
+            </ListItem>
+          </List>
+          
+          <Box sx={{ mt: 3 }}>
+            <Typography variant="subtitle1" gutterBottom>
+              Nøgletal at holde øje med:
+            </Typography>
+            <List>
+              <ListItem>
+                <ListItemText 
+                  secondary="• Totale antal klik per produkt"
+                />
+              </ListItem>
+              <ListItem>
+                <ListItemText 
+                  secondary="• Gennemsnitlige daglige interaktioner"
+                />
+              </ListItem>
+              <ListItem>
+                <ListItemText 
+                  secondary="• Højt og lavt performende placeringer"
+                />
+              </ListItem>
+              <ListItem>
+                <ListItemText 
+                  secondary="• Sæsonmæssige udsving i aktivitet"
+                />
+              </ListItem>
+            </List>
+          </Box>
+        </>
+      )
     }
   ];
 
@@ -916,14 +1112,14 @@ const Dashboard = () => {
               <Typography variant="h6" color="primary" gutterBottom>
                 Statistik
               </Typography>
-              <Box sx={{ mt: 3 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
                 <Button
-                  variant="contained"
-                  onClick={fetchInitialData}
-                  startIcon={<RefreshIcon />}
-                  disabled={isLoading || isLoadingReviews}
+                  variant="outlined"
+                  onClick={handleRefreshData}
+                  disabled={isLoading}
+                  startIcon={isLoading ? <CircularProgress size={20} /> : null}
                 >
-                  Opdater data
+                  {isLoading ? 'Opdaterer...' : 'Opdater Data'}
                 </Button>
               </Box>
             </Box>
@@ -1234,7 +1430,7 @@ const Dashboard = () => {
                       </Tooltip>
                     </TableCell>
                     <TableCell>
-                      <Tooltip title="Den URL som QR koden peger på" arrow placement="top">
+                      <Tooltip title="Dette er det link som dit TapFeed produkt bruger til at videresende besøgende til din Redirect URL" arrow placement="top-start">
                         <Box component="span" sx={{ cursor: 'help' }}>
                           TapFeed URL
                         </Box>
@@ -1255,9 +1451,9 @@ const Dashboard = () => {
                       </Tooltip>
                     </TableCell>
                     <TableCell>
-                      <Tooltip title="Antal gange QR koden er blevet scannet" arrow placement="top">
+                      <Tooltip title="Antal gange dit produkt er blevet scannet med NFC eller QR" arrow placement="top">
                         <Box component="span" sx={{ cursor: 'help' }}>
-                          Antal Klik
+                          Antal klik
                         </Box>
                       </Tooltip>
                     </TableCell>
@@ -1440,54 +1636,82 @@ const Dashboard = () => {
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
         <DialogTitle>Tilføj Nyt Produkt</DialogTitle>
         <DialogContent>
-          <Tooltip title="Et unikt ID der identificerer dit produkt i systemet" arrow placement="top-start">
-            <TextField
-              autoFocus
-              margin="dense"
-              label="Produkt ID"
-              fullWidth
-              value={newStand.standerId}
-              onChange={(e) => setNewStand({ ...newStand, standerId: e.target.value })}
-              helperText="F.eks. 'cafe-bord-1' eller 'butik-vestergade'"
-            />
-          </Tooltip>
-          <Tooltip title="Et valgfrit navn der gør det lettere at genkende produktet" arrow placement="top-start">
-            <TextField
-              margin="dense"
-              label="Kaldenavn (valgfrit)"
-              fullWidth
-              value={newStand.nickname}
-              onChange={(e) => setNewStand({ ...newStand, nickname: e.target.value })}
-              placeholder="F.eks. 'Butik Vestergade' eller 'Café bord 1'"
-              helperText="Gør det lettere at identificere produktet i oversigten"
-            />
-          </Tooltip>
-          <Tooltip title="Den URL som brugeren bliver sendt videre til når de scanner QR koden" arrow placement="top-start">
-            <TextField
-              margin="dense"
-              label="Redirect URL"
-              fullWidth
-              value={newStand.redirectUrl}
-              onChange={(e) => setNewStand({ ...newStand, redirectUrl: e.target.value })}
-              helperText="F.eks. 'https://minbutik.dk/menu' eller 'https://facebook.com/minside'"
-            />
-          </Tooltip>
-          <Tooltip title="Vælg den type produkt du vil oprette" arrow placement="top-start">
-            <FormControl fullWidth margin="dense">
-              <InputLabel>Produkttype</InputLabel>
-              <Select
-                value={newStand.productType}
-                onChange={(e) => setNewStand({ ...newStand, productType: e.target.value })}
-              >
-                {Object.values(PRODUCT_TYPES).map(type => (
-                  <MenuItem key={type.value} value={type.value}>
-                    {type.label}
-                  </MenuItem>
-                ))}
-              </Select>
-              <FormHelperText>Vælg den type fysisk produkt du vil bruge</FormHelperText>
-            </FormControl>
-          </Tooltip>
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <Tooltip title="Indtast det unikke ID som er trykt på dit TapFeed produkt (f.eks. 'XYZ123')" arrow placement="top-start">
+                <TextField
+                  fullWidth
+                  label="Produkt ID"
+                  value={newStand.standerId}
+                  onChange={(e) => setNewStand({ ...newStand, standerId: e.target.value })}
+                  required
+                  helperText="Det unikke ID der er trykt på dit TapFeed produkt"
+                />
+              </Tooltip>
+            </Grid>
+            <Grid item xs={12}>
+              <Tooltip title="Giv dit produkt et navn der gør det let at genkende, f.eks. 'Indgang' eller 'Kasse 1'" arrow placement="top-start">
+                <TextField
+                  fullWidth
+                  label="Kaldenavn (valgfrit)"
+                  value={newStand.nickname || ''}
+                  onChange={(e) => setNewStand({ ...newStand, nickname: e.target.value })}
+                  helperText="Et valgfrit navn der gør det lettere at identificere produktet"
+                />
+              </Tooltip>
+            </Grid>
+            <Grid item xs={12}>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <Tooltip title="Den URL som besøgende bliver sendt til når de scanner dit produkt, f.eks. din Google anmeldelsesside" arrow placement="top-start">
+                  <TextField
+                    fullWidth
+                    label="Redirect URL"
+                    value={newStand.redirectUrl}
+                    onChange={(e) => setNewStand({ ...newStand, redirectUrl: e.target.value })}
+                    required
+                    helperText="Den side som besøgende sendes til ved scanning"
+                  />
+                </Tooltip>
+                <Button
+                  variant="outlined"
+                  onClick={() => {
+                    const googlePlaceId = userData?.googlePlaceId;
+                    if (googlePlaceId) {
+                      const reviewLink = `https://search.google.com/local/writereview?placeid=${googlePlaceId}`;
+                      setNewStand({ ...newStand, redirectUrl: reviewLink });
+                    } else {
+                      setAlert({
+                        open: true,
+                        message: 'Du skal først tilføje din Google Maps lokation under "Google Maps Anmeldelser"',
+                        severity: 'info'
+                      });
+                    }
+                  }}
+                  startIcon={<RateReviewIcon />}
+                >
+                  Brug Google Review Link
+                </Button>
+              </Box>
+            </Grid>
+            <Grid item xs={12}>
+              <Tooltip title="Vælg hvilken type TapFeed produkt du har modtaget" arrow placement="top-start">
+                <FormControl fullWidth margin="dense">
+                  <InputLabel sx={{ mt: -1 }}>Produkttype</InputLabel>
+                  <Select
+                    value={newStand.productType}
+                    onChange={(e) => setNewStand({ ...newStand, productType: e.target.value })}
+                  >
+                    {Object.values(PRODUCT_TYPES).map(type => (
+                      <MenuItem key={type.value} value={type.value}>
+                        {type.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  <FormHelperText>Vælg den type fysisk produkt du har modtaget</FormHelperText>
+                </FormControl>
+              </Tooltip>
+            </Grid>
+          </Grid>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenDialog(false)}>Annuller</Button>
