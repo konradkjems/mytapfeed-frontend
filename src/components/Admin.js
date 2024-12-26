@@ -90,12 +90,58 @@ const Admin = () => {
   const [error, setError] = useState(null);
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [deleteUnclaimedDialog, setDeleteUnclaimedDialog] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filters, setFilters] = useState({
+    showAdmins: true,
+    showUsers: true,
+    showActive: true,
+    showBlocked: true
+  });
   const navigate = useNavigate();
 
+  // Filtrer brugere baseret på søgeord og filtre
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = 
+      user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesFilters = (
+      (user.isAdmin ? filters.showAdmins : filters.showUsers) &&
+      (user.isBlocked ? filters.showBlocked : filters.showActive)
+    );
+
+    return matchesSearch && matchesFilters;
+  });
+
   useEffect(() => {
-    fetchUsers();
-    fetchUnclaimedProducts();
-  }, []);
+    // Tjek om brugeren er admin
+    const checkAdmin = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/user/profile`, {
+          credentials: 'include'
+        });
+        if (response.ok) {
+          const user = await response.json();
+          if (!user.isAdmin) {
+            // Hvis brugeren ikke er admin, redirect til dashboard
+            navigate('/dashboard');
+          } else {
+            // Hvis brugeren er admin, hent data
+            fetchUsers();
+            fetchUnclaimedProducts();
+          }
+        } else {
+          // Hvis der er fejl i auth, redirect til login
+          navigate('/login');
+        }
+      } catch (error) {
+        console.error('Fejl ved tjek af admin status:', error);
+        navigate('/login');
+      }
+    };
+
+    checkAdmin();
+  }, [navigate]);
 
   const fetchUsers = async () => {
     try {
@@ -430,6 +476,55 @@ const Admin = () => {
             <Typography variant="h6" gutterBottom>
               Brugeradministration
             </Typography>
+            <Box sx={{ mb: 3 }}>
+              <TextField
+                fullWidth
+                label="Søg efter brugere"
+                variant="outlined"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Søg efter brugernavn eller email..."
+                sx={{ mb: 2 }}
+              />
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={filters.showAdmins}
+                      onChange={(e) => setFilters({ ...filters, showAdmins: e.target.checked })}
+                    />
+                  }
+                  label="Vis admins"
+                />
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={filters.showUsers}
+                      onChange={(e) => setFilters({ ...filters, showUsers: e.target.checked })}
+                    />
+                  }
+                  label="Vis brugere"
+                />
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={filters.showActive}
+                      onChange={(e) => setFilters({ ...filters, showActive: e.target.checked })}
+                    />
+                  }
+                  label="Vis aktive"
+                />
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={filters.showBlocked}
+                      onChange={(e) => setFilters({ ...filters, showBlocked: e.target.checked })}
+                    />
+                  }
+                  label="Vis deaktiverede"
+                />
+              </Box>
+            </Box>
             {isLoading ? (
               <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
                 <CircularProgress />
@@ -448,7 +543,7 @@ const Admin = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {users.map((user) => (
+                    {filteredUsers.map((user) => (
                       <TableRow key={user._id}>
                         <TableCell>{user.username}</TableCell>
                         <TableCell>{user.email}</TableCell>
@@ -535,8 +630,8 @@ const Admin = () => {
               <Typography variant="h6">
                 Unclaimed Produkter
               </Typography>
-              <Box>
-                <ButtonGroup variant="contained" sx={{ mr: 1 }}>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <ButtonGroup variant="contained">
                   <Button
                     onClick={handleDownloadCSV}
                     startIcon={<DownloadIcon />}
@@ -562,23 +657,22 @@ const Admin = () => {
                       : 'Slet alle'}
                   </Button>
                 </ButtonGroup>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  startIcon={<AddIcon />}
-                  onClick={() => setOpenProductDialog(true)}
-                  sx={{ mr: 1 }}
-                >
-                  Tilføj Produkt
-                </Button>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  startIcon={<AddIcon />}
-                  onClick={() => setBulkDialog(true)}
-                >
-                  Opret Flere Produkter
-                </Button>
+                <ButtonGroup variant="contained">
+                  <Button
+                    color="primary"
+                    startIcon={<AddIcon />}
+                    onClick={() => setOpenProductDialog(true)}
+                  >
+                    Tilføj Produkt
+                  </Button>
+                  <Button
+                    color="primary"
+                    startIcon={<AddIcon />}
+                    onClick={() => setBulkDialog(true)}
+                  >
+                    Opret Flere Produkter
+                  </Button>
+                </ButtonGroup>
               </Box>
             </Box>
             

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
     Box,
@@ -33,6 +33,7 @@ const defaultTheme = createTheme({
 
 const Register = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { setIsAuthenticated } = useAuth();
     const [formData, setFormData] = useState({
         username: '',
@@ -80,7 +81,9 @@ const Register = () => {
 
             if (response.ok) {
                 setIsAuthenticated(true);
-                navigate('/dashboard');
+                const params = new URLSearchParams(location.search);
+                const redirectPath = params.get('redirect');
+                navigate(redirectPath || '/dashboard');
             } else {
                 setError(data.message || 'Der opstod en fejl under registrering');
             }

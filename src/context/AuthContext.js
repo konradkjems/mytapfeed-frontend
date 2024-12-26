@@ -9,10 +9,9 @@ export const AuthProvider = ({ children }) => {
     const [userData, setUserData] = useState(null);
     const [error, setError] = useState(null);
 
-    const fetchUserData = async () => {
+    const checkAuth = async () => {
         try {
-            setIsLoading(true);
-            const response = await fetch(`${API_URL}/api/user/profile`, {
+            const response = await fetch(`${API_URL}/api/auth/status`, {
                 credentials: 'include'
             });
             
@@ -21,8 +20,40 @@ export const AuthProvider = ({ children }) => {
                 throw new Error('Serveren returnerede ikke JSON data');
             }
 
+            const data = await response.json();
+            setIsAuthenticated(data.isAuthenticated);
+            
+            if (data.isAuthenticated) {
+                await fetchUserData();
+            }
+
+            return data.isAuthenticated;
+        } catch (error) {
+            console.error('Auth check failed:', error);
+            setIsAuthenticated(false);
+            setError('Kunne ikke verificere login status');
+            return false;
+        }
+    };
+
+    const fetchUserData = async () => {
+        try {
+            console.log('Starter hentning af brugerdata');
+            setIsLoading(true);
+            const response = await fetch(`${API_URL}/api/user/profile`, {
+                credentials: 'include'
+            });
+            
+            console.log('Brugerdata response:', response);
+            
+            const contentType = response.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) {
+                throw new Error('Serveren returnerede ikke JSON data');
+            }
+
             if (response.ok) {
                 const data = await response.json();
+                console.log('Modtaget brugerdata:', data);
                 setUserData(data);
                 setError(null);
             } else {
@@ -133,7 +164,8 @@ export const AuthProvider = ({ children }) => {
         setUserData,
         fetchUserData,
         error,
-        logout
+        logout,
+        checkAuth
     };
 
     return (

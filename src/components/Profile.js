@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Paper,
@@ -40,6 +40,13 @@ const Profile = () => {
   });
   const [alert, setAlert] = useState({ open: false, message: '', severity: 'success' });
   const [isUploading, setIsUploading] = useState(false);
+  const [profileImage, setProfileImage] = useState(userData?.profileImage);
+  const [imageTimestamp, setImageTimestamp] = useState(Date.now());
+
+  useEffect(() => {
+    setProfileImage(userData?.profileImage);
+    setImageTimestamp(Date.now());
+  }, [userData]);
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
@@ -93,22 +100,35 @@ const Profile = () => {
     const file = e.target.files[0];
     if (!file) return;
 
+    console.log('Starter upload af profilbillede');
     setIsUploading(true);
     const formData = new FormData();
     formData.append('image', file);
 
     try {
+      console.log('Sender request til server');
       const response = await fetch(`${API_URL}/api/user/profile-image`, {
         method: 'POST',
         credentials: 'include',
         body: formData
       });
       
+      console.log('Server response:', response);
+      
       if (!response.ok) {
         throw new Error('Kunne ikke uploade billede');
       }
       
+      const responseData = await response.json();
+      console.log('Server response data:', responseData);
+      console.log('Uploaded image URL:', responseData.user.profileImage);
+      
+      console.log('Henter opdateret brugerdata');
       await fetchUserData(); // Genindlæs brugerdata efter upload
+      console.log('Opdateret userData:', userData);
+      
+      setProfileImage(responseData.user.profileImage);
+      setImageTimestamp(Date.now());
       
       setAlert({
         open: true,
@@ -188,7 +208,7 @@ const Profile = () => {
             <CardContent sx={{ textAlign: 'center' }}>
               <Box sx={{ position: 'relative', display: 'inline-block' }}>
                 <Avatar
-                  src={userData.profileImage}
+                  src={`${profileImage || userData?.profileImage}?t=${imageTimestamp}`}
                   sx={{ 
                     width: 150, 
                     height: 150, 

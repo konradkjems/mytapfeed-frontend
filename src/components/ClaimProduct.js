@@ -4,8 +4,6 @@ import {
   Container,
   Paper,
   Typography,
-  Button,
-  Box,
   CircularProgress,
   Alert
 } from '@mui/material';
@@ -16,44 +14,47 @@ const ClaimProduct = () => {
   const { standerId } = useParams();
   const navigate = useNavigate();
   const { userData } = useAuth();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     // Hvis brugeren ikke er logget ind, redirect til login
     if (!userData) {
       navigate('/login', { state: { from: `/claim/${standerId}` } });
+      return;
     }
-  }, [userData, navigate, standerId]);
 
-  const handleClaim = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+    // Automatisk aktiver produktet når brugeren er logget ind
+    const claimProduct = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-      const response = await fetch(`${API_URL}/api/stands/${standerId}/claim`, {
-        method: 'POST',
-        credentials: 'include'
-      });
+        const response = await fetch(`${API_URL}/api/stands/${standerId}/claim`, {
+          method: 'POST',
+          credentials: 'include'
+        });
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Der opstod en fejl ved aktivering af produktet');
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.message || 'Der opstod en fejl ved aktivering af produktet');
+        }
+
+        // Redirect til dashboard efter succesfuld aktivering
+        navigate('/dashboard', { 
+          state: { 
+            message: 'Produkt aktiveret succesfuldt! Du kan nu konfigurere det under "Produkter".' 
+          } 
+        });
+      } catch (error) {
+        console.error('Fejl ved aktivering af produkt:', error);
+        setError(error.message);
+        setLoading(false);
       }
+    };
 
-      // Redirect til dashboard efter succesfuld aktivering
-      navigate('/dashboard', { 
-        state: { 
-          message: 'Produkt aktiveret succesfuldt! Du kan nu konfigurere det under "Produkter".' 
-        } 
-      });
-    } catch (error) {
-      console.error('Fejl ved aktivering af produkt:', error);
-      setError(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+    claimProduct();
+  }, [userData, navigate, standerId]);
 
   if (!userData) {
     return null; // Viser intet mens der redirectes til login
@@ -61,31 +62,19 @@ const ClaimProduct = () => {
 
   return (
     <Container maxWidth="sm" sx={{ mt: 4 }}>
-      <Paper sx={{ p: 4 }}>
-        <Typography variant="h5" gutterBottom>
-          Aktiver TapFeed Produkt
-        </Typography>
-        
-        <Typography variant="body1" sx={{ mb: 3 }}>
-          Du er ved at aktivere TapFeed produkt med ID: <strong>{standerId}</strong>
-        </Typography>
-
-        {error && (
-          <Alert severity="error" sx={{ mb: 3 }}>
+      <Paper sx={{ p: 4, textAlign: 'center' }}>
+        {loading ? (
+          <>
+            <Typography variant="h6" gutterBottom>
+              Aktiverer dit TapFeed produkt...
+            </Typography>
+            <CircularProgress sx={{ mt: 2 }} />
+          </>
+        ) : error ? (
+          <Alert severity="error">
             {error}
           </Alert>
-        )}
-
-        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-          <Button
-            variant="contained"
-            onClick={handleClaim}
-            disabled={loading}
-            sx={{ minWidth: 200 }}
-          >
-            {loading ? <CircularProgress size={24} /> : 'Aktiver Produkt'}
-          </Button>
-        </Box>
+        ) : null}
       </Paper>
     </Container>
   );

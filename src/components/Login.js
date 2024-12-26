@@ -53,7 +53,7 @@ const Login = () => {
   });
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const { setIsAuthenticated } = useAuth();
+  const { setIsAuthenticated, checkAuth } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const location = useLocation();
 
@@ -111,36 +111,46 @@ const Login = () => {
     });
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  const handleLogin = async (e) => {
+    e.preventDefault();
     setError('');
     setIsLoading(true);
-    
+
     try {
-        const response = await fetch(`${API_URL}/api/auth/login`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            credentials: 'include',
-            body: JSON.stringify(formData)
-        });
+      const response = await fetch(`${API_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({ 
+          username: formData.username, 
+          password: formData.password 
+        })
+      });
 
-        const data = await response.json();
-        console.log('Login response:', { status: response.status, data });
+      const data = await response.json();
 
-        if (response.ok) {
-            setIsAuthenticated(true);
-            navigate('/dashboard');
-        } else {
-            setError(data.message || `Login fejlede (${response.status})`);
-        }
+      if (!response.ok) {
+        throw new Error(data.message || 'Der opstod en fejl ved login');
+      }
+
+      // Opdater auth context
+      await checkAuth();
+
+      // Håndter redirect efter login
+      const params = new URLSearchParams(location.search);
+      const redirectPath = params.get('redirect');
+      
+      if (redirectPath) {
+        navigate(redirectPath);
+      } else {
+        navigate('/dashboard');
+      }
     } catch (error) {
-        console.error('Login fejl:', error);
-        setError(`Der opstod en fejl under login: ${error.message}`);
+      setError(error.message);
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -206,7 +216,7 @@ const Login = () => {
               Log ind
             </Typography>
 
-            <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%', mb: 3 }}>
+            <Box component="form" onSubmit={handleLogin} sx={{ width: '100%', mb: 3 }}>
               {error && (
                 <Alert severity="error" sx={{ mb: 2 }}>
                   {error}
