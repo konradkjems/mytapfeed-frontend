@@ -74,22 +74,26 @@ const Login = () => {
           headers: Object.fromEntries(response.headers.entries())
         });
 
+        if (!response.ok) {
+          throw new Error('Kunne ikke verificere login status');
+        }
+
         const data = await response.json();
         console.log('Auth status data:', data);
         
         if (data.isAuthenticated) {
-          console.log('User is authenticated, redirecting to dashboard');
+          console.log('Bruger er logget ind, redirecter til dashboard');
           setIsAuthenticated(true);
           navigate('/dashboard', { replace: true });
         } else {
-          console.log('User is not authenticated');
+          console.log('Bruger er ikke logget ind');
           const urlParams = new URLSearchParams(location.search);
           if (urlParams.has('error')) {
             setError(`Login fejlede: ${urlParams.get('error')}`);
           }
         }
       } catch (error) {
-        console.error('Error checking auth status:', error);
+        console.error('Fejl ved tjek af login status:', error);
         setError('Der opstod en fejl ved login. Prøv igen.');
       }
     };
@@ -97,7 +101,7 @@ const Login = () => {
     // Check auth status hvis vi har en session ID eller kommer fra Google OAuth
     const params = new URLSearchParams(location.search);
     if (params.has('sessionId') || params.has('code') || params.has('error')) {
-      console.log('Detected auth redirect with params:', 
+      console.log('Detekteret auth redirect med parametre:', 
         Object.fromEntries(params.entries())
       );
       checkGoogleAuth();
@@ -155,13 +159,13 @@ const Login = () => {
   };
 
   const handleGoogleLogin = () => {
-    console.log('Initiating Google login');
+    console.log('Starter Google login');
     // I udvikling skal vi bruge samme origin som frontend
     const baseUrl = process.env.NODE_ENV === 'production'
       ? 'https://api.tapfeed.dk'
       : window.location.origin;
     const googleAuthUrl = `${baseUrl}/api/auth/google`;
-    console.log('Redirecting to:', googleAuthUrl);
+    console.log('Redirecter til:', googleAuthUrl);
     window.location.href = googleAuthUrl;
   };
 

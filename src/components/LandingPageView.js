@@ -17,7 +17,7 @@ import {
 import API_URL from '../config';
 
 const LandingPageView = () => {
-  const { id } = useParams();
+  const { id, urlPath } = useParams();
   const [page, setPage] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -25,76 +25,44 @@ const LandingPageView = () => {
   useEffect(() => {
     const fetchPage = async () => {
       try {
-        console.log('Henter landing page med ID:', id);
-        const response = await fetch(`${API_URL}/api/landing-pages/preview/${id}`);
+        setLoading(true);
+        let response;
         
+        if (id) {
+          // Hvis vi har et ID, brug det direkte
+          response = await fetch(`${API_URL}/api/landing/${id}`);
+        } else if (urlPath) {
+          // Hvis vi har en URL-sti, find landing page via den
+          response = await fetch(`${API_URL}/${urlPath}`);
+        }
+
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          throw new Error('Landing page ikke fundet');
         }
-        
+
         const data = await response.json();
-        console.log('Modtaget data:', data);
-        
-        if (!data) {
-          throw new Error('Ingen data modtaget fra serveren');
-        }
-        
         setPage(data);
-      } catch (err) {
-        console.error('Detaljeret fejl ved hentning af landing page:', {
-          error: err.message,
-          stack: err.stack
-        });
-        setError(`Fejl ved hentning af landing page: ${err.message}`);
+      } catch (error) {
+        console.error('Fejl ved hentning af landing page:', error);
+        setError(error.message);
       } finally {
         setLoading(false);
       }
     };
 
-    if (id) {
-      fetchPage();
-    }
-  }, [id]);
+    fetchPage();
+  }, [id, urlPath]);
 
   if (loading) {
-    return (
-      <Box sx={{ 
-        display: 'flex', 
-        flexDirection: 'column',
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        minHeight: '100vh',
-        bgcolor: '#fff',
-        gap: 2,
-        p: 3
-      }}>
-        <CircularProgress />
-        <Typography>Indlæser landing page...</Typography>
-      </Box>
-    );
+    return <div>Indlæser...</div>;
   }
 
   if (error) {
-    return (
-      <Box sx={{ 
-        display: 'flex', 
-        flexDirection: 'column',
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        minHeight: '100vh',
-        bgcolor: '#fff',
-        gap: 2,
-        p: 3
-      }}>
-        <Typography color="error" align="center">
-          {error}
-        </Typography>
-      </Box>
-    );
+    return <div>Fejl: {error}</div>;
   }
 
   if (!page) {
-    return null;
+    return <div>Landing page ikke fundet</div>;
   }
 
   return (

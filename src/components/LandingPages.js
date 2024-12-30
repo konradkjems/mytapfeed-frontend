@@ -57,6 +57,7 @@ const LandingPages = () => {
   const [newPage, setNewPage] = useState({
     title: '',
     description: '',
+    urlPath: '',
     logo: null,
     backgroundImage: null,
     backgroundColor: '#ffffff',
@@ -131,6 +132,7 @@ const LandingPages = () => {
       const formData = new FormData();
       formData.append('title', newPage.title);
       formData.append('description', newPage.description);
+      formData.append('urlPath', newPage.urlPath);
       formData.append('backgroundColor', newPage.backgroundColor);
       formData.append('buttonColor', newPage.buttonColor);
       formData.append('buttonTextColor', newPage.buttonTextColor);
@@ -179,6 +181,7 @@ const LandingPages = () => {
     setNewPage({
       title: '',
       description: '',
+      urlPath: '',
       logo: null,
       backgroundImage: null,
       backgroundColor: '#ffffff',
@@ -272,29 +275,24 @@ const LandingPages = () => {
     }
   };
 
-  const handleEdit = async (page) => {
-    setSelectedPage(page);
+  const handleEdit = (page) => {
     setNewPage({
-      ...page,
-      logo: null,
-      backgroundImage: null,
-      backgroundColor: page.backgroundColor || '#ffffff',
-      buttonColor: page.buttonColor || '#000000',
-      buttonTextColor: page.buttonTextColor || '#ffffff',
-      titleColor: page.titleColor || '#000000',
-      descriptionColor: page.descriptionColor || '#000000',
-      titleFont: page.titleFont || 'Inter',
-      descriptionFont: page.descriptionFont || 'Inter',
-      buttonFont: page.buttonFont || 'Inter',
+      title: page.title,
+      description: page.description,
+      urlPath: page.urlPath || '',
+      backgroundColor: page.backgroundColor,
+      buttonColor: page.buttonColor,
+      buttonTextColor: page.buttonTextColor,
+      titleColor: page.titleColor,
+      descriptionColor: page.descriptionColor,
+      titleFont: page.titleFont,
+      descriptionFont: page.descriptionFont,
+      buttonFont: page.buttonFont,
       buttons: page.buttons || [],
-      showTitle: page.showTitle ?? true,
-      socialLinks: {
-        instagram: page.socialLinks?.instagram || '',
-        facebook: page.socialLinks?.facebook || '',
-        youtube: page.socialLinks?.youtube || '',
-        twitter: page.socialLinks?.twitter || ''
-      }
+      showTitle: page.showTitle,
+      socialLinks: page.socialLinks || {}
     });
+    setSelectedPage(page);
     setOpenDialog(true);
   };
 
@@ -303,6 +301,7 @@ const LandingPages = () => {
       const formData = new FormData();
       formData.append('title', newPage.title);
       formData.append('description', newPage.description);
+      formData.append('urlPath', newPage.urlPath);
       formData.append('backgroundColor', newPage.backgroundColor);
       formData.append('buttonColor', newPage.buttonColor);
       formData.append('buttonTextColor', newPage.buttonTextColor);
@@ -641,409 +640,445 @@ const LandingPages = () => {
         </Grid>
       </Box>
 
-      <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="lg" fullWidth>
-        <DialogTitle>{selectedPage ? 'Rediger landing page' : 'Opret ny landing page'}</DialogTitle>
+      <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="md" fullWidth>
+        <DialogTitle>
+          {selectedPage ? 'Rediger Landing Page' : 'Opret Ny Landing Page'}
+        </DialogTitle>
         <DialogContent>
-          <Grid container spacing={4} sx={{ mt: 1 }}>
-            {/* Venstre side - Indstillinger */}
-            <Grid item xs={12} md={6}>
-              <Grid container spacing={4}>
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    label="Titel"
-                    value={newPage.title}
-                    onChange={(e) => setNewPage({ ...newPage, title: e.target.value })}
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={newPage.showTitle}
-                        onChange={(e) => setNewPage({ ...newPage, showTitle: e.target.checked })}
-                      />
-                    }
-                    label="Vis titel på landing page"
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    label="Beskrivelse"
-                    multiline
-                    rows={4}
-                    value={newPage.description}
-                    onChange={(e) => setNewPage({ ...newPage, description: e.target.value })}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <Box sx={{ mb: 4 }}>
-                    <Button
-                      variant="outlined"
-                      component="label"
-                      startIcon={<ImageIcon />}
-                      fullWidth
-                    >
-                      Upload Logo
-                      <input
-                        type="file"
-                        hidden
-                        accept="image/*"
-                        onChange={(e) => handleFileChange(e, 'logo')}
-                      />
-                    </Button>
-                    <Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: 'block' }}>
-                      Anbefalet størrelse: 500x500 pixels. Maksimal filstørrelse: 5MB
-                    </Typography>
-                    {newPage.logo && (
-                      <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-                        Valgt fil: {newPage.logo.name}
-                      </Typography>
-                    )}
-                  </Box>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <Box sx={{ mb: 4 }}>
-                    <Button
-                      variant="outlined"
-                      component="label"
-                      startIcon={<ImageIcon />}
-                      fullWidth
-                    >
-                      Upload Baggrundsbillede
-                      <input
-                        type="file"
-                        hidden
-                        accept="image/*"
-                        onChange={(e) => handleFileChange(e, 'backgroundImage')}
-                      />
-                    </Button>
-                    <Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: 'block' }}>
-                      Anbefalet størrelse: 1080x1920 pixels (9:16 format). For bedste visning på mobil. Maksimal filstørrelse: 5MB
-                    </Typography>
-                    {newPage.backgroundImage && (
-                      <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-                        Valgt fil: {newPage.backgroundImage.name}
-                      </Typography>
-                    )}
-                  </Box>
-                </Grid>
-                
-                {/* Farvevalg sektion med mere padding */}
-                <Grid item xs={12}>
-                  <Box sx={{ px: 2 }}>
-                    <Grid container spacing={3}>
-                      <Grid item xs={12} sm={3}>
-                        <FormControl fullWidth>
-                          <InputLabel shrink>Baggrundsfarve</InputLabel>
-                          <input
-                            type="color"
-                            value={newPage.backgroundColor}
-                            onChange={(e) => setNewPage({ ...newPage, backgroundColor: e.target.value })}
-                            style={{ width: '100%', height: '56px', marginTop: '16px' }}
-                          />
-                        </FormControl>
-                      </Grid>
-                      <Grid item xs={12} sm={3}>
-                        <FormControl fullWidth>
-                          <InputLabel shrink>Knapfarve</InputLabel>
-                          <input
-                            type="color"
-                            value={newPage.buttonColor}
-                            onChange={(e) => setNewPage({ ...newPage, buttonColor: e.target.value })}
-                            style={{ width: '100%', height: '56px', marginTop: '16px' }}
-                          />
-                        </FormControl>
-                      </Grid>
-                      <Grid item xs={12} sm={3}>
-                        <FormControl fullWidth>
-                          <InputLabel shrink>Knap tekstfarve</InputLabel>
-                          <input
-                            type="color"
-                            value={newPage.buttonTextColor}
-                            onChange={(e) => setNewPage({ ...newPage, buttonTextColor: e.target.value })}
-                            style={{ width: '100%', height: '56px', marginTop: '16px' }}
-                          />
-                        </FormControl>
-                      </Grid>
-                      <Grid item xs={12} sm={3}>
-                        <FormControl fullWidth>
-                          <InputLabel shrink>Titel farve</InputLabel>
-                          <input
-                            type="color"
-                            value={newPage.titleColor}
-                            onChange={(e) => setNewPage({ ...newPage, titleColor: e.target.value })}
-                            style={{ width: '100%', height: '56px', marginTop: '16px' }}
-                          />
-                        </FormControl>
-                      </Grid>
-                      <Grid item xs={12} sm={3}>
-                        <FormControl fullWidth>
-                          <InputLabel shrink>Beskrivelse farve</InputLabel>
-                          <input
-                            type="color"
-                            value={newPage.descriptionColor}
-                            onChange={(e) => setNewPage({ ...newPage, descriptionColor: e.target.value })}
-                            style={{ width: '100%', height: '56px', marginTop: '16px' }}
-                          />
-                        </FormControl>
-                      </Grid>
-                    </Grid>
-                  </Box>
-                </Grid>
+          <Box sx={{ mt: 2 }}>
+            <TextField
+              fullWidth
+              label="Titel"
+              value={newPage.title}
+              onChange={(e) => setNewPage({ ...newPage, title: e.target.value })}
+              sx={{ mb: 2 }}
+            />
+            
+            <TextField
+              fullWidth
+              label="URL Sti"
+              value={newPage.urlPath}
+              onChange={(e) => setNewPage({ ...newPage, urlPath: e.target.value.toLowerCase() })}
+              helperText={
+                <>
+                  Din landing page vil være tilgængelig på: {window.location.origin}/{newPage.urlPath || 'dinvirksomhed'}<br />
+                  Brug kun små bogstaver, tal og bindestreger
+                </>
+              }
+              sx={{ mb: 2 }}
+            />
 
-                {/* Links sektion */}
-                <Grid item xs={12}>
-                  <Typography variant="h6" gutterBottom>
-                    Tilføj Links
-                  </Typography>
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} sm={6}>
-                      <TextField
-                        fullWidth
-                        label="Link tekst"
-                        value={newButton.text}
-                        onChange={(e) => setNewButton({ ...newButton, text: e.target.value })}
-                      />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <TextField
-                        fullWidth
-                        label="URL"
-                        value={newButton.url}
-                        onChange={(e) => setNewButton({ ...newButton, url: e.target.value })}
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Beskrivelse"
+              value={newPage.description}
+              onChange={(e) => setNewPage({ ...newPage, description: e.target.value })}
+              multiline
+              rows={4}
+              sx={{ mb: 2 }}
+            />
+            
+            <Grid container spacing={4} sx={{ mt: 1 }}>
+              {/* Venstre side - Indstillinger */}
+              <Grid item xs={12} md={6}>
+                <Grid container spacing={4}>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Titel"
+                      value={newPage.title}
+                      onChange={(e) => setNewPage({ ...newPage, title: e.target.value })}
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={newPage.showTitle}
+                          onChange={(e) => setNewPage({ ...newPage, showTitle: e.target.checked })}
+                        />
+                      }
+                      label="Vis titel på landing page"
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Beskrivelse"
+                      multiline
+                      rows={4}
+                      value={newPage.description}
+                      onChange={(e) => setNewPage({ ...newPage, description: e.target.value })}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Box sx={{ mb: 4 }}>
                       <Button
                         variant="outlined"
-                        startIcon={editingButton !== null ? <EditIcon /> : <AddIcon />}
-                        onClick={handleAddButton}
-                        disabled={!newButton.text || !newButton.url}
-                        sx={{ mr: 1 }}
+                        component="label"
+                        startIcon={<ImageIcon />}
+                        fullWidth
                       >
-                        {editingButton !== null ? 'Opdater Link' : 'Tilføj Link'}
+                        Upload Logo
+                        <input
+                          type="file"
+                          hidden
+                          accept="image/*"
+                          onChange={(e) => handleFileChange(e, 'logo')}
+                        />
                       </Button>
-                      {editingButton !== null && (
+                      <Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: 'block' }}>
+                        Anbefalet størrelse: 500x500 pixels. Maksimal filstørrelse: 5MB
+                      </Typography>
+                      {newPage.logo && (
+                        <Typography variant="caption" display="block" sx={{ mt: 1 }}>
+                          Valgt fil: {newPage.logo.name}
+                        </Typography>
+                      )}
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Box sx={{ mb: 4 }}>
+                      <Button
+                        variant="outlined"
+                        component="label"
+                        startIcon={<ImageIcon />}
+                        fullWidth
+                      >
+                        Upload Baggrundsbillede
+                        <input
+                          type="file"
+                          hidden
+                          accept="image/*"
+                          onChange={(e) => handleFileChange(e, 'backgroundImage')}
+                        />
+                      </Button>
+                      <Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: 'block' }}>
+                        Anbefalet størrelse: 1080x1920 pixels (9:16 format). For bedste visning på mobil. Maksimal filstørrelse: 5MB
+                      </Typography>
+                      {newPage.backgroundImage && (
+                        <Typography variant="caption" display="block" sx={{ mt: 1 }}>
+                          Valgt fil: {newPage.backgroundImage.name}
+                        </Typography>
+                      )}
+                    </Box>
+                  </Grid>
+                  
+                  {/* Farvevalg sektion med mere padding */}
+                  <Grid item xs={12}>
+                    <Box sx={{ px: 2 }}>
+                      <Grid container spacing={3}>
+                        <Grid item xs={12} sm={3}>
+                          <FormControl fullWidth>
+                            <InputLabel shrink>Baggrundsfarve</InputLabel>
+                            <input
+                              type="color"
+                              value={newPage.backgroundColor}
+                              onChange={(e) => setNewPage({ ...newPage, backgroundColor: e.target.value })}
+                              style={{ width: '100%', height: '56px', marginTop: '16px' }}
+                            />
+                          </FormControl>
+                        </Grid>
+                        <Grid item xs={12} sm={3}>
+                          <FormControl fullWidth>
+                            <InputLabel shrink>Knapfarve</InputLabel>
+                            <input
+                              type="color"
+                              value={newPage.buttonColor}
+                              onChange={(e) => setNewPage({ ...newPage, buttonColor: e.target.value })}
+                              style={{ width: '100%', height: '56px', marginTop: '16px' }}
+                            />
+                          </FormControl>
+                        </Grid>
+                        <Grid item xs={12} sm={3}>
+                          <FormControl fullWidth>
+                            <InputLabel shrink>Knap tekstfarve</InputLabel>
+                            <input
+                              type="color"
+                              value={newPage.buttonTextColor}
+                              onChange={(e) => setNewPage({ ...newPage, buttonTextColor: e.target.value })}
+                              style={{ width: '100%', height: '56px', marginTop: '16px' }}
+                            />
+                          </FormControl>
+                        </Grid>
+                        <Grid item xs={12} sm={3}>
+                          <FormControl fullWidth>
+                            <InputLabel shrink>Titel farve</InputLabel>
+                            <input
+                              type="color"
+                              value={newPage.titleColor}
+                              onChange={(e) => setNewPage({ ...newPage, titleColor: e.target.value })}
+                              style={{ width: '100%', height: '56px', marginTop: '16px' }}
+                            />
+                          </FormControl>
+                        </Grid>
+                        <Grid item xs={12} sm={3}>
+                          <FormControl fullWidth>
+                            <InputLabel shrink>Beskrivelse farve</InputLabel>
+                            <input
+                              type="color"
+                              value={newPage.descriptionColor}
+                              onChange={(e) => setNewPage({ ...newPage, descriptionColor: e.target.value })}
+                              style={{ width: '100%', height: '56px', marginTop: '16px' }}
+                            />
+                          </FormControl>
+                        </Grid>
+                      </Grid>
+                    </Box>
+                  </Grid>
+
+                  {/* Links sektion */}
+                  <Grid item xs={12}>
+                    <Typography variant="h6" gutterBottom>
+                      Tilføj Links
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} sm={6}>
+                        <TextField
+                          fullWidth
+                          label="Link tekst"
+                          value={newButton.text}
+                          onChange={(e) => setNewButton({ ...newButton, text: e.target.value })}
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <TextField
+                          fullWidth
+                          label="URL"
+                          value={newButton.url}
+                          onChange={(e) => setNewButton({ ...newButton, url: e.target.value })}
+                        />
+                      </Grid>
+                      <Grid item xs={12}>
                         <Button
                           variant="outlined"
-                          color="secondary"
-                          onClick={() => {
-                            setEditingButton(null);
-                            setNewButton({ text: '', url: '' });
-                          }}
+                          startIcon={editingButton !== null ? <EditIcon /> : <AddIcon />}
+                          onClick={handleAddButton}
+                          disabled={!newButton.text || !newButton.url}
+                          sx={{ mr: 1 }}
                         >
-                          Annuller Redigering
+                          {editingButton !== null ? 'Opdater Link' : 'Tilføj Link'}
                         </Button>
-                      )}
-                    </Grid>
-                  </Grid>
-
-                  <List>
-                    {newPage.buttons.map((button, index) => (
-                      <ListItem key={index}>
-                        <ListItemText
-                          primary={button.text}
-                          secondary={button.url}
-                        />
-                        <ListItemSecondaryAction>
-                          <IconButton 
-                            edge="end" 
-                            onClick={() => handleEditButton(button, index)}
-                            sx={{ mr: 1 }}
+                        {editingButton !== null && (
+                          <Button
+                            variant="outlined"
+                            color="secondary"
+                            onClick={() => {
+                              setEditingButton(null);
+                              setNewButton({ text: '', url: '' });
+                            }}
                           >
-                            <EditIcon />
-                          </IconButton>
-                          <IconButton edge="end" onClick={() => handleRemoveButton(index)}>
-                            <DeleteIcon />
-                          </IconButton>
-                        </ListItemSecondaryAction>
-                      </ListItem>
-                    ))}
-                  </List>
-                </Grid>
+                            Annuller Redigering
+                          </Button>
+                        )}
+                      </Grid>
+                    </Grid>
 
-                {/* Sociale medier sektion */}
-                <Grid item xs={12}>
-                  <Typography variant="h6" gutterBottom>
-                    Sociale Medier
-                  </Typography>
-                  <Grid container spacing={2}>
-                    <Grid item xs={12}>
-                      <TextField
-                        fullWidth
-                        label="Instagram URL"
-                        value={newPage.socialLinks.instagram}
-                        onChange={(e) => handleSocialLinkChange('instagram', e.target.value)}
-                        InputProps={{
-                          startAdornment: <InstagramIcon sx={{ mr: 1 }} />
-                        }}
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <TextField
-                        fullWidth
-                        label="Facebook URL"
-                        value={newPage.socialLinks.facebook}
-                        onChange={(e) => handleSocialLinkChange('facebook', e.target.value)}
-                        InputProps={{
-                          startAdornment: <FacebookIcon sx={{ mr: 1 }} />
-                        }}
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <TextField
-                        fullWidth
-                        label="YouTube URL"
-                        value={newPage.socialLinks.youtube}
-                        onChange={(e) => handleSocialLinkChange('youtube', e.target.value)}
-                        InputProps={{
-                          startAdornment: <YouTubeIcon sx={{ mr: 1 }} />
-                        }}
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <TextField
-                        fullWidth
-                        label="Twitter URL"
-                        value={newPage.socialLinks.twitter}
-                        onChange={(e) => handleSocialLinkChange('twitter', e.target.value)}
-                        InputProps={{
-                          startAdornment: <TwitterIcon sx={{ mr: 1 }} />
-                        }}
-                      />
+                    <List>
+                      {newPage.buttons.map((button, index) => (
+                        <ListItem key={index}>
+                          <ListItemText
+                            primary={button.text}
+                            secondary={button.url}
+                          />
+                          <ListItemSecondaryAction>
+                            <IconButton 
+                              edge="end" 
+                              onClick={() => handleEditButton(button, index)}
+                              sx={{ mr: 1 }}
+                            >
+                              <EditIcon />
+                            </IconButton>
+                            <IconButton edge="end" onClick={() => handleRemoveButton(index)}>
+                              <DeleteIcon />
+                            </IconButton>
+                          </ListItemSecondaryAction>
+                        </ListItem>
+                      ))}
+                    </List>
+                  </Grid>
+
+                  {/* Sociale medier sektion */}
+                  <Grid item xs={12}>
+                    <Typography variant="h6" gutterBottom>
+                      Sociale Medier
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12}>
+                        <TextField
+                          fullWidth
+                          label="Instagram URL"
+                          value={newPage.socialLinks.instagram}
+                          onChange={(e) => handleSocialLinkChange('instagram', e.target.value)}
+                          InputProps={{
+                            startAdornment: <InstagramIcon sx={{ mr: 1 }} />
+                          }}
+                        />
+                      </Grid>
+                      <Grid item xs={12}>
+                        <TextField
+                          fullWidth
+                          label="Facebook URL"
+                          value={newPage.socialLinks.facebook}
+                          onChange={(e) => handleSocialLinkChange('facebook', e.target.value)}
+                          InputProps={{
+                            startAdornment: <FacebookIcon sx={{ mr: 1 }} />
+                          }}
+                        />
+                      </Grid>
+                      <Grid item xs={12}>
+                        <TextField
+                          fullWidth
+                          label="YouTube URL"
+                          value={newPage.socialLinks.youtube}
+                          onChange={(e) => handleSocialLinkChange('youtube', e.target.value)}
+                          InputProps={{
+                            startAdornment: <YouTubeIcon sx={{ mr: 1 }} />
+                          }}
+                        />
+                      </Grid>
+                      <Grid item xs={12}>
+                        <TextField
+                          fullWidth
+                          label="Twitter URL"
+                          value={newPage.socialLinks.twitter}
+                          onChange={(e) => handleSocialLinkChange('twitter', e.target.value)}
+                          InputProps={{
+                            startAdornment: <TwitterIcon sx={{ mr: 1 }} />
+                          }}
+                        />
+                      </Grid>
                     </Grid>
                   </Grid>
-                </Grid>
 
-                <Grid item xs={12}>
-                  <FormControl fullWidth>
-                    <InputLabel>Titel Font</InputLabel>
-                    <Select
-                      value={newPage.titleFont}
-                      onChange={(e) => setNewPage({ ...newPage, titleFont: e.target.value })}
-                      label="Titel Font"
-                    >
-                      <MenuItem value="Inter">Inter (Standard)</MenuItem>
-                      <MenuItem value="Roboto">Roboto</MenuItem>
-                      <MenuItem value="Playfair Display">Playfair Display</MenuItem>
-                      <MenuItem value="Montserrat">Montserrat</MenuItem>
-                      <MenuItem value="Lato">Lato</MenuItem>
-                      <MenuItem value="Open Sans">Open Sans</MenuItem>
-                      <MenuItem value="Raleway">Raleway</MenuItem>
-                      <MenuItem value="Poppins">Poppins</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
+                  <Grid item xs={12}>
+                    <FormControl fullWidth>
+                      <InputLabel>Titel Font</InputLabel>
+                      <Select
+                        value={newPage.titleFont}
+                        onChange={(e) => setNewPage({ ...newPage, titleFont: e.target.value })}
+                        label="Titel Font"
+                      >
+                        <MenuItem value="Inter">Inter (Standard)</MenuItem>
+                        <MenuItem value="Roboto">Roboto</MenuItem>
+                        <MenuItem value="Playfair Display">Playfair Display</MenuItem>
+                        <MenuItem value="Montserrat">Montserrat</MenuItem>
+                        <MenuItem value="Lato">Lato</MenuItem>
+                        <MenuItem value="Open Sans">Open Sans</MenuItem>
+                        <MenuItem value="Raleway">Raleway</MenuItem>
+                        <MenuItem value="Poppins">Poppins</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Grid>
 
-                <Grid item xs={12}>
-                  <FormControl fullWidth>
-                    <InputLabel>Beskrivelse Font</InputLabel>
-                    <Select
-                      value={newPage.descriptionFont}
-                      onChange={(e) => setNewPage({ ...newPage, descriptionFont: e.target.value })}
-                      label="Beskrivelse Font"
-                    >
-                      <MenuItem value="Inter">Inter (Standard)</MenuItem>
-                      <MenuItem value="Roboto">Roboto</MenuItem>
-                      <MenuItem value="Playfair Display">Playfair Display</MenuItem>
-                      <MenuItem value="Montserrat">Montserrat</MenuItem>
-                      <MenuItem value="Lato">Lato</MenuItem>
-                      <MenuItem value="Open Sans">Open Sans</MenuItem>
-                      <MenuItem value="Raleway">Raleway</MenuItem>
-                      <MenuItem value="Poppins">Poppins</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
+                  <Grid item xs={12}>
+                    <FormControl fullWidth>
+                      <InputLabel>Beskrivelse Font</InputLabel>
+                      <Select
+                        value={newPage.descriptionFont}
+                        onChange={(e) => setNewPage({ ...newPage, descriptionFont: e.target.value })}
+                        label="Beskrivelse Font"
+                      >
+                        <MenuItem value="Inter">Inter (Standard)</MenuItem>
+                        <MenuItem value="Roboto">Roboto</MenuItem>
+                        <MenuItem value="Playfair Display">Playfair Display</MenuItem>
+                        <MenuItem value="Montserrat">Montserrat</MenuItem>
+                        <MenuItem value="Lato">Lato</MenuItem>
+                        <MenuItem value="Open Sans">Open Sans</MenuItem>
+                        <MenuItem value="Raleway">Raleway</MenuItem>
+                        <MenuItem value="Poppins">Poppins</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Grid>
 
-                <Grid item xs={12}>
-                  <FormControl fullWidth>
-                    <InputLabel>Knap Font</InputLabel>
-                    <Select
-                      value={newPage.buttonFont}
-                      onChange={(e) => setNewPage({ ...newPage, buttonFont: e.target.value })}
-                      label="Knap Font"
-                    >
-                      <MenuItem value="Inter">Inter (Standard)</MenuItem>
-                      <MenuItem value="Roboto">Roboto</MenuItem>
-                      <MenuItem value="Playfair Display">Playfair Display</MenuItem>
-                      <MenuItem value="Montserrat">Montserrat</MenuItem>
-                      <MenuItem value="Lato">Lato</MenuItem>
-                      <MenuItem value="Open Sans">Open Sans</MenuItem>
-                      <MenuItem value="Raleway">Raleway</MenuItem>
-                      <MenuItem value="Poppins">Poppins</MenuItem>
-                    </Select>
-                  </FormControl>
+                  <Grid item xs={12}>
+                    <FormControl fullWidth>
+                      <InputLabel>Knap Font</InputLabel>
+                      <Select
+                        value={newPage.buttonFont}
+                        onChange={(e) => setNewPage({ ...newPage, buttonFont: e.target.value })}
+                        label="Knap Font"
+                      >
+                        <MenuItem value="Inter">Inter (Standard)</MenuItem>
+                        <MenuItem value="Roboto">Roboto</MenuItem>
+                        <MenuItem value="Playfair Display">Playfair Display</MenuItem>
+                        <MenuItem value="Montserrat">Montserrat</MenuItem>
+                        <MenuItem value="Lato">Lato</MenuItem>
+                        <MenuItem value="Open Sans">Open Sans</MenuItem>
+                        <MenuItem value="Raleway">Raleway</MenuItem>
+                        <MenuItem value="Poppins">Poppins</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Grid>
                 </Grid>
               </Grid>
-            </Grid>
 
-            {/* Højre side - Live Preview */}
-            <Grid item xs={12} md={6}>
-              <Paper
-                elevation={3}
-                sx={{
-                  height: '850px',
-                  overflow: 'hidden',
-                  position: 'relative',
-                  '@media (max-width: 600px)': {
-                    height: '700px'
-                  }
-                }}
-              >
-                <Typography variant="h6" gutterBottom sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-                  Live Preview (Mobil format)
-                </Typography>
-                <Box 
-                  sx={{ 
-                    height: 'calc(100% - 48px)',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
+              {/* Højre side - Live Preview */}
+              <Grid item xs={12} md={6}>
+                <Paper
+                  elevation={3}
+                  sx={{
+                    height: '850px',
+                    overflow: 'hidden',
                     position: 'relative',
-                    p: 4,
-                    mt: 2
+                    '@media (max-width: 600px)': {
+                      height: '700px'
+                    }
                   }}
                 >
-                  <Box
-                    sx={{
-                      width: '375px',
-                      height: '812px',
+                  <Typography variant="h6" gutterBottom sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+                    Live Preview (Mobil format)
+                  </Typography>
+                  <Box 
+                    sx={{ 
+                      height: 'calc(100% - 48px)',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
                       position: 'relative',
-                      overflow: 'hidden',
-                      borderRadius: '40px',
-                      boxShadow: '0 0 20px rgba(0,0,0,0.3)',
-                      backgroundImage: `url(${iPhoneBezel})`,
-                      backgroundSize: 'contain',
-                      backgroundRepeat: 'no-repeat',
-                      backgroundPosition: 'center',
+                      p: 4,
+                      mt: 2
                     }}
                   >
-                    <Box 
-                      sx={{ 
-                        position: 'absolute',
-                        top: '12px',
-                        left: '12px',
-                        right: '12px',
-                        bottom: '12px',
-                        overflow: 'auto',
-                        borderRadius: '30px',
-                        backgroundColor: '#fff',
-                        '&::-webkit-scrollbar': {
-                          display: 'none'
-                        },
-                        scrollbarWidth: 'none',
-                        msOverflowStyle: 'none'
+                    <Box
+                      sx={{
+                        width: '375px',
+                        height: '812px',
+                        position: 'relative',
+                        overflow: 'hidden',
+                        borderRadius: '40px',
+                        boxShadow: '0 0 20px rgba(0,0,0,0.3)',
+                        backgroundImage: `url(${iPhoneBezel})`,
+                        backgroundSize: 'contain',
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'center',
                       }}
                     >
-                      <LivePreview />
+                      <Box 
+                        sx={{ 
+                          position: 'absolute',
+                          top: '12px',
+                          left: '12px',
+                          right: '12px',
+                          bottom: '12px',
+                          overflow: 'auto',
+                          borderRadius: '30px',
+                          backgroundColor: '#fff',
+                          '&::-webkit-scrollbar': {
+                            display: 'none'
+                          },
+                          scrollbarWidth: 'none',
+                          msOverflowStyle: 'none'
+                        }}
+                      >
+                        <LivePreview />
+                      </Box>
                     </Box>
                   </Box>
-                </Box>
-              </Paper>
+                </Paper>
+              </Grid>
             </Grid>
-          </Grid>
+          </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => {

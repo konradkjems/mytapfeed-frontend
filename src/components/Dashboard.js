@@ -85,6 +85,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import Layout from './Layout';
 import API_URL from '../config';
+import { useNavigate } from 'react-router-dom';
 
 // Hjælpefunktioner
 const ensureHttps = (url) => {
@@ -297,6 +298,7 @@ const LoadingButton = ({ loading, disabled, onClick, children, variant = "contai
 const Dashboard = () => {
   const { userData } = useAuth();
   const [stands, setStands] = useState([]);
+  const [unclaimedStands, setUnclaimedStands] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedStand, setSelectedStand] = useState(null);
@@ -305,7 +307,9 @@ const Dashboard = () => {
     standerId: '', 
     redirectUrl: '', 
     productType: 'stander',
-    nickname: ''
+    nickname: '',
+    redirectType: 'redirect',
+    landingPageId: ''
   });
   const [alert, setAlert] = useState({ open: false, message: '', severity: 'success' });
   const [isLoading, setIsLoading] = useState(true);
@@ -322,6 +326,14 @@ const Dashboard = () => {
   const [bulkLoading, setBulkLoading] = useState(false);
   const [selectedGuide, setSelectedGuide] = useState(null);
   const [timeRange, setTimeRange] = useState('week'); // 'week', 'month', 'year'
+  const [editDialog, setEditDialog] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [editNickname, setEditNickname] = useState('');
+  const [landingPages, setLandingPages] = useState([]);
+  const [selectedLandingPage, setSelectedLandingPage] = useState('');
+  const [editRedirectUrl, setEditRedirectUrl] = useState('');
+  const [editType, setEditType] = useState('redirect'); // 'redirect' eller 'landing'
+  const navigate = useNavigate();
 
   const PRODUCT_TYPES = {
     STANDER: { value: 'stander', label: 'Stander' },
@@ -535,25 +547,72 @@ const Dashboard = () => {
     };
   }, []);
 
+  const fetchUnclaimedStands = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/stands/unclaimed`, {
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setUnclaimedStands(data);
+      }
+    } catch (error) {
+      console.error('Fejl ved hentning af unclaimed produkter:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (openDialog) {
+      fetchUnclaimedStands();
+    }
+  }, [openDialog]);
+
+  // Hjælpefunktion til at generere landing page URL
+  const getLandingPageUrl = (landingPageId) => {
+    const selectedPage = landingPages.find(page => page._id === landingPageId);
+    return selectedPage?.urlPath 
+      ? `${window.location.origin}/${selectedPage.urlPath}`
+      : `${window.location.origin}/landing/${landingPageId}`;
+  };
+
   const handleAddStand = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/stands`, {
+      const unclaimedStand = unclaimedStands.find(
+        stand => stand.standerId === newStand.standerId
+      );
+
+      if (!unclaimedStand) {
+        setAlert({
+          open: true,
+          message: 'Dette Produkt ID findes ikke i listen over tilgængelige produkter. Kontakt support hvis du har brug for flere produkter.',
+          severity: 'error'
+        });
+        return;
+      }
+
+      // Bestem redirect URL baseret på valgt type
+      const redirectUrl = newStand.redirectType === 'landing' && newStand.landingPageId
+        ? getLandingPageUrl(newStand.landingPageId)
+        : newStand.redirectUrl;
+
+      const response = await fetch(`${API_URL}/api/stands/${unclaimedStand._id}/claim`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         credentials: 'include',
         body: JSON.stringify({
-          ...newStand,
-          status: userData?.isAdmin ? 'unclaimed' : 'claimed',
-          ownerId: userData?.isAdmin ? null : userData?._id
+          nickname: newStand.nickname,
+          redirectUrl: redirectUrl,
+          productType: newStand.productType,
+          landingPageId: newStand.redirectType === 'landing' ? newStand.landingPageId : null
         })
       });
 
       if (response.ok) {
         setAlert({
           open: true,
-          message: 'Produkt tilføjet succesfuldt',
+          message: 'Produkt aktiveret succesfuldt',
           severity: 'success'
         });
         setOpenDialog(false);
@@ -561,20 +620,21 @@ const Dashboard = () => {
           standerId: '',
           redirectUrl: '',
           productType: 'stander',
-          nickname: ''
+          nickname: '',
+          redirectType: 'redirect',
+          landingPageId: ''
         });
         
-        // Hent opdateret liste af stands
         fetchStands();
       } else {
         const error = await response.json();
-        throw new Error(error.message || 'Kunne ikke tilføje produkt');
+        throw new Error(error.message || 'Kunne ikke aktivere produkt');
       }
     } catch (error) {
-      console.error('Fejl ved tilføjelse af produkt:', error);
+      console.error('Fejl ved aktivering af produkt:', error);
       setAlert({
         open: true,
-        message: error.message || 'Der opstod en fejl ved tilføjelse af produkt',
+        message: error.message || 'Der opstod en fejl ved aktivering af produkt',
         severity: 'error'
       });
     }
@@ -1097,6 +1157,78 @@ const Dashboard = () => {
     }
   ];
 
+  useEffect(() => {
+    fetchStands();
+    fetchLandingPages();
+  }, []);
+
+  const fetchLandingPages = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/landing-pages`, {
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setLandingPages(data);
+      }
+    } catch (error) {
+      console.error('Fejl ved hentning af landing pages:', error);
+    }
+  };
+
+  const openEditDialog = (product) => {
+    setSelectedProduct(product);
+    setEditNickname(product.nickname || '');
+    setEditRedirectUrl(product.redirectUrl || '');
+    if (product.landingPageId) {
+      setEditType('landing');
+      setSelectedLandingPage(product.landingPageId);
+    } else {
+      setEditType('redirect');
+      setSelectedLandingPage('');
+    }
+    setEditDialog(true);
+  };
+
+  const handleEditProduct = async () => {
+    try {
+      // Bestem redirect URL baseret på valgt type
+      const redirectUrl = editType === 'landing' && selectedLandingPage
+        ? getLandingPageUrl(selectedLandingPage)
+        : editRedirectUrl;
+
+      const response = await fetch(`${API_URL}/api/stands/${selectedProduct._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          nickname: editNickname,
+          landingPageId: editType === 'landing' ? selectedLandingPage : null,
+          redirectUrl: redirectUrl
+        })
+      });
+
+      if (response.ok) {
+        setAlert({
+          open: true,
+          message: 'Produkt opdateret',
+          severity: 'success'
+        });
+        setEditDialog(false);
+        fetchStands();
+      }
+    } catch (error) {
+      console.error('Fejl ved opdatering af produkt:', error);
+      setAlert({
+        open: true,
+        message: 'Der opstod en fejl ved opdatering af produkt',
+        severity: 'error'
+      });
+    }
+  };
+
   return (
     <Layout title="Dashboard">
       <Grid container spacing={3}>
@@ -1546,7 +1678,7 @@ const Dashboard = () => {
                           ) : (
                             <Tooltip title="Rediger produkt" arrow>
                               <IconButton
-                                onClick={() => handleEdit(stand._id)}
+                                onClick={() => openEditDialog(stand)}
                                 color="primary"
                               >
                                 <EditIcon />
@@ -1636,86 +1768,89 @@ const Dashboard = () => {
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
         <DialogTitle>Tilføj Nyt Produkt</DialogTitle>
         <DialogContent>
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <Tooltip title="Indtast det unikke ID som er trykt på dit TapFeed produkt (f.eks. 'XYZ123')" arrow placement="top-start">
-                <TextField
-                  fullWidth
-                  label="Produkt ID"
-                  value={newStand.standerId}
-                  onChange={(e) => setNewStand({ ...newStand, standerId: e.target.value })}
-                  required
-                  helperText="Det unikke ID der er trykt på dit TapFeed produkt"
-                />
-              </Tooltip>
-            </Grid>
-            <Grid item xs={12}>
-              <Tooltip title="Giv dit produkt et navn der gør det let at genkende, f.eks. 'Indgang' eller 'Kasse 1'" arrow placement="top-start">
-                <TextField
-                  fullWidth
-                  label="Kaldenavn (valgfrit)"
-                  value={newStand.nickname || ''}
-                  onChange={(e) => setNewStand({ ...newStand, nickname: e.target.value })}
-                  helperText="Et valgfrit navn der gør det lettere at identificere produktet"
-                />
-              </Tooltip>
-            </Grid>
-            <Grid item xs={12}>
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                <Tooltip title="Den URL som besøgende bliver sendt til når de scanner dit produkt, f.eks. din Google anmeldelsesside" arrow placement="top-start">
-                  <TextField
-                    fullWidth
-                    label="Redirect URL"
-                    value={newStand.redirectUrl}
-                    onChange={(e) => setNewStand({ ...newStand, redirectUrl: e.target.value })}
-                    required
-                    helperText="Den side som besøgende sendes til ved scanning"
-                  />
-                </Tooltip>
-                <Button
-                  variant="outlined"
-                  onClick={() => {
-                    const googlePlaceId = userData?.googlePlaceId;
-                    if (googlePlaceId) {
-                      const reviewLink = `https://search.google.com/local/writereview?placeid=${googlePlaceId}`;
-                      setNewStand({ ...newStand, redirectUrl: reviewLink });
-                    } else {
-                      setAlert({
-                        open: true,
-                        message: 'Du skal først tilføje din Google Maps lokation under "Google Maps Anmeldelser"',
-                        severity: 'info'
-                      });
-                    }
-                  }}
-                  startIcon={<RateReviewIcon />}
+          <Box sx={{ mt: 2 }}>
+            <TextField
+              fullWidth
+              label="Produkt ID"
+              value={newStand.standerId}
+              onChange={(e) => setNewStand({ ...newStand, standerId: e.target.value })}
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              fullWidth
+              label="Kaldenavn"
+              value={newStand.nickname}
+              onChange={(e) => setNewStand({ ...newStand, nickname: e.target.value })}
+              sx={{ mb: 2 }}
+            />
+            <FormControl fullWidth sx={{ mb: 2 }}>
+              <InputLabel>Produkt Type</InputLabel>
+              <Select
+                value={newStand.productType}
+                onChange={(e) => setNewStand({ ...newStand, productType: e.target.value })}
+                label="Produkt Type"
+              >
+                {Object.values(PRODUCT_TYPES).map(type => (
+                  <MenuItem key={type.value} value={type.value}>
+                    {type.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <FormControl fullWidth sx={{ mb: 2 }}>
+              <InputLabel>Redirect Type</InputLabel>
+              <Select
+                value={newStand.redirectType}
+                onChange={(e) => setNewStand({ ...newStand, redirectType: e.target.value })}
+                label="Redirect Type"
+              >
+                <MenuItem value="redirect">Almindeligt Redirect URL</MenuItem>
+                <MenuItem value="landing">Landing Page</MenuItem>
+              </Select>
+              <FormHelperText>
+                • Almindeligt Redirect URL: Send besøgende direkte til en specifik webadresse (f.eks. dit Google Review Link eller din hjemmeside)<br />
+                • Landing Page: Send besøgende til en specialdesignet MyTapFeed landing page med mere information
+              </FormHelperText>
+            </FormControl>
+
+            {newStand.redirectType === 'redirect' ? (
+              <TextField
+                fullWidth
+                label="Redirect URL"
+                value={newStand.redirectUrl}
+                onChange={(e) => setNewStand({ ...newStand, redirectUrl: e.target.value })}
+                helperText="Indtast den URL som produktet skal linke til (f.eks. din hjemmeside eller sociale medier)"
+              />
+            ) : (
+              <FormControl fullWidth>
+                <InputLabel>Landing Page</InputLabel>
+                <Select
+                  value={newStand.landingPageId}
+                  onChange={(e) => setNewStand({ ...newStand, landingPageId: e.target.value })}
+                  label="Landing Page"
                 >
-                  Brug Google Review Link
-                </Button>
-              </Box>
-            </Grid>
-            <Grid item xs={12}>
-              <Tooltip title="Vælg hvilken type TapFeed produkt du har modtaget" arrow placement="top-start">
-                <FormControl fullWidth margin="dense">
-                  <InputLabel sx={{ mt: -1 }}>Produkttype</InputLabel>
-                  <Select
-                    value={newStand.productType}
-                    onChange={(e) => setNewStand({ ...newStand, productType: e.target.value })}
-                  >
-                    {Object.values(PRODUCT_TYPES).map(type => (
-                      <MenuItem key={type.value} value={type.value}>
-                        {type.label}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  <FormHelperText>Vælg den type fysisk produkt du har modtaget</FormHelperText>
-                </FormControl>
-              </Tooltip>
-            </Grid>
-          </Grid>
+                  <MenuItem value="">
+                    <em>Ingen landing page</em>
+                  </MenuItem>
+                  {landingPages.map((page) => (
+                    <MenuItem key={page._id} value={page._id}>
+                      {page.title}
+                    </MenuItem>
+                  ))}
+                </Select>
+                <FormHelperText>
+                  Vælg en landing page som produktet skal linke til
+                </FormHelperText>
+              </FormControl>
+            )}
+          </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenDialog(false)}>Annuller</Button>
-          <Button onClick={handleAddStand} variant="contained">Tilføj</Button>
+          <Button onClick={handleAddStand} variant="contained" color="primary">
+            Tilføj
+          </Button>
         </DialogActions>
       </Dialog>
 
@@ -1864,6 +1999,77 @@ const Dashboard = () => {
         <DialogActions>
           <Button onClick={() => setSelectedGuide(null)}>
             Luk
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Rediger Produkt Dialog */}
+      <Dialog open={editDialog} onClose={() => setEditDialog(false)}>
+        <DialogTitle>Rediger Produkt</DialogTitle>
+        <DialogContent>
+          <Box sx={{ mt: 2 }}>
+            <TextField
+              fullWidth
+              label="Kaldenavn"
+              value={editNickname}
+              onChange={(e) => setEditNickname(e.target.value)}
+              sx={{ mb: 2 }}
+            />
+            
+            <FormControl fullWidth sx={{ mb: 2 }}>
+              <InputLabel>Redirect Type</InputLabel>
+              <Select
+                value={editType}
+                onChange={(e) => setEditType(e.target.value)}
+                label="Redirect Type"
+              >
+                <MenuItem value="redirect">Almindeligt Redirect URL</MenuItem>
+                <MenuItem value="landing">Landing Page</MenuItem>
+              </Select>
+              <FormHelperText>
+                • Almindeligt Redirect URL: Send besøgende direkte til en specifik webadresse (f.eks. dit Google Review Link eller din hjemmeside)<br />
+                • Landing Page: Send besøgende til en specialdesignet MyTapFeed landing page med mere information
+              </FormHelperText>
+            </FormControl>
+
+            {editType === 'redirect' ? (
+              <TextField
+                fullWidth
+                label="Redirect URL"
+                value={editRedirectUrl}
+                onChange={(e) => setEditRedirectUrl(e.target.value)}
+                helperText="Indtast den URL som produktet skal linke til (f.eks. din hjemmeside eller sociale medier)"
+              />
+            ) : (
+              <FormControl fullWidth>
+                <InputLabel>Landing Page</InputLabel>
+                <Select
+                  value={selectedLandingPage}
+                  onChange={(e) => setSelectedLandingPage(e.target.value)}
+                  label="Landing Page"
+                >
+                  <MenuItem value="">
+                    <em>Ingen landing page</em>
+                  </MenuItem>
+                  {landingPages.map((page) => (
+                    <MenuItem key={page._id} value={page._id}>
+                      {page.title}
+                    </MenuItem>
+                  ))}
+                </Select>
+                <FormHelperText>
+                  Vælg en landing page som produktet skal linke til
+                </FormHelperText>
+              </FormControl>
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditDialog(false)}>
+            Annuller
+          </Button>
+          <Button onClick={handleEditProduct} variant="contained" color="primary">
+            Gem
           </Button>
         </DialogActions>
       </Dialog>

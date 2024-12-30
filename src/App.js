@@ -55,6 +55,7 @@ function App() {
               } />
               <Route path="/landing/:id" element={<LandingPageView />} />
               <Route path="/claim/:standerId" element={<ClaimProduct />} />
+              <Route path="/:urlPath" element={<LandingPageView />} />
             </Routes>
           </div>
         </Router>
