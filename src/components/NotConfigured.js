@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   Box,
   Container,
@@ -12,7 +12,8 @@ import {
   ListItemText,
   Alert,
   Divider,
-  Chip
+  Chip,
+  CircularProgress
 } from '@mui/material';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import LinkIcon from '@mui/icons-material/Link';
@@ -25,28 +26,54 @@ const NotConfigured = () => {
   const { standerId } = useParams();
   const [stand, setStand] = useState(null);
   const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchStand = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/stands/${standerId}`, {
-          credentials: 'include'
-        });
+        setIsLoading(true);
+        const response = await fetch(`${API_URL}/api/stands/${standerId}`);
         
         if (!response.ok) {
           throw new Error('Kunne ikke hente produkt information');
         }
 
         const data = await response.json();
+        
+        // Hvis produktet ikke er claimed eller har en redirect URL/landing page, redirect til claim siden
+        if (data.status !== 'claimed' || data.redirectUrl || data.landingPageId) {
+          navigate(`/claim/${standerId}`);
+          return;
+        }
+
         setStand(data);
       } catch (error) {
         console.error('Fejl ved hentning af produkt:', error);
         setError('Der opstod en fejl ved hentning af produkt information');
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchStand();
-  }, [standerId]);
+  }, [standerId, navigate]);
+
+  if (isLoading) {
+    return (
+      <Box
+        sx={{
+          minHeight: '100vh',
+          backgroundColor: '#f5f5f5',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center'
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box
@@ -120,7 +147,7 @@ const NotConfigured = () => {
                   </ListItemIcon>
                   <ListItemText 
                     primary="2. Find dit produkt" 
-                    secondary="Under 'Produkter' finder du dette produkt med ID'et"
+                    secondary={`Under 'Produkter' finder du dette produkt med ID'et ${standerId}`}
                   />
                 </ListItem>
                 <ListItem>
@@ -129,7 +156,7 @@ const NotConfigured = () => {
                   </ListItemIcon>
                   <ListItemText 
                     primary="3. Vælg destination" 
-                    secondary="Du kan enten tilføje et direkte link til din hjemmeside/sociale medier, eller oprette en flot landing page"
+                    secondary="Du kan enten tilføje et direkte link til din Google Review side, hjemmeside/sociale medier, eller oprette en flot landing page"
                   />
                 </ListItem>
                 <ListItem>

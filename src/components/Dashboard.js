@@ -345,6 +345,7 @@ const Dashboard = () => {
   const prepareTimeSeriesData = () => {
     const now = new Date();
     now.setHours(0, 0, 0, 0);
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset()); // Konverter til UTC
 
     const ranges = {
       week: 7,
@@ -369,6 +370,7 @@ const Dashboard = () => {
       (stand.clickHistory || []).forEach(click => {
         const clickDate = new Date(click.timestamp);
         clickDate.setHours(0, 0, 0, 0);
+        clickDate.setMinutes(clickDate.getMinutes() - clickDate.getTimezoneOffset()); // Konverter til UTC
         const diffDays = Math.floor((now - clickDate) / (1000 * 60 * 60 * 24));
         
         if (diffDays < days) {
@@ -384,74 +386,52 @@ const Dashboard = () => {
 
   const fetchInitialData = async () => {
     try {
-        setIsLoading(true);
-        setIsLoadingReviews(true);
+      const cachedData = sessionStorage.getItem('dashboardStands');
+      const cacheTimestamp = sessionStorage.getItem('dashboardCacheTimestamp');
+      const isCacheValid = cacheTimestamp && (Date.now() - parseInt(cacheTimestamp)) < 60 * 1000; // Reducer til 1 minut
 
-        // Tjek først sessionStorage for cached data
-        const cachedStands = sessionStorage.getItem('dashboardStands');
-        const cachedReviews = sessionStorage.getItem('dashboardReviews');
-        const cachedBusinessData = sessionStorage.getItem('dashboardBusiness');
-        const cacheTimestamp = sessionStorage.getItem('dashboardCacheTimestamp');
-
-        // Tjek om cache er gyldig (mindre end 5 minutter gammel)
-        const isCacheValid = cacheTimestamp && (Date.now() - parseInt(cacheTimestamp)) < 5 * 60 * 1000;
-
-        if (isCacheValid && cachedStands && cachedReviews && cachedBusinessData) {
-            console.log('Bruger cached dashboard data');
-            setStands(JSON.parse(cachedStands));
-            setReviews(JSON.parse(cachedReviews));
-            setBusinessData(JSON.parse(cachedBusinessData));
-            setIsLoading(false);
-            setIsLoadingReviews(false);
-            return;
-        }
-
-        // Hvis ingen gyldig cache, hent ny data
-        const [standsResponse, reviewsResponse] = await Promise.all([
-            fetch(`${API_URL}/api/stands`, {
-                credentials: 'include'
-            }),
-            fetch(`${API_URL}/api/business/google-reviews`, {
-                credentials: 'include'
-            })
-        ]);
-
-        if (!standsResponse.ok) throw new Error('Kunne ikke hente produkter');
-        const standsData = await standsResponse.json();
-        setStands(standsData);
-        sessionStorage.setItem('dashboardStands', JSON.stringify(standsData));
-
-        if (reviewsResponse.ok) {
-            const reviewsData = await reviewsResponse.json();
-            setBusinessData(reviewsData.business);
-            setReviews(reviewsData.reviews);
-            sessionStorage.setItem('dashboardReviews', JSON.stringify(reviewsData.reviews));
-            sessionStorage.setItem('dashboardBusiness', JSON.stringify(reviewsData.business));
-        }
-
-        // Gem timestamp for cachen
-        sessionStorage.setItem('dashboardCacheTimestamp', Date.now().toString());
-
-        setAlert({
-            open: true,
-            message: 'Data opdateret succesfuldt',
-            severity: 'success'
-        });
-    } catch (error) {
-        console.error('Fejl ved hentning af data:', error);
-        setAlert({
-            open: true,
-            message: 'Der opstod en fejl ved opdatering af data',
-            severity: 'error'
-        });
-    } finally {
+      if (isCacheValid && cachedData) {
+        console.log('Bruger cached dashboard data');
+        setStands(JSON.parse(cachedData));
         setIsLoading(false);
-        setIsLoadingReviews(false);
+        return;
+      }
+
+      setIsLoading(true);
+      const response = await fetch(`${API_URL}/api/stands`, {
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setStands(data);
+        sessionStorage.setItem('dashboardStands', JSON.stringify(data));
+        sessionStorage.setItem('dashboardCacheTimestamp', Date.now().toString());
+      } else {
+        throw new Error('Kunne ikke hente produkter');
+      }
+    } catch (error) {
+      console.error('Fejl ved hentning af produkter:', error);
+      setAlert({
+        open: true,
+        message: 'Der opstod en fejl ved hentning af produkter',
+        severity: 'error'
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
     fetchInitialData();
+  }, []);
+
+  // Tilføj automatisk opdatering hvert minut
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchInitialData();
+    }, 60 * 1000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const handleRefreshData = async () => {
@@ -488,7 +468,7 @@ const Dashboard = () => {
     let isSubscribed = true;
     let retryTimeout;
 
-    const fetchGoogleReviews = async () => {
+    const fetchGoogleReviews = async (retryCount = 0) => {
       try {
         const response = await fetch(`${API_URL}/api/business/google-reviews`, {
           credentials: 'include',
@@ -498,10 +478,14 @@ const Dashboard = () => {
         });
         
         if (response.status === 429) {
-          // Vent 60 sekunder før næste forsøg ved rate limiting
-          console.log('Rate limit nået, venter 60 sekunder...');
-          await new Promise(resolve => setTimeout(resolve, 60000));
-          return await fetchGoogleReviews();
+          if (retryCount < 3) { // Max 3 forsøg
+            console.log(`Rate limit nået, forsøg ${retryCount + 1}/3. Venter 60 sekunder...`);
+            // Vent 60 sekunder før næste forsøg
+            await new Promise(resolve => setTimeout(resolve, 60000));
+            return await fetchGoogleReviews(retryCount + 1);
+          } else {
+            throw new Error('Rate limit nået - prøv igen senere');
+          }
         }
         
         if (!response.ok) {
@@ -509,35 +493,42 @@ const Dashboard = () => {
         }
         
         const data = await response.json();
-        if (data.business) {
-          setBusinessData(data.business);
-          setReviews(data.reviews);
-          
-          // Gem i sessionStorage
-          sessionStorage.setItem('dashboardReviews', JSON.stringify(data.reviews));
-          sessionStorage.setItem('dashboardBusiness', JSON.stringify(data.business));
-          sessionStorage.setItem('dashboardCacheTimestamp', Date.now().toString());
+        if (isSubscribed) {
+          if (data.business) {
+            setBusinessData(data.business);
+            setReviews(data.reviews);
+            
+            // Gem i sessionStorage
+            sessionStorage.setItem('dashboardReviews', JSON.stringify(data.reviews));
+            sessionStorage.setItem('dashboardBusiness', JSON.stringify(data.business));
+            sessionStorage.setItem('dashboardCacheTimestamp', Date.now().toString());
+          }
         }
       } catch (error) {
         console.error('Fejl ved hentning af Google anmeldelser:', error);
         // Vis ikke fejl hvis der ikke er tilknyttet en virksomhed
-        if (error.message !== 'HTTP error! status: 404') {
+        if (error.message !== 'HTTP error! status: 404' && isSubscribed) {
           setAlert({
             open: true,
-            message: 'Der opstod en fejl ved hentning af anmeldelser. Prøver igen om lidt...',
+            message: error.message || 'Der opstod en fejl ved hentning af anmeldelser',
             severity: 'error'
           });
         }
       }
     };
 
-    const fetchData = async () => {
-      if (isSubscribed) {
-        await fetchGoogleReviews();
-      }
-    };
+    // Tjek først om vi har cached data
+    const cachedReviews = sessionStorage.getItem('dashboardReviews');
+    const cachedBusiness = sessionStorage.getItem('dashboardBusiness');
+    const cacheTimestamp = sessionStorage.getItem('dashboardCacheTimestamp');
+    const isCacheValid = cacheTimestamp && (Date.now() - parseInt(cacheTimestamp)) < 5 * 60 * 1000; // 5 minutter cache
 
-    fetchData();
+    if (isCacheValid && cachedReviews && cachedBusiness) {
+      setBusinessData(JSON.parse(cachedBusiness));
+      setReviews(JSON.parse(cachedReviews));
+    } else {
+      fetchGoogleReviews();
+    }
 
     return () => {
       isSubscribed = false;

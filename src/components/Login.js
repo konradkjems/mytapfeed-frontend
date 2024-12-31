@@ -124,7 +124,8 @@ const Login = () => {
       const response = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
         credentials: 'include',
         body: JSON.stringify({ 
@@ -134,14 +135,15 @@ const Login = () => {
       });
 
       const data = await response.json();
+      console.log('Login response:', data);
 
       if (!response.ok) {
         throw new Error(data.message || 'Der opstod en fejl ved login');
       }
 
-      // Opdater auth context
-      await checkAuth();
-
+      // Opdater auth status
+      setIsAuthenticated(true);
+      
       // Håndter redirect efter login
       const params = new URLSearchParams(location.search);
       const redirectPath = params.get('redirect');
@@ -152,7 +154,8 @@ const Login = () => {
         navigate('/dashboard');
       }
     } catch (error) {
-      setError(error.message);
+      console.error('Login fejl:', error);
+      setError(error.message || 'Forkert brugernavn eller adgangskode');
     } finally {
       setIsLoading(false);
     }

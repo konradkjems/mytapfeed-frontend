@@ -50,7 +50,7 @@ const Statistics = () => {
     try {
       const cachedData = sessionStorage.getItem('statisticsData');
       const cacheTimestamp = sessionStorage.getItem('statisticsCacheTimestamp');
-      const isCacheValid = cacheTimestamp && (Date.now() - parseInt(cacheTimestamp)) < 5 * 60 * 1000;
+      const isCacheValid = cacheTimestamp && (Date.now() - parseInt(cacheTimestamp)) < 60 * 1000;
 
       if (isCacheValid && cachedData) {
         console.log('Bruger cached statistik data');
@@ -78,9 +78,18 @@ const Statistics = () => {
     }
   };
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchStands();
+    }, 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const prepareTimeSeriesData = () => {
     const now = new Date();
     now.setHours(0, 0, 0, 0);
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
 
     const timeRanges = {
       week: 7,
@@ -105,6 +114,7 @@ const Statistics = () => {
       (stand.clickHistory || []).forEach(click => {
         const clickDate = new Date(click.timestamp);
         clickDate.setHours(0, 0, 0, 0);
+        clickDate.setMinutes(clickDate.getMinutes() - clickDate.getTimezoneOffset());
 
         const dateIndex = dateArray.findIndex(date => 
           date.getFullYear() === clickDate.getFullYear() &&
