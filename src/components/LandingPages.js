@@ -47,6 +47,7 @@ import {
 import Layout from './Layout';
 import API_URL from '../config';
 import iPhoneBezel from '../assets/Iphone bezel.png';
+import logo from '../assets/tapfeed logo dark wide transparent.svg';
 
 const LandingPages = () => {
   const [pages, setPages] = useState([]);

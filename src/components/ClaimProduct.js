@@ -5,10 +5,12 @@ import {
   Paper,
   Typography,
   CircularProgress,
-  Alert
+  Alert,
+  Box
 } from '@mui/material';
 import API_URL from '../config';
 import { useAuth } from '../context/AuthContext';
+import logo from '../assets/tapfeed logo white wide transparent.svg';
 
 const ClaimProduct = () => {
   const { standerId } = useParams();
@@ -61,22 +63,48 @@ const ClaimProduct = () => {
   }
 
   return (
-    <Container maxWidth="sm" sx={{ mt: 4 }}>
-      <Paper sx={{ p: 4, textAlign: 'center' }}>
-        {loading ? (
-          <>
-            <Typography variant="h6" gutterBottom>
-              Aktiverer dit TapFeed produkt...
-            </Typography>
-            <CircularProgress sx={{ mt: 2 }} />
-          </>
-        ) : error ? (
-          <Alert severity="error">
-            {error}
-          </Alert>
-        ) : null}
-      </Paper>
-    </Container>
+    <Box
+      sx={{
+        minHeight: '100vh',
+        backgroundColor: '#f5f5f5',
+        py: 4
+      }}
+    >
+      <Container maxWidth="sm">
+        <Paper 
+          sx={{ 
+            p: 4, 
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 3
+          }}
+        >
+          <img
+            src={logo}
+            alt="TapFeed Logo"
+            style={{
+              width: '200px',
+              marginBottom: '20px'
+            }}
+          />
+          
+          {loading ? (
+            <>
+              <Typography variant="h5" gutterBottom>
+                Aktiverer dit TapFeed produkt...
+              </Typography>
+              <CircularProgress sx={{ mt: 2 }} />
+            </>
+          ) : error ? (
+            <Alert severity="error" sx={{ width: '100%' }}>
+              {error}
+            </Alert>
+          ) : null}
+        </Paper>
+      </Container>
+    </Box>
   );
 };
 

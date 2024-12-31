@@ -15,6 +15,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import LandingPages from './components/LandingPages';
 import LandingPageView from './components/LandingPageView';
 import ClaimProduct from './components/ClaimProduct';
+import NotConfigured from './components/NotConfigured';
 
 function App() {
   return (
@@ -55,6 +56,7 @@ function App() {
               } />
               <Route path="/landing/:id" element={<LandingPageView />} />
               <Route path="/claim/:standerId" element={<ClaimProduct />} />
+              <Route path="/not-configured/:standerId" element={<NotConfigured />} />
               <Route path="/:urlPath" element={<LandingPageView />} />
             </Routes>
           </div>
