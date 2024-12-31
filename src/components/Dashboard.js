@@ -656,10 +656,8 @@ const Dashboard = () => {
         },
         credentials: 'include',
         body: JSON.stringify({
-          standerId: stand.standerId,
-          redirectUrl: stand.redirectUrl,
-          productType: stand.productType,
-          nickname: stand.nickname
+          nickname: stand.nickname,
+          landingPageId: stand.landingPageId
         })
       });
 
@@ -1206,7 +1204,7 @@ const Dashboard = () => {
         body: JSON.stringify({
           nickname: editNickname,
           landingPageId: editType === 'landing' ? selectedLandingPage : null,
-          redirectUrl: redirectUrl
+          redirectUrl: editType === 'redirect' ? redirectUrl : null
         })
       });
 
@@ -1218,6 +1216,9 @@ const Dashboard = () => {
         });
         setEditDialog(false);
         fetchStands();
+      } else {
+        const error = await response.json();
+        throw new Error(error.message || 'Kunne ikke opdatere produkt');
       }
     } catch (error) {
       console.error('Fejl ved opdatering af produkt:', error);
