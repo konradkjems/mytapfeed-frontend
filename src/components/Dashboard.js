@@ -334,7 +334,6 @@ const Dashboard = () => {
   const [editRedirectUrl, setEditRedirectUrl] = useState('');
   const [editType, setEditType] = useState('redirect'); // 'redirect' eller 'landing'
   const navigate = useNavigate();
-  const [timeSeriesData, setTimeSeriesData] = useState({ data: [], labels: [] });
 
   const PRODUCT_TYPES = {
     STANDER: { value: 'stander', label: 'Stander' },
@@ -381,11 +380,7 @@ const Dashboard = () => {
     return { data, labels };
   };
 
-  // Opdater timeSeriesData når stands eller timeRange ændres
-  useEffect(() => {
-    const newTimeSeriesData = prepareTimeSeriesData();
-    setTimeSeriesData(newTimeSeriesData);
-  }, [stands, timeRange]);
+  const timeSeriesData = prepareTimeSeriesData();
 
   const fetchInitialData = async () => {
     try {
