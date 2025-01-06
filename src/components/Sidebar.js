@@ -14,7 +14,7 @@ import {
 import {
   Dashboard as DashboardIcon,
   BarChart as BarChartIcon,
-  Person as PersonIcon,
+  Settings as SettingsIcon,
   AdminPanelSettings as AdminIcon,
   DarkMode as DarkModeIcon,
   LightMode as LightModeIcon,
@@ -77,10 +77,10 @@ const Sidebar = ({ open }) => {
       onClick: () => navigate('/statistics')
     },
     {
-      text: 'Min Profil',
-      icon: <PersonIcon />,
-      path: '/profile',
-      onClick: () => navigate('/profile')
+      text: 'Indstillinger',
+      icon: <SettingsIcon />,
+      path: '/settings',
+      onClick: () => navigate('/settings')
     }
   ];
 

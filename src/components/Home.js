@@ -22,22 +22,22 @@ function Home() {
 
   const features = [
     {
-      icon: <DashboardIcon sx={{ fontSize: 40, color: '#fff' }} />,
+      icon: <DashboardIcon sx={{ fontSize: 40, color: '#001F3F' }} />,
       title: 'Brugervenligt Dashboard',
       description: 'Få overblik over dine data og administrer dine produkter fra ét sted'
     },
     {
-      icon: <AnalyticsIcon sx={{ fontSize: 40, color: '#fff' }} />,
+      icon: <AnalyticsIcon sx={{ fontSize: 40, color: '#001F3F' }} />,
       title: 'Detaljeret Statistik',
       description: 'Følg med i dine besøgstal og se hvordan dine produkter performer'
     },
     {
-      icon: <WebIcon sx={{ fontSize: 40, color: '#fff' }} />,
+      icon: <WebIcon sx={{ fontSize: 40, color: '#001F3F' }} />,
       title: 'Landing Pages',
       description: 'Opret og tilpas professionelle landing pages på få minutter'
     },
     {
-      icon: <StoreIcon sx={{ fontSize: 40, color: '#fff' }} />,
+      icon: <StoreIcon sx={{ fontSize: 40, color: '#001F3F' }} />,
       title: 'Google Reviews',
       description: 'Se og administrer dine Google anmeldelser direkte fra dashboardet'
     }
@@ -45,7 +45,7 @@ function Home() {
 
   return (
     <Box sx={{ 
-      backgroundColor: '#001F3F',
+      backgroundColor: '#fff',
       minHeight: '100vh',
       display: 'flex',
       flexDirection: 'column'
@@ -61,13 +61,14 @@ function Home() {
                 style={{ 
                   maxWidth: '100%',
                   width: '400px',
-                  marginBottom: '24px'
+                  marginBottom: '24px',
+                  filter: 'brightness(0.2)'
                 }} 
               />
-              <Typography variant="h4" component="h1" sx={{ color: 'white', mb: 2 }}>
+              <Typography variant="h4" component="h1" sx={{ color: '#001F3F', mb: 2 }}>
                 Velkommen til MyTapFeed
               </Typography>
-              <Typography variant="h6" sx={{ color: 'white', mb: 4, opacity: 0.9 }}>
+              <Typography variant="h6" sx={{ color: '#001F3F', mb: 4, opacity: 0.9 }}>
                 Din platform til at administrere og optimere din digitale tilstedeværelse
               </Typography>
               <Box sx={{ display: 'flex', gap: 2, justifyContent: { xs: 'center', md: 'flex-start' } }}>
@@ -77,10 +78,10 @@ function Home() {
                   variant="contained"
                   size="large"
                   sx={{ 
-                    backgroundColor: '#fff',
-                    color: '#001F3F',
+                    backgroundColor: '#001F3F',
+                    color: '#fff',
                     '&:hover': {
-                      backgroundColor: '#f0f0f0'
+                      backgroundColor: '#002f5f'
                     }
                   }}
                 >
@@ -92,11 +93,11 @@ function Home() {
                   variant="outlined"
                   size="large"
                   sx={{ 
-                    borderColor: '#fff',
-                    color: '#fff',
+                    borderColor: '#001F3F',
+                    color: '#001F3F',
                     '&:hover': {
-                      borderColor: '#f0f0f0',
-                      backgroundColor: 'rgba(255,255,255,0.1)'
+                      borderColor: '#002f5f',
+                      backgroundColor: 'rgba(0,31,63,0.1)'
                     }
                   }}
                 >
@@ -107,16 +108,16 @@ function Home() {
           </Grid>
           <Grid item xs={12} md={6}>
             <Box sx={{ p: 4 }}>
-              <Typography variant="h5" sx={{ color: 'white', mb: 3, textAlign: 'center' }}>
+              <Typography variant="h5" sx={{ color: '#001F3F', mb: 3, textAlign: 'center' }}>
                 Besøg vores webshop
               </Typography>
               <Paper sx={{ 
                 p: 3, 
-                backgroundColor: 'rgba(255,255,255,0.1)',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255,255,255,0.2)'
+                backgroundColor: '#fff',
+                border: '1px solid rgba(0,31,63,0.2)',
+                boxShadow: '0 4px 6px rgba(0,31,63,0.1)'
               }}>
-                <Typography sx={{ color: 'white', mb: 2, textAlign: 'center' }}>
+                <Typography sx={{ color: '#001F3F', mb: 2, textAlign: 'center' }}>
                   Find vores komplette udvalg af produkter på vores webshop
                 </Typography>
                 <Box sx={{ display: 'flex', justifyContent: 'center' }}>
@@ -127,10 +128,10 @@ function Home() {
                     target="_blank"
                     rel="noopener noreferrer"
                     sx={{ 
-                      backgroundColor: '#fff',
-                      color: '#001F3F',
+                      backgroundColor: '#001F3F',
+                      color: '#fff',
                       '&:hover': {
-                        backgroundColor: '#f0f0f0'
+                        backgroundColor: '#002f5f'
                       }
                     }}
                   >
@@ -151,19 +152,19 @@ function Home() {
               <Paper sx={{ 
                 p: 3, 
                 height: '100%',
-                backgroundColor: 'rgba(255,255,255,0.1)',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255,255,255,0.2)',
+                backgroundColor: '#fff',
+                border: '1px solid rgba(0,31,63,0.2)',
+                boxShadow: '0 4px 6px rgba(0,31,63,0.1)',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 textAlign: 'center'
               }}>
                 {feature.icon}
-                <Typography variant="h6" sx={{ color: 'white', my: 2 }}>
+                <Typography variant="h6" sx={{ color: '#001F3F', my: 2 }}>
                   {feature.title}
                 </Typography>
-                <Typography sx={{ color: 'white', opacity: 0.9 }}>
+                <Typography sx={{ color: '#001F3F', opacity: 0.9 }}>
                   {feature.description}
                 </Typography>
               </Paper>

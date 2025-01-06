@@ -25,12 +25,15 @@ export const AuthProvider = ({ children }) => {
             
             if (data.isAuthenticated) {
                 await fetchUserData();
+            } else {
+                setUserData(null);
             }
 
             return data.isAuthenticated;
         } catch (error) {
             console.error('Auth check failed:', error);
             setIsAuthenticated(false);
+            setUserData(null);
             setError('Kunne ikke verificere login status');
             return false;
         }

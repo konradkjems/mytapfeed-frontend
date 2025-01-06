@@ -29,10 +29,8 @@ const LandingPageView = () => {
         let response;
         
         if (id) {
-          // Hvis vi har et ID, brug det direkte
           response = await fetch(`${API_URL}/api/landing/${id}`);
         } else if (urlPath) {
-          // Hvis vi har en URL-sti, find landing page via den
           response = await fetch(`${API_URL}/${urlPath}`);
         }
 
@@ -95,36 +93,32 @@ const LandingPageView = () => {
         />
       )}
 
-      {page.showTitle && (
-        <Typography
-          variant="h4"
-          component="h1"
-          sx={{
-            color: page.titleColor || '#000000',
-            textAlign: 'center',
-            marginBottom: 3,
-            maxWidth: '600px',
-            fontFamily: page.titleFont || 'Roboto'
-          }}
-        >
-          {page.title}
-        </Typography>
-      )}
+      <Typography
+        variant="h4"
+        component="h1"
+        sx={{
+          color: page.titleColor || '#000000',
+          textAlign: 'center',
+          marginBottom: 3,
+          maxWidth: '600px',
+          fontFamily: page.titleFont || 'Roboto'
+        }}
+      >
+        {page.title}
+      </Typography>
 
-      {page.description && (
-        <Typography
-          variant="body1"
-          sx={{
-            color: page.descriptionColor || '#000000',
-            textAlign: 'center',
-            marginBottom: 4,
-            maxWidth: '600px',
-            fontFamily: page.descriptionFont || 'Roboto'
-          }}
-        >
-          {page.description}
-        </Typography>
-      )}
+      <Typography
+        variant="body1"
+        sx={{
+          color: page.descriptionColor || '#000000',
+          textAlign: 'center',
+          marginBottom: 4,
+          maxWidth: '600px',
+          fontFamily: page.descriptionFont || 'Roboto'
+        }}
+      >
+        {page.description}
+      </Typography>
 
       <Stack spacing={2} sx={{ width: '100%', maxWidth: '300px' }}>
         {page.buttons?.map((button, index) => (

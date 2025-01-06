@@ -4,7 +4,7 @@ import Login from './components/Login';
 import Register from './components/Register';
 import Dashboard from './components/Dashboard';
 import Home from './components/Home';
-import Profile from './components/Profile';
+import Settings from './components/Settings';
 import ProtectedRoute from './components/ProtectedRoute';
 import Admin from './components/Admin';
 import Statistics from './components/Statistics';
@@ -16,6 +16,7 @@ import LandingPages from './components/LandingPages';
 import LandingPageView from './components/LandingPageView';
 import ClaimProduct from './components/ClaimProduct';
 import NotConfigured from './components/NotConfigured';
+import Unclaimed from './components/Unclaimed';
 
 function App() {
   return (
@@ -39,9 +40,9 @@ function App() {
                   <Statistics />
                 </ProtectedRoute>
               } />
-              <Route path="/profile" element={
+              <Route path="/settings" element={
                 <ProtectedRoute>
-                  <Profile />
+                  <Settings />
                 </ProtectedRoute>
               } />
               <Route path="/admin" element={
@@ -56,6 +57,7 @@ function App() {
               } />
               <Route path="/landing/:id" element={<LandingPageView />} />
               <Route path="/claim/:standerId" element={<ClaimProduct />} />
+              <Route path="/unclaimed/:standerId" element={<Unclaimed />} />
               <Route path="/not-configured/:standerId" element={<NotConfigured />} />
               <Route path="/:urlPath" element={<LandingPageView />} />
             </Routes>

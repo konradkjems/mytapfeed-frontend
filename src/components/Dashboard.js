@@ -79,6 +79,7 @@ import {
   CompareArrows as CompareArrowsIcon,
   TrendingUp as TrendingUpIcon,
   Update as UpdateIcon,
+  Reply as ReplyIcon,
 } from '@mui/icons-material';
 import { BarChart } from '@mui/x-charts/BarChart';
 import { useAuth } from '../context/AuthContext';
@@ -313,6 +314,10 @@ const Dashboard = () => {
   });
   const [alert, setAlert] = useState({ open: false, message: '', severity: 'success' });
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [dashboardData, setDashboardData] = useState(null);
+  const [totalClicks, setTotalClicks] = useState(0);
+  const [totalStands, setTotalStands] = useState(0);
   const { mode } = useTheme();
   const [businessData, setBusinessData] = useState(null);
   const [reviews, setReviews] = useState([]);
@@ -1146,24 +1151,57 @@ const Dashboard = () => {
     }
   ];
 
-  useEffect(() => {
-    fetchStands();
-    fetchLandingPages();
-  }, []);
-
-  const fetchLandingPages = async () => {
+  const fetchDashboard = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/landing-pages`, {
+      console.log('Henter dashboard data...');
+      setIsLoading(true);
+      
+      // Hent brugerens stands
+      const standsResponse = await fetch(`${API_URL}/api/stands`, {
         credentials: 'include'
       });
-      if (response.ok) {
-        const data = await response.json();
-        setLandingPages(data);
+
+      if (!standsResponse.ok) {
+        throw new Error('Kunne ikke hente produkter');
       }
+
+      const standsData = await standsResponse.json();
+      console.log('Produkter hentet:', standsData);
+      
+      // Beregn totaler
+      const totalStandsCount = standsData.length;
+      const totalClicksCount = standsData.reduce((sum, stand) => sum + (stand.clicks || 0), 0);
+
+      // Opdater state
+      setStands(standsData);
+      setTotalStands(totalStandsCount);
+      setTotalClicks(totalClicksCount);
+      setDashboardData({
+        stands: standsData,
+        totalStands: totalStandsCount,
+        totalClicks: totalClicksCount
+      });
+      
+      // Gem i sessionStorage
+      sessionStorage.setItem('dashboardStands', JSON.stringify(standsData));
+      sessionStorage.setItem('dashboardCacheTimestamp', Date.now().toString());
     } catch (error) {
-      console.error('Fejl ved hentning af landing pages:', error);
+      console.error('Fejl ved hentning af dashboard data:', error);
+      setError('Der opstod en fejl ved hentning af dashboard data');
+      setAlert({
+        open: true,
+        message: 'Der opstod en fejl ved hentning af data',
+        severity: 'error'
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchDashboard();
+    fetchGoogleReviews();
+  }, []);
 
   const openEditDialog = (product) => {
     setSelectedProduct(product);
@@ -1218,6 +1256,32 @@ const Dashboard = () => {
         message: 'Der opstod en fejl ved opdatering af produkt',
         severity: 'error'
       });
+    }
+  };
+
+  const fetchGoogleReviews = async () => {
+    try {
+      setIsLoadingReviews(true);
+      const response = await fetch(`${API_URL}/api/business/google-reviews`, {
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Kunne ikke hente anmeldelser');
+      }
+      
+      const data = await response.json();
+      setBusinessData(data.business);
+      setReviews(data.reviews || []);
+    } catch (error) {
+      console.error('Fejl ved hentning af Google anmeldelser:', error);
+      setAlert({
+        open: true,
+        message: 'Der opstod en fejl ved hentning af anmeldelser',
+        severity: 'error'
+      });
+    } finally {
+      setIsLoadingReviews(false);
     }
   };
 
@@ -1454,7 +1518,7 @@ const Dashboard = () => {
                         {[...reviews]
                           .sort((a, b) => {
                             const sortMultiplier = reviewSortOrder === 'desc' ? -1 : 1;
-                            return sortMultiplier * (a.time - b.time);
+                            return (a.time - b.time) * sortMultiplier;
                           })
                           .map((review, index) => (
                             <React.Fragment key={review.time}>
@@ -1466,24 +1530,26 @@ const Dashboard = () => {
                                 </ListItemAvatar>
                                 <ListItemText
                                   primary={
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <Box display="flex" alignItems="center" gap={1}>
                                       <Typography component="span" variant="subtitle2">
                                         {review.author_name}
                                       </Typography>
                                       <Rating value={review.rating} size="small" readOnly />
-                                      <Typography variant="caption" color="text.secondary">
+                                      <Typography variant="body2" color="textSecondary">
                                         {new Date(review.time * 1000).toLocaleDateString('da-DK')}
                                       </Typography>
                                     </Box>
                                   }
                                   secondary={
-                                    <Typography
-                                      component="span"
-                                      variant="body2"
-                                      color="text.primary"
-                                    >
-                                      {review.text}
-                                    </Typography>
+                                    <>
+                                      <Typography
+                                        component="span"
+                                        variant="body2"
+                                        color="textPrimary"
+                                      >
+                                        {review.text}
+                                      </Typography>
+                                    </>
                                   }
                                 />
                               </ListItem>

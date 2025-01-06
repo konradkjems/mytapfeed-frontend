@@ -70,7 +70,7 @@ const LandingPages = () => {
     descriptionFont: 'Inter',
     buttonFont: 'Inter',
     buttons: [],
-    showTitle: true,
+    showTitle: false,
     socialLinks: {
       instagram: '',
       facebook: '',
@@ -130,6 +130,7 @@ const LandingPages = () => {
 
   const handleCreatePage = async () => {
     try {
+      console.log('Creating page, showTitle value:', newPage.showTitle);
       const formData = new FormData();
       formData.append('title', newPage.title);
       formData.append('description', newPage.description);
@@ -139,9 +140,14 @@ const LandingPages = () => {
       formData.append('buttonTextColor', newPage.buttonTextColor);
       formData.append('titleColor', newPage.titleColor);
       formData.append('descriptionColor', newPage.descriptionColor);
-      formData.append('showTitle', newPage.showTitle);
+      formData.append('showTitle', newPage.showTitle ? 'true' : 'false');
       formData.append('buttons', JSON.stringify(newPage.buttons));
       formData.append('socialLinks', JSON.stringify(newPage.socialLinks));
+      formData.append('titleFont', newPage.titleFont);
+      formData.append('descriptionFont', newPage.descriptionFont);
+      formData.append('buttonFont', newPage.buttonFont);
+
+      console.log('FormData showTitle value:', formData.get('showTitle'));
 
       if (newPage.logo) {
         formData.append('logo', newPage.logo);
@@ -194,7 +200,7 @@ const LandingPages = () => {
       descriptionFont: 'Inter',
       buttonFont: 'Inter',
       buttons: [],
-      showTitle: true,
+      showTitle: false,
       socialLinks: {
         instagram: '',
         facebook: '',
@@ -277,6 +283,7 @@ const LandingPages = () => {
   };
 
   const handleEdit = (page) => {
+    console.log('Original page showTitle:', page.showTitle);
     setNewPage({
       title: page.title,
       description: page.description,
@@ -286,19 +293,21 @@ const LandingPages = () => {
       buttonTextColor: page.buttonTextColor,
       titleColor: page.titleColor,
       descriptionColor: page.descriptionColor,
-      titleFont: page.titleFont,
-      descriptionFont: page.descriptionFont,
-      buttonFont: page.buttonFont,
+      titleFont: page.titleFont || 'Inter',
+      descriptionFont: page.descriptionFont || 'Inter',
+      buttonFont: page.buttonFont || 'Inter',
       buttons: page.buttons || [],
-      showTitle: page.showTitle,
+      showTitle: page.showTitle === undefined ? false : page.showTitle,
       socialLinks: page.socialLinks || {}
     });
+    console.log('New page showTitle after edit:', page.showTitle === undefined ? false : page.showTitle);
     setSelectedPage(page);
     setOpenDialog(true);
   };
 
   const handleUpdate = async () => {
     try {
+      console.log('Updating page, showTitle value:', newPage.showTitle);
       const formData = new FormData();
       formData.append('title', newPage.title);
       formData.append('description', newPage.description);
@@ -308,9 +317,14 @@ const LandingPages = () => {
       formData.append('buttonTextColor', newPage.buttonTextColor);
       formData.append('titleColor', newPage.titleColor);
       formData.append('descriptionColor', newPage.descriptionColor);
-      formData.append('showTitle', newPage.showTitle);
+      formData.append('showTitle', newPage.showTitle ? 'true' : 'false');
       formData.append('buttons', JSON.stringify(newPage.buttons));
       formData.append('socialLinks', JSON.stringify(newPage.socialLinks));
+      formData.append('titleFont', newPage.titleFont);
+      formData.append('descriptionFont', newPage.descriptionFont);
+      formData.append('buttonFont', newPage.buttonFont);
+
+      console.log('FormData showTitle value:', formData.get('showTitle'));
 
       if (newPage.logo instanceof File) {
         formData.append('logo', newPage.logo);
@@ -326,6 +340,8 @@ const LandingPages = () => {
       });
 
       if (response.ok) {
+        const updatedPage = await response.json();
+        console.log('Updated page response:', updatedPage);
         setAlert({
           open: true,
           message: 'Landing page opdateret',
@@ -369,6 +385,9 @@ const LandingPages = () => {
 
     const socialLinks = newPage.socialLinks || selectedPage?.socialLinks || {};
     const activeSocialLinks = Object.entries(socialLinks).filter(([_, url]) => url && url.trim() !== '');
+    const showTitleValue = newPage.showTitle === undefined ? false : newPage.showTitle;
+
+    console.log('LivePreview showTitleValue:', showTitleValue, typeof showTitleValue);
 
     return (
       <Box
@@ -401,7 +420,7 @@ const LandingPages = () => {
           />
         )}
         
-        {newPage.showTitle && (
+        {showTitleValue && (
           <Typography 
             variant="h4" 
             component="h1" 
@@ -672,46 +691,33 @@ const LandingPages = () => {
             <TextField
               fullWidth
               label="Beskrivelse"
-              value={newPage.description}
-              onChange={(e) => setNewPage({ ...newPage, description: e.target.value })}
               multiline
               rows={4}
+              value={newPage.description}
+              onChange={(e) => setNewPage({ ...newPage, description: e.target.value })}
               sx={{ mb: 2 }}
             />
-            
-            <Grid container spacing={4} sx={{ mt: 1 }}>
-              {/* Venstre side - Indstillinger */}
+
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={newPage.showTitle}
+                  onChange={(e) => {
+                    console.log('Switch changed to:', e.target.checked);
+                    setNewPage(prev => ({
+                      ...prev,
+                      showTitle: e.target.checked
+                    }));
+                  }}
+                />
+              }
+              label="Vis titel på landing page"
+              sx={{ mb: 2 }}
+            />
+
+            <Grid container spacing={2}>
               <Grid item xs={12} md={6}>
                 <Grid container spacing={4}>
-                  <Grid item xs={12}>
-                    <TextField
-                      fullWidth
-                      label="Titel"
-                      value={newPage.title}
-                      onChange={(e) => setNewPage({ ...newPage, title: e.target.value })}
-                    />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={newPage.showTitle}
-                          onChange={(e) => setNewPage({ ...newPage, showTitle: e.target.checked })}
-                        />
-                      }
-                      label="Vis titel på landing page"
-                    />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <TextField
-                      fullWidth
-                      label="Beskrivelse"
-                      multiline
-                      rows={4}
-                      value={newPage.description}
-                      onChange={(e) => setNewPage({ ...newPage, description: e.target.value })}
-                    />
-                  </Grid>
                   <Grid item xs={12} sm={6}>
                     <Box sx={{ mb: 4 }}>
                       <Button
@@ -765,7 +771,6 @@ const LandingPages = () => {
                     </Box>
                   </Grid>
                   
-                  {/* Farvevalg sektion med mere padding */}
                   <Grid item xs={12}>
                     <Box sx={{ px: 2 }}>
                       <Grid container spacing={3}>
@@ -828,7 +833,6 @@ const LandingPages = () => {
                     </Box>
                   </Grid>
 
-                  {/* Links sektion */}
                   <Grid item xs={12}>
                     <Typography variant="h6" gutterBottom>
                       Tilføj Links
@@ -899,7 +903,6 @@ const LandingPages = () => {
                     </List>
                   </Grid>
 
-                  {/* Sociale medier sektion */}
                   <Grid item xs={12}>
                     <Typography variant="h6" gutterBottom>
                       Sociale Medier
@@ -1014,12 +1017,11 @@ const LandingPages = () => {
                 </Grid>
               </Grid>
 
-              {/* Højre side - Live Preview */}
               <Grid item xs={12} md={6}>
                 <Paper
                   elevation={3}
                   sx={{
-                    height: '850px',
+                    height: '750px',
                     overflow: 'hidden',
                     position: 'relative',
                     '@media (max-width: 600px)': {
@@ -1037,22 +1039,18 @@ const LandingPages = () => {
                       justifyContent: 'center',
                       alignItems: 'center',
                       position: 'relative',
-                      p: 4,
-                      mt: 2
+                      p: 0,
+                      mt: 0
                     }}
                   >
                     <Box
                       sx={{
-                        width: '375px',
-                        height: '812px',
+                        width: '300px',
+                        height: '600px',
                         position: 'relative',
                         overflow: 'hidden',
-                        borderRadius: '40px',
+                        borderRadius: '50px',
                         boxShadow: '0 0 20px rgba(0,0,0,0.3)',
-                        backgroundImage: `url(${iPhoneBezel})`,
-                        backgroundSize: 'contain',
-                        backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'center',
                       }}
                     >
                       <Box 
@@ -1062,18 +1060,39 @@ const LandingPages = () => {
                           left: '12px',
                           right: '12px',
                           bottom: '12px',
+                          width: 'calc(100% - 24px)',
+                          height: 'calc(100% - 24px)',
                           overflow: 'auto',
-                          borderRadius: '30px',
                           backgroundColor: '#fff',
+                          borderRadius: '50px',
                           '&::-webkit-scrollbar': {
                             display: 'none'
                           },
                           scrollbarWidth: 'none',
-                          msOverflowStyle: 'none'
+                          msOverflowStyle: 'none',
+                          '& > div': {
+                            padding: '20px',
+                            paddingTop: '60px',
+                            paddingBottom: '40px'
+                          }
                         }}
                       >
                         <LivePreview />
                       </Box>
+                      <Box
+                        component="img"
+                        src={iPhoneBezel}
+                        sx={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          width: '100%',
+                          height: '100%',
+                          pointerEvents: 'none',
+                          zIndex: 1,
+                          objectFit: 'contain'
+                        }}
+                      />
                     </Box>
                   </Box>
                 </Paper>

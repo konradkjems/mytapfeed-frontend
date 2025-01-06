@@ -18,7 +18,8 @@ import {
   ChevronLeft as ChevronLeftIcon,
   Person as PersonIcon,
   Logout as LogoutIcon,
-  AdminPanelSettings as AdminIcon
+  AdminPanelSettings as AdminIcon,
+  Settings as SettingsIcon
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -132,10 +133,10 @@ const Layout = ({ children, title }) => {
             >
               <MenuItem onClick={() => {
                 handleClose();
-                navigate('/profile');
+                navigate('/settings');
               }}>
-                <PersonIcon sx={{ mr: 2 }} />
-                Min Profil
+                <SettingsIcon sx={{ mr: 2 }} />
+                Indstillinger
               </MenuItem>
               {userData?.isAdmin && (
                 <MenuItem onClick={() => {

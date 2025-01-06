@@ -25,13 +25,15 @@ import {
   CalendarToday as CalendarIcon,
   AdminPanelSettings as AdminIcon,
   PhotoCamera as PhotoCameraIcon,
-  Error as ErrorIcon
+  Error as ErrorIcon,
+  Business as BusinessIcon,
+  Google as GoogleIcon
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import Layout from './Layout';
 import API_URL from '../config';
 
-const Profile = () => {
+const Settings = () => {
   const { userData, fetchUserData, error: authError, isLoading: authLoading } = useAuth();
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
@@ -47,6 +49,45 @@ const Profile = () => {
     setProfileImage(userData?.profileImage);
     setImageTimestamp(Date.now());
   }, [userData]);
+
+  const handleGoogleLogin = async () => {
+    try {
+      // Åbn Google OAuth vindue
+      window.location.href = `${API_URL}/api/auth/google-business`;
+    } catch (error) {
+      setAlert({
+        open: true,
+        message: 'Der opstod en fejl ved login med Google',
+        severity: 'error'
+      });
+    }
+  };
+
+  const handleGoogleLogout = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/auth/google-business/logout`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        await fetchUserData();
+        setAlert({
+          open: true,
+          message: 'Du er nu logget ud af Google My Business',
+          severity: 'success'
+        });
+      } else {
+        throw new Error('Kunne ikke logge ud af Google My Business');
+      }
+    } catch (error) {
+      setAlert({
+        open: true,
+        message: error.message || 'Der opstod en fejl ved logout af Google',
+        severity: 'error'
+      });
+    }
+  };
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
@@ -100,32 +141,23 @@ const Profile = () => {
     const file = e.target.files[0];
     if (!file) return;
 
-    console.log('Starter upload af profilbillede');
     setIsUploading(true);
     const formData = new FormData();
     formData.append('image', file);
 
     try {
-      console.log('Sender request til server');
       const response = await fetch(`${API_URL}/api/user/profile-image`, {
         method: 'POST',
         credentials: 'include',
         body: formData
       });
       
-      console.log('Server response:', response);
-      
       if (!response.ok) {
         throw new Error('Kunne ikke uploade billede');
       }
       
       const responseData = await response.json();
-      console.log('Server response data:', responseData);
-      console.log('Uploaded image URL:', responseData.user.profileImage);
-      
-      console.log('Henter opdateret brugerdata');
-      await fetchUserData(); // Genindlæs brugerdata efter upload
-      console.log('Opdateret userData:', userData);
+      await fetchUserData();
       
       setProfileImage(responseData.user.profileImage);
       setImageTimestamp(Date.now());
@@ -149,7 +181,7 @@ const Profile = () => {
 
   if (authLoading) {
     return (
-      <Layout title="Min Profil">
+      <Layout title="Indstillinger">
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
           <CircularProgress />
         </Box>
@@ -159,7 +191,7 @@ const Profile = () => {
 
   if (authError) {
     return (
-      <Layout title="Min Profil">
+      <Layout title="Indstillinger">
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, mt: 4 }}>
           <ErrorIcon color="error" sx={{ fontSize: 60 }} />
           <Typography variant="h6" color="error">
@@ -182,7 +214,7 @@ const Profile = () => {
 
   if (!userData) {
     return (
-      <Layout title="Min Profil">
+      <Layout title="Indstillinger">
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, mt: 4 }}>
           <ErrorIcon color="warning" sx={{ fontSize: 60 }} />
           <Typography variant="h6">
@@ -201,7 +233,7 @@ const Profile = () => {
   }
 
   return (
-    <Layout title="Min Profil">
+    <Layout title="Indstillinger">
       <Grid container spacing={3}>
         <Grid item xs={12} md={4}>
           <Card>
@@ -283,6 +315,50 @@ const Profile = () => {
               </List>
             </CardContent>
           </Card>
+
+          {/* Google My Business Integration */}
+          <Card sx={{ mt: 3 }}>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Google My Business Integration
+              </Typography>
+              <Divider sx={{ mb: 2 }} />
+              
+              {userData.googleAccessToken ? (
+                <>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <BusinessIcon color="success" sx={{ mr: 1 }} />
+                    <Typography color="success.main">
+                      Forbundet med Google My Business
+                    </Typography>
+                  </Box>
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    onClick={handleGoogleLogout}
+                    startIcon={<GoogleIcon />}
+                    fullWidth
+                  >
+                    Log ud af Google
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Typography color="text.secondary" paragraph>
+                    Forbind din Google My Business konto for at kunne se og svare på anmeldelser direkte fra dashboardet.
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    onClick={handleGoogleLogin}
+                    startIcon={<GoogleIcon />}
+                    fullWidth
+                  >
+                    Log ind med Google
+                  </Button>
+                </>
+              )}
+            </CardContent>
+          </Card>
         </Grid>
 
         <Grid item xs={12} md={8}>
@@ -337,7 +413,6 @@ const Profile = () => {
                     <Button
                       type="submit"
                       variant="contained"
-                      color="primary"
                       startIcon={<KeyIcon />}
                     >
                       Skift adgangskode
@@ -367,4 +442,4 @@ const Profile = () => {
   );
 };
 
-export default Profile; 
+export default Settings; 
