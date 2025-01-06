@@ -51,6 +51,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import Layout from './Layout';
 import API_URL from '../config';
+import AdminStatistics from './AdminStatistics';
 
 const PRODUCT_TYPES = {
   STANDER: { value: 'stander', label: 'Stander' },
@@ -86,6 +87,7 @@ const Admin = () => {
   });
   const [bulkDialog, setBulkDialog] = useState(false);
   const [unclaimedProducts, setUnclaimedProducts] = useState([]);
+  const [claimedProducts, setClaimedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedProducts, setSelectedProducts] = useState([]);
@@ -97,6 +99,7 @@ const Admin = () => {
     showActive: true,
     showBlocked: true
   });
+  const [activeTab, setActiveTab] = useState('users');
   const navigate = useNavigate();
 
   // Filtrer brugere baseret på søgeord og filtre
@@ -129,6 +132,7 @@ const Admin = () => {
             // Hvis brugeren er admin, hent data
             fetchUsers();
             fetchUnclaimedProducts();
+            fetchClaimedProducts();
           }
         } else {
           // Hvis der er fejl i auth, redirect til login
@@ -168,6 +172,7 @@ const Admin = () => {
 
   const fetchUnclaimedProducts = async () => {
     try {
+      setLoading(true);
       const response = await fetch(`${API_URL}/api/stands/unclaimed`, {
         credentials: 'include'
       });
@@ -177,6 +182,25 @@ const Admin = () => {
     } catch (error) {
       console.error('Fejl ved hentning af unclaimed produkter:', error);
       setError('Kunne ikke hente unclaimed produkter');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchClaimedProducts = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_URL}/api/admin/stands/claimed`, {
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Kunne ikke hente claimed produkter');
+      const data = await response.json();
+      setClaimedProducts(data);
+    } catch (error) {
+      console.error('Fejl ved hentning af claimed produkter:', error);
+      setError('Kunne ikke hente claimed produkter');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -470,193 +494,305 @@ const Admin = () => {
 
   return (
     <Layout title="Admin Panel">
-      <Grid container spacing={3}>
-        <Grid item xs={12}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Brugeradministration
-            </Typography>
-            <Box sx={{ mb: 3 }}>
-              <TextField
-                fullWidth
-                label="Søg efter brugere"
-                variant="outlined"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Søg efter brugernavn eller email..."
-                sx={{ mb: 2 }}
-              />
-              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={filters.showAdmins}
-                      onChange={(e) => setFilters({ ...filters, showAdmins: e.target.checked })}
-                    />
-                  }
-                  label="Vis admins"
+      <Box sx={{ mb: 3, mt: 3 }}>
+        <ButtonGroup variant="contained">
+          <Button
+            onClick={() => setActiveTab('users')}
+            variant={activeTab === 'users' ? 'contained' : 'outlined'}
+          >
+            Brugeradministration
+          </Button>
+          <Button
+            onClick={() => setActiveTab('products')}
+            variant={activeTab === 'products' ? 'contained' : 'outlined'}
+          >
+            Produkter
+          </Button>
+          <Button
+            onClick={() => setActiveTab('statistics')}
+            variant={activeTab === 'statistics' ? 'contained' : 'outlined'}
+          >
+            Statistik
+          </Button>
+        </ButtonGroup>
+      </Box>
+
+      {activeTab === 'users' && (
+        <Grid container spacing={3}>
+          <Grid item xs={12}>
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Brugeradministration
+              </Typography>
+              <Box sx={{ mb: 3 }}>
+                <TextField
+                  fullWidth
+                  label="Søg efter brugere"
+                  variant="outlined"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Søg efter brugernavn eller email..."
+                  sx={{ mb: 2 }}
                 />
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={filters.showUsers}
-                      onChange={(e) => setFilters({ ...filters, showUsers: e.target.checked })}
-                    />
-                  }
-                  label="Vis brugere"
-                />
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={filters.showActive}
-                      onChange={(e) => setFilters({ ...filters, showActive: e.target.checked })}
-                    />
-                  }
-                  label="Vis aktive"
-                />
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={filters.showBlocked}
-                      onChange={(e) => setFilters({ ...filters, showBlocked: e.target.checked })}
-                    />
-                  }
-                  label="Vis deaktiverede"
-                />
+                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={filters.showAdmins}
+                        onChange={(e) => setFilters({ ...filters, showAdmins: e.target.checked })}
+                      />
+                    }
+                    label="Vis admins"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={filters.showUsers}
+                        onChange={(e) => setFilters({ ...filters, showUsers: e.target.checked })}
+                      />
+                    }
+                    label="Vis brugere"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={filters.showActive}
+                        onChange={(e) => setFilters({ ...filters, showActive: e.target.checked })}
+                      />
+                    }
+                    label="Vis aktive"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={filters.showBlocked}
+                        onChange={(e) => setFilters({ ...filters, showBlocked: e.target.checked })}
+                      />
+                    }
+                    label="Vis deaktiverede"
+                  />
+                </Box>
               </Box>
-            </Box>
-            {isLoading ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-                <CircularProgress />
+              {isLoading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                  <CircularProgress />
+                </Box>
+              ) : (
+                <TableContainer>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Brugernavn</TableCell>
+                        <TableCell>Email</TableCell>
+                        <TableCell>Admin</TableCell>
+                        <TableCell>Oprettet</TableCell>
+                        <TableCell>Status</TableCell>
+                        <TableCell>Handlinger</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {filteredUsers.map((user) => (
+                        <TableRow key={user._id}>
+                          <TableCell>{user.username}</TableCell>
+                          <TableCell>{user.email}</TableCell>
+                          <TableCell>
+                            <Chip
+                              label={user.isAdmin ? 'Admin' : 'Bruger'}
+                              color={user.isAdmin ? 'primary' : 'default'}
+                              size="small"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            {new Date(user.createdAt).toLocaleDateString('da-DK')}
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              label={user.isBlocked ? 'Deaktiveret' : 'Aktiv'}
+                              color={user.isBlocked ? 'error' : 'success'}
+                              size="small"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <ButtonGroup>
+                              <IconButton
+                                onClick={() => handleBlockUser(user._id, user.isBlocked)}
+                                color={user.isBlocked ? 'success' : 'error'}
+                                disabled={user.isAdmin}
+                                title={user.isAdmin ? 'Kan ikke deaktivere admin' : ''}
+                              >
+                                {user.isBlocked ? <UnblockIcon /> : <BlockIcon />}
+                              </IconButton>
+                              <IconButton
+                                onClick={() => {
+                                  setSelectedUser(user);
+                                  setEditUserData({
+                                    username: user.username,
+                                    email: user.email,
+                                    isAdmin: user.isAdmin
+                                  });
+                                  setEditUserDialog(true);
+                                }}
+                                color="primary"
+                              >
+                                <EditIcon />
+                              </IconButton>
+                              <IconButton
+                                onClick={() => handleViewUserDetails(user)}
+                                color="primary"
+                              >
+                                <ViewIcon />
+                              </IconButton>
+                              <IconButton
+                                onClick={() => {
+                                  setSelectedUser(user);
+                                  setResetPasswordDialog(true);
+                                }}
+                                color="warning"
+                              >
+                                <KeyIcon />
+                              </IconButton>
+                              <IconButton
+                                onClick={() => {
+                                  setSelectedUser(user);
+                                  setDeleteUserDialog(true);
+                                }}
+                                color="error"
+                                disabled={user.isAdmin}
+                              >
+                                <DeleteIcon />
+                              </IconButton>
+                            </ButtonGroup>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
+            </Paper>
+          </Grid>
+
+          <Grid item xs={12}>
+            <Paper sx={{ p: 3 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h6">
+                  Unclaimed Produkter
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <ButtonGroup variant="contained">
+                    <Button
+                      onClick={handleDownloadCSV}
+                      startIcon={<DownloadIcon />}
+                      disabled={unclaimedProducts.length === 0}
+                    >
+                      Download CSV
+                    </Button>
+                    <Button
+                      onClick={handleDownloadQR}
+                      startIcon={<DownloadIcon />}
+                      disabled={unclaimedProducts.length === 0}
+                    >
+                      Download QR
+                    </Button>
+                    <Button
+                      onClick={confirmDeleteUnclaimed}
+                      startIcon={<DeleteIcon />}
+                      disabled={unclaimedProducts.length === 0}
+                      color="error"
+                    >
+                      {selectedProducts.length > 0 
+                        ? `Slet ${selectedProducts.length} valgte` 
+                        : 'Slet alle'}
+                    </Button>
+                  </ButtonGroup>
+                  <ButtonGroup variant="contained">
+                    <Button
+                      color="primary"
+                      startIcon={<AddIcon />}
+                      onClick={() => setOpenProductDialog(true)}
+                    >
+                      Tilføj Produkt
+                    </Button>
+                    <Button
+                      color="primary"
+                      startIcon={<AddIcon />}
+                      onClick={() => setBulkDialog(true)}
+                    >
+                      Opret Flere Produkter
+                    </Button>
+                  </ButtonGroup>
+                </Box>
               </Box>
-            ) : (
+              
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                Her kan du oprette nye produkter som endnu ikke er tilknyttet en bruger. 
+                Når en bruger scanner produktet første gang, vil de få mulighed for at aktivere det.
+              </Typography>
+
               <TableContainer>
                 <Table>
                   <TableHead>
                     <TableRow>
-                      <TableCell>Brugernavn</TableCell>
-                      <TableCell>Email</TableCell>
-                      <TableCell>Admin</TableCell>
+                      <TableCell padding="checkbox">
+                        <Checkbox
+                          checked={selectedProducts.length === unclaimedProducts.length}
+                          indeterminate={selectedProducts.length > 0 && selectedProducts.length < unclaimedProducts.length}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedProducts(unclaimedProducts.map(p => p._id));
+                            } else {
+                              setSelectedProducts([]);
+                            }
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell>Produkt ID</TableCell>
+                      <TableCell>Type</TableCell>
                       <TableCell>Oprettet</TableCell>
-                      <TableCell>Status</TableCell>
-                      <TableCell>Handlinger</TableCell>
+                      <TableCell>TapFeed URL</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {filteredUsers.map((user) => (
-                      <TableRow key={user._id}>
-                        <TableCell>{user.username}</TableCell>
-                        <TableCell>{user.email}</TableCell>
-                        <TableCell>
-                          <Chip
-                            label={user.isAdmin ? 'Admin' : 'Bruger'}
-                            color={user.isAdmin ? 'primary' : 'default'}
-                            size="small"
+                    {unclaimedProducts.map((product) => (
+                      <TableRow key={product._id}>
+                        <TableCell padding="checkbox">
+                          <Checkbox
+                            checked={selectedProducts.includes(product._id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedProducts([...selectedProducts, product._id]);
+                              } else {
+                                setSelectedProducts(selectedProducts.filter(id => id !== product._id));
+                              }
+                            }}
                           />
                         </TableCell>
+                        <TableCell>{product.standerId}</TableCell>
+                        <TableCell>{PRODUCT_TYPES[product.productType.toUpperCase()]?.label || product.productType}</TableCell>
+                        <TableCell>{new Date(product.createdAt).toLocaleString('da-DK')}</TableCell>
                         <TableCell>
-                          {new Date(user.createdAt).toLocaleDateString('da-DK')}
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={user.isBlocked ? 'Deaktiveret' : 'Aktiv'}
-                            color={user.isBlocked ? 'error' : 'success'}
-                            size="small"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <ButtonGroup>
-                            <IconButton
-                              onClick={() => handleBlockUser(user._id, user.isBlocked)}
-                              color={user.isBlocked ? 'success' : 'error'}
-                              disabled={user.isAdmin}
-                              title={user.isAdmin ? 'Kan ikke deaktivere admin' : ''}
-                            >
-                              {user.isBlocked ? <UnblockIcon /> : <BlockIcon />}
-                            </IconButton>
-                            <IconButton
-                              onClick={() => {
-                                setSelectedUser(user);
-                                setEditUserData({
-                                  username: user.username,
-                                  email: user.email,
-                                  isAdmin: user.isAdmin
-                                });
-                                setEditUserDialog(true);
-                              }}
-                              color="primary"
-                            >
-                              <EditIcon />
-                            </IconButton>
-                            <IconButton
-                              onClick={() => handleViewUserDetails(user)}
-                              color="primary"
-                            >
-                              <ViewIcon />
-                            </IconButton>
-                            <IconButton
-                              onClick={() => {
-                                setSelectedUser(user);
-                                setResetPasswordDialog(true);
-                              }}
-                              color="warning"
-                            >
-                              <KeyIcon />
-                            </IconButton>
-                            <IconButton
-                              onClick={() => {
-                                setSelectedUser(user);
-                                setDeleteUserDialog(true);
-                              }}
-                              color="error"
-                              disabled={user.isAdmin}
-                            >
-                              <DeleteIcon />
-                            </IconButton>
-                          </ButtonGroup>
+                          <Link href={`${API_URL}/${product.standerId}`} target="_blank">
+                            {`${API_URL}/${product.standerId}`}
+                          </Link>
                         </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
               </TableContainer>
-            )}
-          </Paper>
+            </Paper>
+          </Grid>
         </Grid>
+      )}
 
-        <Grid item xs={12}>
-          <Paper sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h6">
-                Unclaimed Produkter
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                <ButtonGroup variant="contained">
-                  <Button
-                    onClick={handleDownloadCSV}
-                    startIcon={<DownloadIcon />}
-                    disabled={unclaimedProducts.length === 0}
-                  >
-                    Download CSV
-                  </Button>
-                  <Button
-                    onClick={handleDownloadQR}
-                    startIcon={<DownloadIcon />}
-                    disabled={unclaimedProducts.length === 0}
-                  >
-                    Download QR
-                  </Button>
-                  <Button
-                    onClick={confirmDeleteUnclaimed}
-                    startIcon={<DeleteIcon />}
-                    disabled={unclaimedProducts.length === 0}
-                    color="error"
-                  >
-                    {selectedProducts.length > 0 
-                      ? `Slet ${selectedProducts.length} valgte` 
-                      : 'Slet alle'}
-                  </Button>
-                </ButtonGroup>
+      {activeTab === 'products' && (
+        <Grid container spacing={3}>
+          <Grid item xs={12}>
+            <Paper sx={{ p: 3 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h6">
+                  Ikke-aktiverede Produkter
+                </Typography>
                 <ButtonGroup variant="contained">
                   <Button
                     color="primary"
@@ -674,67 +810,220 @@ const Admin = () => {
                   </Button>
                 </ButtonGroup>
               </Box>
-            </Box>
-            
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Her kan du oprette nye produkter som endnu ikke er tilknyttet en bruger. 
-              Når en bruger scanner produktet første gang, vil de få mulighed for at aktivere det.
-            </Typography>
 
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell padding="checkbox">
-                      <Checkbox
-                        checked={selectedProducts.length === unclaimedProducts.length}
-                        indeterminate={selectedProducts.length > 0 && selectedProducts.length < unclaimedProducts.length}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedProducts(unclaimedProducts.map(p => p._id));
-                          } else {
-                            setSelectedProducts([]);
-                          }
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell>Produkt ID</TableCell>
-                    <TableCell>Type</TableCell>
-                    <TableCell>Oprettet</TableCell>
-                    <TableCell>TapFeed URL</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {unclaimedProducts.map((product) => (
-                    <TableRow key={product._id}>
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
                       <TableCell padding="checkbox">
                         <Checkbox
-                          checked={selectedProducts.includes(product._id)}
+                          checked={selectedProducts.length === unclaimedProducts.length}
+                          indeterminate={selectedProducts.length > 0 && selectedProducts.length < unclaimedProducts.length}
                           onChange={(e) => {
                             if (e.target.checked) {
-                              setSelectedProducts([...selectedProducts, product._id]);
+                              setSelectedProducts(unclaimedProducts.map(p => p._id));
                             } else {
-                              setSelectedProducts(selectedProducts.filter(id => id !== product._id));
+                              setSelectedProducts([]);
                             }
                           }}
                         />
                       </TableCell>
-                      <TableCell>{product.standerId}</TableCell>
-                      <TableCell>{PRODUCT_TYPES[product.productType.toUpperCase()]?.label || product.productType}</TableCell>
-                      <TableCell>{new Date(product.createdAt).toLocaleString('da-DK')}</TableCell>
-                      <TableCell>
-                        <Link href={`${API_URL}/${product.standerId}`} target="_blank">
-                          {`${API_URL}/${product.standerId}`}
-                        </Link>
-                      </TableCell>
+                      <TableCell>Produkt ID</TableCell>
+                      <TableCell>Type</TableCell>
+                      <TableCell>Status</TableCell>
+                      <TableCell>Oprettet</TableCell>
+                      <TableCell>TapFeed URL</TableCell>
+                      <TableCell>Handlinger</TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Paper>
+                  </TableHead>
+                  <TableBody>
+                    {unclaimedProducts.map((product) => (
+                      <TableRow key={product._id}>
+                        <TableCell padding="checkbox">
+                          <Checkbox
+                            checked={selectedProducts.includes(product._id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedProducts([...selectedProducts, product._id]);
+                              } else {
+                                setSelectedProducts(selectedProducts.filter(id => id !== product._id));
+                              }
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell>{product.standerId}</TableCell>
+                        <TableCell>{PRODUCT_TYPES[product.productType.toUpperCase()]?.label || product.productType}</TableCell>
+                        <TableCell>
+                          <Chip
+                            label={product.status === 'unclaimed' ? 'Ikke aktiveret' : 'Aktiveret'}
+                            color={product.status === 'unclaimed' ? 'warning' : 'success'}
+                            size="small"
+                          />
+                        </TableCell>
+                        <TableCell>{new Date(product.createdAt).toLocaleString('da-DK')}</TableCell>
+                        <TableCell>
+                          <Link href={`${API_URL}/${product.standerId}`} target="_blank">
+                            {`${API_URL}/${product.standerId}`}
+                          </Link>
+                        </TableCell>
+                        <TableCell>
+                          <ButtonGroup>
+                            <IconButton
+                              onClick={() => {
+                                setSelectedProducts([product._id]);
+                                setDeleteUnclaimedDialog(true);
+                              }}
+                              color="error"
+                            >
+                              <DeleteIcon />
+                            </IconButton>
+                            <IconButton
+                              onClick={() => window.open(`${API_URL}/${product.standerId}`, '_blank')}
+                              color="primary"
+                            >
+                              <ViewIcon />
+                            </IconButton>
+                          </ButtonGroup>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+
+              {unclaimedProducts.length > 0 && (
+                <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
+                  <ButtonGroup variant="contained">
+                    <Button
+                      onClick={handleDownloadCSV}
+                      startIcon={<DownloadIcon />}
+                      disabled={selectedProducts.length === 0}
+                    >
+                      Download CSV
+                    </Button>
+                    <Button
+                      onClick={handleDownloadQR}
+                      startIcon={<DownloadIcon />}
+                      disabled={selectedProducts.length === 0}
+                    >
+                      Download QR
+                    </Button>
+                    <Button
+                      onClick={confirmDeleteUnclaimed}
+                      startIcon={<DeleteIcon />}
+                      disabled={selectedProducts.length === 0}
+                      color="error"
+                    >
+                      Slet valgte ({selectedProducts.length})
+                    </Button>
+                  </ButtonGroup>
+                </Box>
+              )}
+
+              {unclaimedProducts.length === 0 && !loading && (
+                <Box sx={{ textAlign: 'center', py: 3 }}>
+                  <Typography color="text.secondary">
+                    Ingen produkter at vise
+                  </Typography>
+                </Box>
+              )}
+
+              {loading && (
+                <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                  <CircularProgress />
+                </Box>
+              )}
+            </Paper>
+          </Grid>
+
+          <Grid item xs={12}>
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Aktiverede Produkter
+              </Typography>
+
+              {loading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                  <CircularProgress />
+                </Box>
+              ) : error ? (
+                <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
+              ) : (
+                <>
+                  <TableContainer>
+                    <Table>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Produkt ID</TableCell>
+                          <TableCell>Type</TableCell>
+                          <TableCell>Ejer</TableCell>
+                          <TableCell>Aktiveret</TableCell>
+                          <TableCell>Visninger</TableCell>
+                          <TableCell>Sidste Visning</TableCell>
+                          <TableCell>Landing Page</TableCell>
+                          <TableCell>Handlinger</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {claimedProducts.map((product) => (
+                          <TableRow key={product._id}>
+                            <TableCell>{product.standerId}</TableCell>
+                            <TableCell>{PRODUCT_TYPES[product.productType.toUpperCase()]?.label || product.productType}</TableCell>
+                            <TableCell>
+                              <Link 
+                                component="button"
+                                onClick={() => handleViewUserDetails(product.user)}
+                              >
+                                {product.user.username}
+                              </Link>
+                            </TableCell>
+                            <TableCell>{new Date(product.claimedAt).toLocaleString('da-DK')}</TableCell>
+                            <TableCell>{product.views}</TableCell>
+                            <TableCell>
+                              {product.lastViewedAt ? new Date(product.lastViewedAt).toLocaleString('da-DK') : 'Aldrig'}
+                            </TableCell>
+                            <TableCell>
+                              {product.landingPage ? (
+                                <Link href={`/landing/${product.landingPage._id}`} target="_blank">
+                                  {product.landingPage.title}
+                                </Link>
+                              ) : (
+                                <Typography color="text.secondary">Ingen</Typography>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <ButtonGroup>
+                                <IconButton
+                                  onClick={() => window.open(`${API_URL}/${product.standerId}`, '_blank')}
+                                  color="primary"
+                                >
+                                  <ViewIcon />
+                                </IconButton>
+                              </ButtonGroup>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+
+                  {claimedProducts.length === 0 && (
+                    <Box sx={{ textAlign: 'center', py: 3 }}>
+                      <Typography color="text.secondary">
+                        Ingen aktiverede produkter at vise
+                      </Typography>
+                    </Box>
+                  )}
+                </>
+              )}
+            </Paper>
+          </Grid>
         </Grid>
-      </Grid>
+      )}
+
+      {activeTab === 'statistics' && (
+        <AdminStatistics />
+      )}
 
       {/* Brugerdetaljer Dialog */}
       <Dialog

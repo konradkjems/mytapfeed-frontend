@@ -6,7 +6,9 @@ import {
   Button,
   IconButton,
   CircularProgress,
-  Stack
+  Stack,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import {
   Instagram as InstagramIcon,
@@ -21,6 +23,8 @@ const LandingPageView = () => {
   const [page, setPage] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const theme = useTheme();
+  const isMobile = useMediaQuery('(max-width:393px)');
 
   useEffect(() => {
     const fetchPage = async () => {
@@ -52,15 +56,27 @@ const LandingPageView = () => {
   }, [id, urlPath]);
 
   if (loading) {
-    return <div>Indlæser...</div>;
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
   }
 
   if (error) {
-    return <div>Fejl: {error}</div>;
+    return (
+      <Box sx={{ p: 3, textAlign: 'center' }}>
+        <Typography color="error">Fejl: {error}</Typography>
+      </Box>
+    );
   }
 
   if (!page) {
-    return <div>Landing page ikke fundet</div>;
+    return (
+      <Box sx={{ p: 3, textAlign: 'center' }}>
+        <Typography>Landing page ikke fundet</Typography>
+      </Box>
+    );
   }
 
   return (
@@ -72,10 +88,14 @@ const LandingPageView = () => {
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
-        padding: 3,
+        padding: isMobile ? 2 : 3,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center'
+        alignItems: 'center',
+        width: '100%',
+        maxWidth: '100%',
+        boxSizing: 'border-box',
+        overflowX: 'hidden'
       }}
     >
       {page.logo && (
@@ -85,42 +105,56 @@ const LandingPageView = () => {
           alt="Logo"
           sx={{
             width: 'auto',
-            maxWidth: '150px',
+            maxWidth: isMobile ? '120px' : '150px',
             height: 'auto',
-            maxHeight: '150px',
-            marginBottom: 2
+            maxHeight: isMobile ? '120px' : '150px',
+            marginBottom: isMobile ? 1.5 : 2
           }}
         />
       )}
 
-      <Typography
-        variant="h4"
-        component="h1"
-        sx={{
-          color: page.titleColor || '#000000',
-          textAlign: 'center',
-          marginBottom: 3,
-          maxWidth: '600px',
-          fontFamily: page.titleFont || 'Roboto'
-        }}
-      >
-        {page.title}
-      </Typography>
+      {page.showTitle !== false && (
+        <Typography
+          variant={isMobile ? "h5" : "h4"}
+          component="h1"
+          sx={{
+            color: page.titleColor || '#000000',
+            textAlign: 'center',
+            marginBottom: isMobile ? 2 : 3,
+            maxWidth: isMobile ? '340px' : '600px',
+            fontFamily: page.titleFont || 'Roboto',
+            padding: isMobile ? '0 16px' : 0,
+            wordWrap: 'break-word'
+          }}
+        >
+          {page.title}
+        </Typography>
+      )}
 
       <Typography
         variant="body1"
         sx={{
           color: page.descriptionColor || '#000000',
           textAlign: 'center',
-          marginBottom: 4,
-          maxWidth: '600px',
-          fontFamily: page.descriptionFont || 'Roboto'
+          marginBottom: isMobile ? 3 : 4,
+          maxWidth: isMobile ? '340px' : '600px',
+          fontFamily: page.descriptionFont || 'Roboto',
+          padding: isMobile ? '0 16px' : 0,
+          fontSize: isMobile ? '0.9rem' : '1rem',
+          wordWrap: 'break-word'
         }}
       >
         {page.description}
       </Typography>
 
-      <Stack spacing={2} sx={{ width: '100%', maxWidth: '300px' }}>
+      <Stack 
+        spacing={isMobile ? 1.5 : 2} 
+        sx={{ 
+          width: '100%', 
+          maxWidth: isMobile ? '340px' : '300px',
+          padding: isMobile ? '0 16px' : 0
+        }}
+      >
         {page.buttons?.map((button, index) => (
           <Button
             key={index}
@@ -132,6 +166,8 @@ const LandingPageView = () => {
               backgroundColor: page.buttonColor || '#000000',
               color: page.buttonTextColor || '#ffffff',
               fontFamily: page.buttonFont || 'Roboto',
+              padding: isMobile ? '10px 16px' : '12px 24px',
+              fontSize: isMobile ? '0.9rem' : '1rem',
               '&:hover': {
                 backgroundColor: page.buttonColor || '#000000',
                 opacity: 0.9
@@ -143,15 +179,29 @@ const LandingPageView = () => {
         ))}
       </Stack>
 
-      <Box sx={{ marginTop: 'auto', display: 'flex', gap: 2, padding: 2 }}>
+      <Box 
+        sx={{ 
+          marginTop: 'auto', 
+          display: 'flex', 
+          gap: isMobile ? 1.5 : 2, 
+          padding: isMobile ? 1.5 : 2 
+        }}
+      >
         {page.socialLinks?.instagram && (
           <IconButton
             href={page.socialLinks.instagram}
             target="_blank"
             rel="noopener noreferrer"
-            sx={{ color: page.buttonColor || '#000000' }}
+            sx={{ 
+              color: page.buttonColor || '#000000',
+              padding: isMobile ? '8px' : '12px',
+              backgroundColor: 'white',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.9)'
+              }
+            }}
           >
-            <InstagramIcon />
+            <InstagramIcon sx={{ fontSize: isMobile ? '1.5rem' : '2rem' }} />
           </IconButton>
         )}
         {page.socialLinks?.facebook && (
@@ -159,9 +209,16 @@ const LandingPageView = () => {
             href={page.socialLinks.facebook}
             target="_blank"
             rel="noopener noreferrer"
-            sx={{ color: page.buttonColor || '#000000' }}
+            sx={{ 
+              color: page.buttonColor || '#000000',
+              padding: isMobile ? '8px' : '12px',
+              backgroundColor: 'white',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.9)'
+              }
+            }}
           >
-            <FacebookIcon />
+            <FacebookIcon sx={{ fontSize: isMobile ? '1.5rem' : '2rem' }} />
           </IconButton>
         )}
         {page.socialLinks?.youtube && (
@@ -169,9 +226,16 @@ const LandingPageView = () => {
             href={page.socialLinks.youtube}
             target="_blank"
             rel="noopener noreferrer"
-            sx={{ color: page.buttonColor || '#000000' }}
+            sx={{ 
+              color: page.buttonColor || '#000000',
+              padding: isMobile ? '8px' : '12px',
+              backgroundColor: 'white',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.9)'
+              }
+            }}
           >
-            <YouTubeIcon />
+            <YouTubeIcon sx={{ fontSize: isMobile ? '1.5rem' : '2rem' }} />
           </IconButton>
         )}
         {page.socialLinks?.twitter && (
@@ -179,9 +243,16 @@ const LandingPageView = () => {
             href={page.socialLinks.twitter}
             target="_blank"
             rel="noopener noreferrer"
-            sx={{ color: page.buttonColor || '#000000' }}
+            sx={{ 
+              color: page.buttonColor || '#000000',
+              padding: isMobile ? '8px' : '12px',
+              backgroundColor: 'white',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.9)'
+              }
+            }}
           >
-            <TwitterIcon />
+            <TwitterIcon sx={{ fontSize: isMobile ? '1.5rem' : '2rem' }} />
           </IconButton>
         )}
       </Box>
