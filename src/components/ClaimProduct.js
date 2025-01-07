@@ -25,7 +25,7 @@ const ClaimProduct = () => {
       navigate('/login', { state: { from: `/claim/${standerId}` } });
       return;
     }
-
+// comment //
     // Automatisk aktiver produktet når brugeren er logget ind
     const claimProduct = async () => {
       try {
@@ -107,5 +107,4 @@ const ClaimProduct = () => {
     </Box>
   );
 };
-
 export default ClaimProduct; 
