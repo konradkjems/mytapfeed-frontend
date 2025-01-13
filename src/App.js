@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Login from './components/Login';
 import Register from './components/Register';
 import Dashboard from './components/Dashboard';
@@ -17,6 +17,20 @@ import LandingPageView from './components/LandingPageView';
 import ClaimProduct from './components/ClaimProduct';
 import NotConfigured from './components/NotConfigured';
 import Unclaimed from './components/Unclaimed';
+import Pricing from './components/Pricing';
+import About from './components/About';
+import Contact from './components/Contact';
+import Navigation from './components/Navigation';
+
+const NavigationWrapper = () => {
+  const location = useLocation();
+  const publicPaths = ['/', '/login', '/register', '/pricing', '/about', '/contact', '/reset-password'];
+  
+  const shouldShowNavigation = publicPaths.includes(location.pathname) || 
+    location.pathname.startsWith('/reset-password/');
+
+  return shouldShowNavigation ? <Navigation /> : null;
+};
 
 function App() {
   return (
@@ -24,10 +38,14 @@ function App() {
       <AuthProvider>
         <Router>
           <div className="App">
+            <NavigationWrapper />
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/pricing" element={<Pricing />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
               <Route path="/reset-password" element={<RequestReset />} />
               <Route path="/reset-password/:token" element={<ResetPassword />} />
               <Route path="/dashboard" element={

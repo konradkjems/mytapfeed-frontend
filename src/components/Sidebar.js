@@ -22,6 +22,8 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import LogoWhite from '../assets/tapfeed logo white wide transparent.svg';
+import LogoDark from '../assets/tapfeed logo dark wide transparent.svg';
 
 const drawerWidth = 240;
 
@@ -100,6 +102,25 @@ const Sidebar = ({ open }) => {
 
   return (
     <StyledDrawer variant="permanent" open={open}>
+      <Box sx={{ 
+        p: 2, 
+        display: 'flex', 
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: 56,
+        maxHeight: 64
+      }}>
+        <img 
+          src={mode === 'dark' ? LogoWhite : LogoDark} 
+          alt="TapFeed Logo" 
+          style={{ 
+            maxWidth: open ? '80%' : '40px',
+            height: 'auto',
+            transition: 'max-width 0.2s ease-in-out'
+          }} 
+        />
+      </Box>
+      <Divider />
       <List component="nav">
         {menuItems.map((item) => (
           <ListItemButton
