@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Box, CircularProgress, Container, Paper, Typography, Button } from '@mui/material';
 import { Link } from 'react-router-dom';
-import { API_URL } from '../config';
+import API_URL from '../config';
 
 const RedirectHandler = () => {
   const { standerId } = useParams();
