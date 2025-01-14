@@ -9,6 +9,15 @@ const RedirectHandler = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const ensureValidUrl = (url) => {
+    if (!url) return null;
+    // Hvis URL'en ikke starter med http:// eller https://, tilføj https://
+    if (!url.match(/^https?:\/\//i)) {
+      return `https://${url}`;
+    }
+    return url;
+  };
+
   useEffect(() => {
     const checkAndRedirect = async () => {
       try {
@@ -30,14 +39,15 @@ const RedirectHandler = () => {
         }
 
         // Hvis produktet er claimed og har en redirect URL
-        if (data.redirectUrl) {
-          console.log('Product is claimed and has redirect URL:', data.redirectUrl);
-          window.location.href = data.redirectUrl;
+        const validRedirectUrl = ensureValidUrl(data.redirectUrl);
+        if (validRedirectUrl) {
+          console.log('Product is claimed and has redirect URL:', validRedirectUrl);
+          window.location.href = validRedirectUrl;
           return;
         }
 
         // Hvis produktet er claimed men ikke har en redirect URL
-        console.log('Product is claimed but has no redirect URL');
+        console.log('Product is claimed but has no valid redirect URL');
         window.location.href = `/not-configured/${standerId}`;
         
       } catch (error) {
