@@ -36,7 +36,7 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <Router>
+        <Router basename={process.env.PUBLIC_URL}>
           <div className="App">
             <NavigationWrapper />
             <Routes>
@@ -48,6 +48,9 @@ function App() {
               <Route path="/contact" element={<Contact />} />
               <Route path="/reset-password" element={<RequestReset />} />
               <Route path="/reset-password/:token" element={<ResetPassword />} />
+              <Route path="/unclaimed/:standerId" element={<Unclaimed />} />
+              <Route path="/not-configured/:standerId" element={<NotConfigured />} />
+              <Route path="/claim/:standerId" element={<ClaimProduct />} />
               <Route path="/dashboard" element={
                 <ProtectedRoute>
                   <Dashboard />
@@ -74,9 +77,6 @@ function App() {
                 </ProtectedRoute>
               } />
               <Route path="/landing/:id" element={<LandingPageView />} />
-              <Route path="/claim/:standerId" element={<ClaimProduct />} />
-              <Route path="/unclaimed/:standerId" element={<Unclaimed />} />
-              <Route path="/not-configured/:standerId" element={<NotConfigured />} />
               <Route path="/:urlPath" element={<LandingPageView />} />
             </Routes>
           </div>
