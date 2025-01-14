@@ -17,6 +17,7 @@ import LandingPageView from './components/LandingPageView';
 import ClaimProduct from './components/ClaimProduct';
 import NotConfigured from './components/NotConfigured';
 import Unclaimed from './components/Unclaimed';
+import RedirectHandler from './components/RedirectHandler';
 import Pricing from './components/Pricing';
 import About from './components/About';
 import Contact from './components/Contact';
@@ -40,6 +41,7 @@ function App() {
           <div className="App">
             <NavigationWrapper />
             <Routes>
+              {/* Public routes */}
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
@@ -48,9 +50,13 @@ function App() {
               <Route path="/contact" element={<Contact />} />
               <Route path="/reset-password" element={<RequestReset />} />
               <Route path="/reset-password/:token" element={<ResetPassword />} />
+              
+              {/* Product status routes */}
               <Route path="/unclaimed/:standerId" element={<Unclaimed />} />
               <Route path="/not-configured/:standerId" element={<NotConfigured />} />
               <Route path="/claim/:standerId" element={<ClaimProduct />} />
+              
+              {/* Protected routes */}
               <Route path="/dashboard" element={
                 <ProtectedRoute>
                   <Dashboard />
@@ -76,7 +82,14 @@ function App() {
                   <LandingPages />
                 </ProtectedRoute>
               } />
+              
+              {/* Landing page routes */}
               <Route path="/landing/:id" element={<LandingPageView />} />
+              
+              {/* Product redirect handler - skal være før catch-all routen */}
+              <Route path="/:standerId([A-Z0-9]+)" element={<RedirectHandler />} />
+              
+              {/* Catch-all route for custom landing page URLs */}
               <Route path="/:urlPath" element={<LandingPageView />} />
             </Routes>
           </div>
