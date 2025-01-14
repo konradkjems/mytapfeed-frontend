@@ -10,26 +10,53 @@ const RedirectHandler = () => {
   const [error, setError] = useState(null);
 
   const ensureValidUrl = (url) => {
-    if (!url) return null;
-    // Hvis URL'en ikke starter med http:// eller https://, tilføj https://
-    if (!url.match(/^https?:\/\//i)) {
-      return `https://${url}`;
+    console.log('Validating URL:', url);
+    console.log('URL type:', typeof url);
+    
+    if (!url) {
+      console.log('URL is null or undefined');
+      return null;
     }
-    return url;
+    
+    if (typeof url !== 'string') {
+      console.log('URL is not a string');
+      return null;
+    }
+    
+    const trimmedUrl = url.trim();
+    console.log('Trimmed URL:', trimmedUrl);
+    
+    if (trimmedUrl.length === 0) {
+      console.log('URL is empty after trimming');
+      return null;
+    }
+    
+    // Hvis URL'en ikke starter med http:// eller https://, tilføj https://
+    if (!trimmedUrl.match(/^https?:\/\//i)) {
+      const validUrl = `https://${trimmedUrl}`;
+      console.log('Added https:// to URL:', validUrl);
+      return validUrl;
+    }
+    
+    console.log('URL already has protocol:', trimmedUrl);
+    return trimmedUrl;
   };
 
   useEffect(() => {
     const checkAndRedirect = async () => {
       try {
         console.log('Checking product:', standerId);
+        console.log('API URL:', `${API_URL}/api/stands/${standerId}`);
+        
         const response = await fetch(`${API_URL}/api/stands/${standerId}`);
+        console.log('Response status:', response.status);
         
         if (!response.ok) {
           throw new Error('Produkt ikke fundet');
         }
 
         const data = await response.json();
-        console.log('Product data:', data);
+        console.log('Product data:', JSON.stringify(data, null, 2));
         
         // Hvis produktet ikke er claimed, vis unclaimed siden
         if (data.status !== 'claimed') {
@@ -38,16 +65,28 @@ const RedirectHandler = () => {
           return;
         }
 
-        // Hvis produktet er claimed og har en redirect URL
+        // Tjek om produktet er konfigureret
+        if (!data.configured) {
+          console.log('Product is not configured, showing not-configured page');
+          window.location.href = `/not-configured/${standerId}`;
+          return;
+        }
+
+        console.log('Product is claimed and configured, checking redirectUrl');
+        console.log('Raw redirectUrl:', data.redirectUrl);
+
+        // Hvis produktet er claimed, konfigureret og har en redirect URL
         const validRedirectUrl = ensureValidUrl(data.redirectUrl);
+        console.log('Validated redirectUrl:', validRedirectUrl);
+        
         if (validRedirectUrl) {
-          console.log('Product is claimed and has redirect URL:', validRedirectUrl);
+          console.log('Redirecting to:', validRedirectUrl);
           window.location.href = validRedirectUrl;
           return;
         }
 
-        // Hvis produktet er claimed men ikke har en redirect URL
-        console.log('Product is claimed but has no valid redirect URL');
+        // Hvis produktet er claimed men ikke har en gyldig redirect URL
+        console.log('No valid redirect URL found, showing not-configured page');
         window.location.href = `/not-configured/${standerId}`;
         
       } catch (error) {
