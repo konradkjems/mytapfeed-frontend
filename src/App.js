@@ -36,7 +36,7 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <Router basename={process.env.PUBLIC_URL}>
+        <Router>
           <div className="App">
             <NavigationWrapper />
             <Routes>
