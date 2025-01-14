@@ -12,6 +12,7 @@ const RedirectHandler = () => {
   useEffect(() => {
     const checkAndRedirect = async () => {
       try {
+        console.log('Checking product:', standerId);
         const response = await fetch(`${API_URL}/api/stands/${standerId}`);
         
         if (!response.ok) {
@@ -19,19 +20,26 @@ const RedirectHandler = () => {
         }
 
         const data = await response.json();
+        console.log('Product data:', data);
         
-        // Hvis produktet er claimed og har en redirect URL, redirect til den
-        if (data.status === 'claimed' && data.redirectUrl) {
-          window.location.href = data.redirectUrl;
-        } 
-        // Hvis produktet er claimed men ikke har en redirect URL, vis not-configured siden
-        else if (data.status === 'claimed' && !data.redirectUrl) {
-          window.location.href = `/not-configured/${standerId}`;
-        }
         // Hvis produktet ikke er claimed, vis unclaimed siden
-        else {
+        if (data.status !== 'claimed') {
+          console.log('Product is not claimed, redirecting to unclaimed page');
           window.location.href = `/unclaimed/${standerId}`;
+          return;
         }
+
+        // Hvis produktet er claimed og har en redirect URL
+        if (data.redirectUrl) {
+          console.log('Product is claimed and has redirect URL:', data.redirectUrl);
+          window.location.href = data.redirectUrl;
+          return;
+        }
+
+        // Hvis produktet er claimed men ikke har en redirect URL
+        console.log('Product is claimed but has no redirect URL');
+        window.location.href = `/not-configured/${standerId}`;
+        
       } catch (error) {
         console.error('Fejl ved håndtering af redirect:', error);
         setError(error.message);
