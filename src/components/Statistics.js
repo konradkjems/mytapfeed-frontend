@@ -19,7 +19,9 @@ import {
   InputLabel,
   Button,
   Snackbar,
-  Alert
+  Alert,
+  TextField,
+  Tooltip
 } from '@mui/material';
 import { BarChart } from '@mui/x-charts';
 import { LineChart } from '@mui/x-charts';
@@ -39,11 +41,31 @@ const Statistics = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTimeRange, setSelectedTimeRange] = useState('week');
   const [selectedProductType, setSelectedProductType] = useState('all');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [useCustomDateRange, setUseCustomDateRange] = useState(false);
   const { mode } = useTheme();
   const [alert, setAlert] = useState({ open: false, message: '', severity: 'success' });
 
   useEffect(() => {
     fetchStands();
+  }, []);
+
+  useEffect(() => {
+    // Når timeRange ændres, nulstil custom dato range
+    if (selectedTimeRange !== 'custom') {
+      setUseCustomDateRange(false);
+    }
+  }, [selectedTimeRange]);
+
+  // Sæt standard datoer når komponenten indlæses
+  useEffect(() => {
+    const today = new Date();
+    const lastMonth = new Date();
+    lastMonth.setMonth(today.getMonth() - 1);
+    
+    setEndDate(today.toISOString().split('T')[0]);
+    setStartDate(lastMonth.toISOString().split('T')[0]);
   }, []);
 
   const fetchStands = async () => {
@@ -86,82 +108,258 @@ const Statistics = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const prepareTimeSeriesData = () => {
+  const getDateRange = () => {
+    // Opret datoer i lokal tid
     const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    const localNow = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    
+    if (useCustomDateRange && startDate && endDate) {
+      const start = new Date(startDate);
+      const localStart = new Date(start.getFullYear(), start.getMonth(), start.getDate(), 0, 0, 0, 0);
+      
+      const end = new Date(endDate);
+      const localEnd = new Date(end.getFullYear(), end.getMonth(), end.getDate(), 23, 59, 59, 999);
+      
+      // Beregn antal dage mellem datoerne
+      const diffTime = Math.abs(localEnd - localStart);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+      
+      // Generer array af datoer i lokal tid
+      const dateArray = Array.from({ length: diffDays }, (_, i) => {
+        const date = new Date(localStart);
+        date.setDate(date.getDate() + i);
+        return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0);
+      });
 
-    const timeRanges = {
-      week: 7,
-      month: 30,
-      year: 365
-    };
-    const days = timeRanges[selectedTimeRange];
+      console.log('Custom date range:', {
+        start: localStart.toISOString(),
+        end: localEnd.toISOString(),
+        numberOfDays: diffDays,
+        dates: dateArray.map(d => d.toISOString())
+      });
+      
+      return { dateArray, start: localStart, end: localEnd };
+    } else {
+      // Standard tidsperioder
+      const timeRanges = {
+        week: 7,
+        month: 30,
+        year: 365
+      };
+      const days = timeRanges[selectedTimeRange];
+      
+      // Find den seneste dato blandt alle klik
+      let latestClickDate = new Date(0); // Start med en meget gammel dato
+      stands.forEach(stand => {
+        (stand.clickHistory || []).forEach(click => {
+          const clickDate = new Date(click.timestamp);
+          if (clickDate > latestClickDate) {
+            latestClickDate = clickDate;
+          }
+        });
+      });
+
+      // Hvis der ikke er nogen klik, brug nuværende dato
+      if (latestClickDate.getTime() === 0) {
+        latestClickDate = now;
+      }
+
+      // Opret start og slut datoer baseret på den seneste klik-dato
+      const localEnd = new Date(
+        latestClickDate.getFullYear(),
+        latestClickDate.getMonth(),
+        latestClickDate.getDate(),
+        23, 59, 59, 999
+      );
+      
+      const localStart = new Date(localEnd);
+      localStart.setDate(localStart.getDate() - days + 1);
+      localStart.setHours(0, 0, 0, 0);
+      
+      // Generer array af datoer i lokal tid
+      const dateArray = Array.from({ length: days }, (_, i) => {
+        const date = new Date(localStart);
+        date.setDate(date.getDate() + i);
+        return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0);
+      });
+
+      console.log('Standard date range:', {
+        timeRange: selectedTimeRange,
+        latestClick: latestClickDate.toISOString(),
+        start: localStart.toISOString(),
+        end: localEnd.toISOString(),
+        numberOfDays: days,
+        dates: dateArray.map(d => ({
+          date: d.toISOString(),
+          year: d.getFullYear(),
+          month: d.getMonth(),
+          day: d.getDate()
+        }))
+      });
+      
+      return { dateArray, start: localStart, end: localEnd };
+    }
+  };
+
+  const prepareTimeSeriesData = () => {
+    const { dateArray, start, end } = getDateRange();
+    
     const filteredStands = selectedProductType === 'all' 
       ? stands 
       : stands.filter(stand => stand.productType === selectedProductType);
 
-    const data = Array(days).fill(0);
-    let labels = Array(days).fill('');
+    console.log('Behandler data for stands:', filteredStands.map(stand => ({
+      standerId: stand.standerId,
+      clicks: stand.clicks,
+      clickHistoryLength: stand.clickHistory?.length || 0,
+      firstClick: stand.clickHistory?.[0]?.timestamp,
+      lastClick: stand.clickHistory?.[stand.clickHistory?.length - 1]?.timestamp
+    })));
 
-    const dateArray = Array.from({ length: days }, (_, i) => {
-      const date = new Date(now);
-      date.setDate(date.getDate() - (days - i - 1));
-      return date;
-    });
-
-    filteredStands.forEach(stand => {
-      (stand.clickHistory || []).forEach(click => {
-        const clickDate = new Date(click.timestamp);
-        clickDate.setHours(0, 0, 0, 0);
-        clickDate.setMinutes(clickDate.getMinutes() - clickDate.getTimezoneOffset());
-
-        const dateIndex = dateArray.findIndex(date => 
-          date.getFullYear() === clickDate.getFullYear() &&
-          date.getMonth() === clickDate.getMonth() &&
-          date.getDate() === clickDate.getDate()
-        );
-
-        if (dateIndex !== -1) {
-          data[dateIndex]++;
-        }
-      });
-    });
-
-    labels = dateArray.map(date => 
+    const data = Array(dateArray.length).fill(0);
+    const labels = dateArray.map(date => 
       date.toLocaleDateString('da-DK', { 
         day: 'numeric',
         month: 'short'
       })
     );
 
-    console.log('Dato array:', dateArray.map(d => d.toISOString()));
-    console.log('Data array:', data);
-    console.log('Labels:', labels);
+    filteredStands.forEach(stand => {
+      (stand.clickHistory || []).forEach(click => {
+        // Konverter timestamp til lokal tid uden tidszone offset
+        const clickDate = new Date(click.timestamp);
+        // Bemærk: JavaScript måneder er 0-baseret (0-11)
+        const localClickDate = new Date(
+          clickDate.getFullYear(),
+          clickDate.getMonth(),
+          clickDate.getDate(),
+          0, 0, 0, 0
+        );
+
+        const dateIndex = dateArray.findIndex(date => {
+          // Sammenlign datoer uden tidszone offset
+          return date.getFullYear() === localClickDate.getFullYear() &&
+                 date.getMonth() === localClickDate.getMonth() &&
+                 date.getDate() === localClickDate.getDate();
+        });
+
+        if (dateIndex !== -1) {
+          data[dateIndex]++;
+        } else {
+          console.log('Kunne ikke finde matching dato for klik:', {
+            clickTimestamp: click.timestamp,
+            localClickDate: localClickDate.toISOString(),
+            clickYear: localClickDate.getFullYear(),
+            // +1 for at vise menneske-læsbar måned (1-12)
+            clickMonth: localClickDate.getMonth() + 1,
+            clickDay: localClickDate.getDate(),
+            availableDates: dateArray.map(d => ({
+              date: d.toISOString(),
+              year: d.getFullYear(),
+              // +1 for at vise menneske-læsbar måned (1-12)
+              month: d.getMonth() + 1,
+              day: d.getDate()
+            }))
+          });
+        }
+      });
+    });
+
+    console.log('Statistik beregnet:', {
+      dateRange: {
+        start: start.toISOString(),
+        end: end.toISOString()
+      },
+      dates: dateArray.map(d => ({
+        date: d.toISOString(),
+        year: d.getFullYear(),
+        // +1 for at vise menneske-læsbar måned (1-12)
+        month: d.getMonth() + 1,
+        day: d.getDate()
+      })),
+      data,
+      labels
+    });
 
     return { data, labels };
   };
 
   const calculateStatistics = () => {
+    const { start, end } = getDateRange();
+    
+    console.log('Beregner statistik for periode:', {
+      start: start.toISOString(),
+      end: end.toISOString()
+    });
+
     const filteredStands = selectedProductType === 'all' 
       ? stands 
       : stands.filter(stand => stand.productType === selectedProductType);
 
-    const totalClicks = filteredStands.reduce((sum, stand) => sum + (stand.clicks || 0), 0);
+    // Filtrer klik baseret på valgt tidsperiode
+    const filteredClicks = filteredStands.flatMap(stand => 
+      (stand.clickHistory || []).filter(click => {
+        const clickDate = new Date(click.timestamp);
+        const localClickDate = new Date(
+          clickDate.getFullYear(),
+          clickDate.getMonth(),
+          clickDate.getDate(),
+          0, 0, 0, 0
+        );
+        return localClickDate >= start && localClickDate <= end;
+      })
+    );
+
+    console.log('Filtrerede klik:', {
+      total: filteredClicks.length,
+      clicks: filteredClicks.map(click => {
+        const clickDate = new Date(click.timestamp);
+        const localClickDate = new Date(
+          clickDate.getFullYear(),
+          clickDate.getMonth(),
+          clickDate.getDate(),
+          0, 0, 0, 0
+        );
+        return {
+          timestamp: click.timestamp,
+          localTime: localClickDate.toISOString(),
+          // +1 for at vise menneske-læsbar måned (1-12)
+          month: localClickDate.getMonth() + 1,
+          day: localClickDate.getDate(),
+          year: localClickDate.getFullYear()
+        };
+      })
+    });
+
+    const totalClicks = filteredClicks.length;
     const totalProducts = filteredStands.length;
     const avgClicksPerProduct = totalProducts ? (totalClicks / totalProducts).toFixed(1) : 0;
 
     // Beregn klik per dag
     const clicksPerDay = {};
-    filteredStands.forEach(stand => {
-      (stand.clickHistory || []).forEach(click => {
-        const date = new Date(click.timestamp).toLocaleDateString('da-DK');
-        clicksPerDay[date] = (clicksPerDay[date] || 0) + 1;
-      });
+    filteredClicks.forEach(click => {
+      const clickDate = new Date(click.timestamp);
+      const localClickDate = new Date(
+        clickDate.getFullYear(),
+        clickDate.getMonth(),
+        clickDate.getDate(),
+        0, 0, 0, 0
+      );
+      const date = localClickDate.toLocaleDateString('da-DK');
+      clicksPerDay[date] = (clicksPerDay[date] || 0) + 1;
     });
+    
     const avgClicksPerDay = Object.values(clicksPerDay).length 
       ? (Object.values(clicksPerDay).reduce((a, b) => a + b, 0) / Object.values(clicksPerDay).length).toFixed(1)
       : 0;
+
+    console.log('Beregnede statistikker:', {
+      totalClicks,
+      totalProducts,
+      avgClicksPerProduct,
+      avgClicksPerDay,
+      clicksPerDay
+    });
 
     return {
       totalClicks,
@@ -196,6 +394,14 @@ const Statistics = () => {
     }
   };
 
+  const handleTimeRangeChange = (e) => {
+    const value = e.target.value;
+    setSelectedTimeRange(value);
+    if (value === 'custom') {
+      setUseCustomDateRange(true);
+    }
+  };
+
   const stats = calculateStatistics();
   const timeSeriesData = prepareTimeSeriesData();
 
@@ -211,24 +417,49 @@ const Statistics = () => {
 
   return (
     <Layout title="Statistik">
-      <Grid container spacing={3}>
+      <Grid container spacing={2}>
         {/* Filtre og Opdater Data knap */}
         <Grid item xs={12}>
-          <Paper sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <FormControl sx={{ minWidth: 200 }}>
+          <Paper sx={{ p: 1, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 1 }}>
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 1, flex: 1 }}>
+              <FormControl fullWidth size="small">
                 <InputLabel>Tidsperiode</InputLabel>
                 <Select
                   value={selectedTimeRange}
                   label="Tidsperiode"
-                  onChange={(e) => setSelectedTimeRange(e.target.value)}
+                  onChange={handleTimeRangeChange}
                 >
                   <MenuItem value="week">Sidste 7 dage</MenuItem>
                   <MenuItem value="month">Sidste 30 dage</MenuItem>
                   <MenuItem value="year">Sidste år</MenuItem>
+                  <MenuItem value="custom">Brugerdefineret</MenuItem>
                 </Select>
               </FormControl>
-              <FormControl sx={{ minWidth: 200 }}>
+              
+              {selectedTimeRange === 'custom' && (
+                <>
+                  <TextField
+                    label="Fra dato"
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    InputLabelProps={{ shrink: true }}
+                    fullWidth
+                    size="small"
+                  />
+                  <TextField
+                    label="Til dato"
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    InputLabelProps={{ shrink: true }}
+                    fullWidth
+                    size="small"
+                  />
+                </>
+              )}
+              
+              <FormControl fullWidth size="small">
                 <InputLabel>Produkttype</InputLabel>
                 <Select
                   value={selectedProductType}
@@ -249,6 +480,8 @@ const Statistics = () => {
               onClick={handleRefreshData}
               disabled={isLoading}
               startIcon={isLoading ? <CircularProgress size={20} /> : null}
+              fullWidth
+              size="small"
             >
               {isLoading ? 'Opdaterer...' : 'Opdater Data'}
             </Button>
@@ -259,10 +492,10 @@ const Statistics = () => {
         <Grid item xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
-              <Typography color="textSecondary" gutterBottom>
-                Totale klik
+              <Typography variant="subtitle2" color="textSecondary" gutterBottom>
+                Totale visninger
               </Typography>
-              <Typography variant="h4">
+              <Typography variant="h5">
                 {stats.totalClicks}
               </Typography>
             </CardContent>
@@ -271,10 +504,10 @@ const Statistics = () => {
         <Grid item xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
-              <Typography color="textSecondary" gutterBottom>
+              <Typography variant="subtitle2" color="textSecondary" gutterBottom>
                 Antal produkter
               </Typography>
-              <Typography variant="h4">
+              <Typography variant="h5">
                 {stats.totalProducts}
               </Typography>
             </CardContent>
@@ -283,10 +516,10 @@ const Statistics = () => {
         <Grid item xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
-              <Typography color="textSecondary" gutterBottom>
-                Gennemsnit klik per produkt
+              <Typography variant="subtitle2" color="textSecondary" gutterBottom>
+                Visninger/produkt
               </Typography>
-              <Typography variant="h4">
+              <Typography variant="h5">
                 {stats.avgClicksPerProduct}
               </Typography>
             </CardContent>
@@ -295,10 +528,10 @@ const Statistics = () => {
         <Grid item xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
-              <Typography color="textSecondary" gutterBottom>
-                Gennemsnit klik per dag
+              <Typography variant="subtitle2" color="textSecondary" gutterBottom>
+                Visninger/dag
               </Typography>
-              <Typography variant="h4">
+              <Typography variant="h5">
                 {stats.avgClicksPerDay}
               </Typography>
             </CardContent>
@@ -307,84 +540,100 @@ const Statistics = () => {
 
         {/* Grafer */}
         <Grid item xs={12}>
-          <Paper sx={{ p: 2 }}>
+          <Paper sx={{ p: 1 }}>
             <Typography variant="h6" gutterBottom>
-              Klik over tid
+              Visninger over tid
             </Typography>
-            <BarChart
-              xAxis={[{
-                scaleType: 'band',
-                data: timeSeriesData.labels,
-                tickLabelStyle: { 
-                  fill: mode === 'dark' ? 'white' : 'black'
-                }
-              }]}
-              series={[{
-                data: timeSeriesData.data,
-                color: mode === 'dark' ? '#4CAF50' : '#2E7D32'
-              }]}
-              height={400}
-              sx={{
-                '.MuiChartsAxis-label': { 
-                  fill: mode === 'dark' ? 'white' : 'black'
-                },
-                '.MuiChartsAxis-tick': { 
-                  fill: mode === 'dark' ? 'white' : 'black'
-                },
-                '.MuiChartsAxis-line': { 
-                  stroke: mode === 'dark' ? 'white' : 'black'
-                }
-              }}
-            />
+            <Box sx={{ overflowX: 'auto' }}>
+              <Box sx={{ minWidth: 300 }}>
+                <BarChart
+                  xAxis={[{
+                    scaleType: 'band',
+                    data: timeSeriesData.labels,
+                    tickLabelStyle: { 
+                      fill: mode === 'dark' ? 'white' : 'black',
+                      fontSize: { xs: 10, sm: 12 }
+                    }
+                  }]}
+                  series={[{
+                    data: timeSeriesData.data,
+                    color: mode === 'dark' ? '#4CAF50' : '#2E7D32'
+                  }]}
+                  height={300}
+                />
+              </Box>
+            </Box>
           </Paper>
         </Grid>
 
         {/* Detaljeret tabel */}
         <Grid item xs={12}>
-          <Paper sx={{ p: 2 }}>
+          <Paper sx={{ p: 1 }}>
             <Typography variant="h6" gutterBottom>
-              Detaljeret produktoversigt
+              Produktoversigt
             </Typography>
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Produkt ID</TableCell>
-                    <TableCell>Produkttype</TableCell>
-                    <TableCell>URL</TableCell>
-                    <TableCell align="right">Totale klik</TableCell>
-                    <TableCell align="right">Klik i perioden</TableCell>
-                    <TableCell>Seneste klik</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {stands
-                    .filter(stand => selectedProductType === 'all' || stand.productType === selectedProductType)
-                    .map((stand) => {
-                      const clicksInPeriod = (stand.clickHistory || []).filter(click => {
-                        const clickDate = new Date(click.timestamp);
-                        const diffDays = Math.floor((new Date() - clickDate) / (1000 * 60 * 60 * 24));
-                        return diffDays < (selectedTimeRange === 'week' ? 7 : selectedTimeRange === 'month' ? 30 : 365);
-                      }).length;
+            <Box sx={{ overflowX: 'auto' }}>
+              <TableContainer>
+                <Table sx={{ minWidth: 600 }}>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>ID</TableCell>
+                      <TableCell>Type</TableCell>
+                      <TableCell>Visninger</TableCell>
+                      <TableCell>Seneste</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {stands
+                      .filter(stand => selectedProductType === 'all' || stand.productType === selectedProductType)
+                      .map((stand) => {
+                        const { start, end } = getDateRange();
+                        
+                        const clicksInPeriod = (stand.clickHistory || []).filter(click => {
+                          const clickDate = new Date(click.timestamp);
+                          return clickDate >= start && clickDate <= end;
+                        }).length;
 
-                      const latestClick = stand.clickHistory && stand.clickHistory.length > 0
-                        ? new Date(stand.clickHistory[stand.clickHistory.length - 1].timestamp).toLocaleString('da-DK')
-                        : 'Ingen klik';
+                        const latestClick = stand.clickHistory && stand.clickHistory.length > 0
+                          ? new Date(stand.clickHistory[stand.clickHistory.length - 1].timestamp).toLocaleString('da-DK')
+                          : 'Ingen';
 
-                      return (
-                        <TableRow key={stand._id}>
-                          <TableCell>{stand.standerId}</TableCell>
-                          <TableCell>{PRODUCT_TYPES[stand.productType.toUpperCase()]?.label || stand.productType}</TableCell>
-                          <TableCell>{stand.redirectUrl}</TableCell>
-                          <TableCell align="right">{stand.clicks || 0}</TableCell>
-                          <TableCell align="right">{clicksInPeriod}</TableCell>
-                          <TableCell>{latestClick}</TableCell>
-                        </TableRow>
-                      );
-                    })}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                        return (
+                          <TableRow key={stand._id}>
+                            <TableCell>
+                              <Tooltip title={stand.standerId} arrow>
+                                <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
+                                  {stand.standerId}
+                                </Typography>
+                              </Tooltip>
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant="body2">
+                                {PRODUCT_TYPES[stand.productType.toUpperCase()]?.label || stand.productType}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Box sx={{ display: 'flex', gap: 1 }}>
+                                <Typography variant="body2">
+                                  {clicksInPeriod}
+                                </Typography>
+                                <Typography variant="body2" color="textSecondary">
+                                  ({stand.clicks || 0})
+                                </Typography>
+                              </Box>
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant="body2">
+                                {latestClick}
+                              </Typography>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Box>
           </Paper>
         </Grid>
       </Grid>

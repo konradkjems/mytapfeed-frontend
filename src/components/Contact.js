@@ -80,8 +80,8 @@ const Contact = () => {
     {
       icon: <EmailIcon sx={{ fontSize: 40, color: '#001F3F' }} />,
       title: 'Email',
-      content: 'kontakt@tapfeed.dk',
-      link: 'mailto:kontakt@tapfeed.dk'
+      content: 'konrad@tapfeed.dk',
+      link: 'mailto:konrad@tapfeed.dk'
     },
     {
       icon: <PhoneIcon sx={{ fontSize: 40, color: '#001F3F' }} />,

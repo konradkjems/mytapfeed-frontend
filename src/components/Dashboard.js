@@ -1287,54 +1287,90 @@ const Dashboard = () => {
 
   return (
     <Layout title="Dashboard">
-      <Grid container spacing={3}>
+      <Grid container spacing={2}>
         {/* Statistik sektion */}
         <Grid item xs={12}>
-          <Paper sx={{ p: 2 }}>
+          <Paper sx={{ p: { xs: 1, sm: 2 }, mb: 2 }}>
             <Box sx={{ 
               display: 'flex', 
+              flexDirection: { xs: 'column', sm: 'row' },
               justifyContent: 'space-between',
-              alignItems: 'center',
+              alignItems: { xs: 'flex-start', sm: 'center' },
+              gap: 1,
               mb: 2
             }}>
-              <Typography variant="h6" color="primary" gutterBottom>
+              <Typography variant="h6" color="primary">
                 Statistik
               </Typography>
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
-                <Button
-                  variant="outlined"
-                  onClick={handleRefreshData}
-                  disabled={isLoading}
-                  startIcon={isLoading ? <CircularProgress size={20} /> : null}
-                >
-                  {isLoading ? 'Opdaterer...' : 'Opdater Data'}
-                </Button>
+              <Button
+                variant="outlined"
+                onClick={handleRefreshData}
+                disabled={isLoading}
+                startIcon={isLoading ? <CircularProgress size={20} /> : null}
+                sx={{ width: { xs: '100%', sm: 'auto' } }}
+              >
+                {isLoading ? 'Opdaterer...' : 'Opdater Data'}
+              </Button>
+            </Box>
+            
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: { xs: 'column', md: 'row' },
+              gap: 2,
+              mb: 2
+            }}>
+              <Card sx={{ flex: 1 }}>
+                <CardContent>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Totale klik
+                  </Typography>
+                  <Typography variant="h4" color="primary">
+                    {totalClicks}
+                  </Typography>
+                </CardContent>
+              </Card>
+              
+              <Card sx={{ flex: 1 }}>
+                <CardContent>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Aktive produkter
+                  </Typography>
+                  <Typography variant="h4" color="primary">
+                    {totalStands}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Box>
+
+            <Box sx={{ overflowX: 'auto' }}>
+              <Box sx={{ minWidth: 300 }}>
+                <BarChart
+                  xAxis={[{
+                    scaleType: 'band',
+                    data: timeSeriesData.labels,
+                    tickLabelStyle: { 
+                      fill: mode === 'dark' ? 'white' : 'black',
+                      fontSize: { xs: 10, sm: 12 }
+                    }
+                  }]}
+                  series={[{
+                    data: timeSeriesData.data,
+                    color: mode === 'dark' ? '#4CAF50' : '#2E7D32'
+                  }]}
+                  height={250}
+                />
               </Box>
             </Box>
-            <BarChart
-              xAxis={[{
-                scaleType: 'band',
-                data: timeSeriesData.labels,
-                tickLabelStyle: { 
-                  fill: mode === 'dark' ? 'white' : 'black'
-                }
-              }]}
-              series={[{
-                data: timeSeriesData.data,
-                color: mode === 'dark' ? '#4CAF50' : '#2E7D32'
-              }]}
-              height={300}
-            />
           </Paper>
         </Grid>
 
         {/* Google Maps Anmeldelser sektion */}
         <Grid item xs={12}>
-          <Paper sx={{ p: 2 }}>
+          <Paper sx={{ p: 1 }}>
             <Typography variant="h6" color="primary" gutterBottom>
               Google Maps Anmeldelser
             </Typography>
-            <Grid container spacing={3}>
+            <Grid container spacing={1}>
               <Grid item xs={12} md={4}>
                 <Card>
                   <CardContent>
@@ -1447,15 +1483,28 @@ const Dashboard = () => {
               <Grid item xs={12} md={8}>
                 <Card>
                   <CardContent>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                    <Box sx={{ 
+                      display: 'flex', 
+                      flexDirection: { xs: 'column', sm: 'row' },
+                      justifyContent: 'space-between', 
+                      alignItems: 'flex-start',
+                      gap: 1,
+                      mb: 1
+                    }}>
                       <Typography variant="h6">
                         Seneste anmeldelser
                       </Typography>
-                      <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Box sx={{ 
+                        display: 'flex', 
+                        flexDirection: { xs: 'column', sm: 'row' },
+                        gap: 1,
+                        width: { xs: '100%', sm: 'auto' }
+                      }}>
                         <Button
                           variant="outlined"
                           onClick={() => setReviewSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
                           startIcon={reviewSortOrder === 'desc' ? <ArrowDownward /> : <ArrowUpward />}
+                          fullWidth={'xs'}
                         >
                           {reviewSortOrder === 'desc' ? 'Nyeste først' : 'Ældste først'}
                         </Button>
@@ -1573,22 +1622,29 @@ const Dashboard = () => {
 
         {/* Produkter sektion */}
         <Grid item xs={12}>
-          <Paper sx={{ p: 2 }}>
+          <Paper sx={{ p: { xs: 1, sm: 2 } }}>
             <Box sx={{ 
               display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center',
-              mb: 2 
+              flexDirection: { xs: 'column', sm: 'row' },
+              justifyContent: 'space-between',
+              alignItems: { xs: 'flex-start', sm: 'center' },
+              gap: 1,
+              mb: 2
             }}>
               <Typography variant="h6" color="primary">
                 Produkter
               </Typography>
-              <Box>
+              <Box sx={{ 
+                display: 'flex', 
+                flexDirection: { xs: 'column', sm: 'row' },
+                gap: 1,
+                width: { xs: '100%', sm: 'auto' }
+              }}>
                 <Button
                   variant="outlined"
                   onClick={() => setBulkDialog(true)}
                   startIcon={<CloudUploadIcon />}
-                  sx={{ mr: 1 }}
+                  fullWidth={'xs'}
                 >
                   Bulk Upload
                 </Button>
@@ -1596,190 +1652,118 @@ const Dashboard = () => {
                   variant="contained"
                   onClick={() => setOpenDialog(true)}
                   startIcon={<AddIcon />}
+                  fullWidth={'xs'}
                 >
                   Tilføj nyt produkt
                 </Button>
               </Box>
             </Box>
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>
-                      <Tooltip title="Et unikt ID for dit produkt" arrow placement="top">
-                        <Box component="span" sx={{ cursor: 'help' }}>
-                          Produkt ID
-                        </Box>
-                      </Tooltip>
-                    </TableCell>
-                    <TableCell>
-                      <Tooltip title="Et valgfrit navn til at identificere dit produkt" arrow placement="top">
-                        <Box component="span" sx={{ cursor: 'help' }}>
-                          Kaldenavn
-                        </Box>
-                      </Tooltip>
-                    </TableCell>
-                    <TableCell>
-                      <Tooltip title="Dette er det link som dit TapFeed produkt bruger til at videresende besøgende til din Redirect URL" arrow placement="top-start">
-                        <Box component="span" sx={{ cursor: 'help' }}>
-                          TapFeed URL
-                        </Box>
-                      </Tooltip>
-                    </TableCell>
-                    <TableCell>
-                      <Tooltip title="Den URL som brugeren bliver sendt videre til" arrow placement="top">
-                        <Box component="span" sx={{ cursor: 'help' }}>
-                          Redirect URL
-                        </Box>
-                      </Tooltip>
-                    </TableCell>
-                    <TableCell>
-                      <Tooltip title="Typen af fysisk produkt" arrow placement="top">
-                        <Box component="span" sx={{ cursor: 'help' }}>
-                          Produkttype
-                        </Box>
-                      </Tooltip>
-                    </TableCell>
-                    <TableCell>
-                      <Tooltip title="Antal gange dit produkt er blevet scannet med NFC eller QR" arrow placement="top">
-                        <Box component="span" sx={{ cursor: 'help' }}>
-                          Antal klik
-                        </Box>
-                      </Tooltip>
-                    </TableCell>
-                    <TableCell>Handlinger</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {stands.map((stand) => (
-                    <TableRow key={stand._id}>
-                      <TableCell>{stand.standerId}</TableCell>
-                      <TableCell>
-                        {editingId === stand._id ? (
-                          <TextField
-                            value={stand.nickname || ''}
-                            onChange={(e) => {
-                              const updatedStands = stands.map(s =>
-                                s._id === stand._id ? { ...s, nickname: e.target.value } : s
-                              );
-                              setStands(updatedStands);
-                            }}
-                            fullWidth
-                            placeholder="Tilføj kaldenavn"
-                          />
-                        ) : (
-                          stand.nickname || '-'
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Link
-                          href={`https://api.tapfeed.dk/${stand.standerId}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          api.tapfeed.dk/{stand.standerId}
-                        </Link>
-                      </TableCell>
-                      <TableCell>
-                        {editingId === stand._id ? (
-                          <TextField
-                            value={stand.redirectUrl}
-                            onChange={(e) => {
-                              const updatedStands = stands.map(s =>
-                                s._id === stand._id ? { ...s, redirectUrl: e.target.value } : s
-                              );
-                              setStands(updatedStands);
-                            }}
-                            fullWidth
-                          />
-                        ) : (
-                          <Link href={ensureHttps(stand.redirectUrl)} target="_blank" rel="noopener noreferrer">
-                            {stand.redirectUrl}
-                          </Link>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {editingId === stand._id ? (
-                          <FormControl fullWidth>
-                            <Select
-                              value={stand.productType}
+            
+            <Box sx={{ overflowX: 'auto' }}>
+              <TableContainer>
+                <Table sx={{ minWidth: 600 }}>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>ID</TableCell>
+                      <TableCell>Navn</TableCell>
+                      <TableCell>Type</TableCell>
+                      <TableCell>Klik</TableCell>
+                      <TableCell>Handlinger</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {stands.map((stand) => (
+                      <TableRow key={stand._id}>
+                        <TableCell>
+                          <Tooltip title={stand.standerId} arrow>
+                            <Typography variant="body2" sx={{ 
+                              fontFamily: 'monospace',
+                              wordBreak: 'break-all'
+                            }}>
+                              {stand.standerId}
+                            </Typography>
+                          </Tooltip>
+                        </TableCell>
+                        <TableCell>
+                          {editingId === stand._id ? (
+                            <TextField
+                              value={stand.nickname || ''}
                               onChange={(e) => {
                                 const updatedStands = stands.map(s =>
-                                  s._id === stand._id ? { ...s, productType: e.target.value } : s
+                                  s._id === stand._id ? { ...s, nickname: e.target.value } : s
                                 );
                                 setStands(updatedStands);
                               }}
-                            >
-                              {Object.values(PRODUCT_TYPES).map(type => (
-                                <MenuItem key={type.value} value={type.value}>
-                                  {type.label}
-                                </MenuItem>
-                              ))}
-                            </Select>
-                          </FormControl>
-                        ) : (
-                          PRODUCT_TYPES[stand.productType.toUpperCase()]?.label || stand.productType
-                        )}
-                      </TableCell>
-                      <TableCell>{stand.clicks || 0}</TableCell>
-                      <TableCell>
-                        <ButtonGroup>
-                          {editingId === stand._id ? (
-                            <Tooltip title="Gem ændringer" arrow>
-                              <IconButton
-                                onClick={() => handleSave(stand._id)}
-                                color="primary"
-                              >
-                                <SaveIcon />
-                              </IconButton>
-                            </Tooltip>
+                              fullWidth
+                              size="small"
+                              placeholder="Kaldenavn"
+                            />
                           ) : (
-                            <Tooltip title="Rediger produkt" arrow>
+                            <Typography variant="body2">
+                              {stand.nickname || '-'}
+                            </Typography>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2">
+                            {PRODUCT_TYPES[stand.productType.toUpperCase()]?.label || stand.productType}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2">
+                            {stand.clicks || 0}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', gap: 1 }}>
+                            <Tooltip title="Rediger" arrow>
                               <IconButton
                                 onClick={() => openEditDialog(stand)}
+                                size="small"
                                 color="primary"
                               >
-                                <EditIcon />
+                                <EditIcon fontSize="small" />
                               </IconButton>
                             </Tooltip>
-                          )}
-                          <Tooltip title="Download QR kode" arrow>
-                            <IconButton
-                              onClick={() => handleQrDownload(stand.standerId)}
-                              color="secondary"
-                            >
-                              <QrCodeIcon />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Slet produkt" arrow>
-                            <IconButton
-                              onClick={() => handleDelete(stand._id)}
-                              color="error"
-                            >
-                              <DeleteIcon />
-                            </IconButton>
-                          </Tooltip>
-                        </ButtonGroup>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                            <Tooltip title="QR kode" arrow>
+                              <IconButton
+                                onClick={() => handleQrDownload(stand.standerId)}
+                                size="small"
+                                color="secondary"
+                              >
+                                <QrCodeIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Slet" arrow>
+                              <IconButton
+                                onClick={() => handleDelete(stand._id)}
+                                size="small"
+                                color="error"
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          </Box>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Box>
           </Paper>
         </Grid>
 
-        {/* Guides sektion - nu placeret sidst */}
+        {/* Guides sektion */}
         <Grid item xs={12}>
-          <Paper sx={{ p: 3, mt: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-              <GuideIcon sx={{ mr: 2, color: 'primary.main' }} />
+          <Paper sx={{ p: 2, mt: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <GuideIcon sx={{ mr: 1, color: 'primary.main' }} />
               <Typography variant="h6">
                 Guides & Tips
               </Typography>
             </Box>
-            
-            <Grid container spacing={3}>
+            <Grid container spacing={2}>
               {guides.map((guide) => (
                 <Grid item xs={12} sm={6} md={4} key={guide.id}>
                   <Card 

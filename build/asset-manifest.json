@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/static/css/main.96117490.css",
-    "main.js": "/static/js/main.e22302a2.js",
+    "main.js": "/static/js/main.ec9f34a8.js",
     "static/js/297.9e533418.chunk.js": "/static/js/297.9e533418.chunk.js",
     "static/js/153.d1c2e3d7.chunk.js": "/static/js/153.d1c2e3d7.chunk.js",
     "static/media/Iphone bezel.png": "/static/media/Iphone bezel.4d50b1b753a1bef8e79e.png",
@@ -68,6 +68,6 @@
   },
   "entrypoints": [
     "static/css/main.96117490.css",
-    "static/js/main.e22302a2.js"
+    "static/js/main.ec9f34a8.js"
   ]
 }
