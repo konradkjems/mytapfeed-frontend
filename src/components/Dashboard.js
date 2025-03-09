@@ -1666,6 +1666,7 @@ const Dashboard = () => {
                     <TableRow>
                       <TableCell>ID</TableCell>
                       <TableCell>Navn</TableCell>
+                      <TableCell>TapFeed URL</TableCell>
                       <TableCell>Type</TableCell>
                       <TableCell>Klik</TableCell>
                       <TableCell>Handlinger</TableCell>
@@ -1676,10 +1677,7 @@ const Dashboard = () => {
                       <TableRow key={stand._id}>
                         <TableCell>
                           <Tooltip title={stand.standerId} arrow>
-                            <Typography variant="body2" sx={{ 
-                              fontFamily: 'monospace',
-                              wordBreak: 'break-all'
-                            }}>
+                            <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
                               {stand.standerId}
                             </Typography>
                           </Tooltip>
@@ -1703,6 +1701,18 @@ const Dashboard = () => {
                               {stand.nickname || '-'}
                             </Typography>
                           )}
+                        </TableCell>
+                        <TableCell>
+                          <Link
+                            href={`https://api.tapfeed.dk/${stand.standerId}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            sx={{ textDecoration: 'none' }}
+                          >
+                            <Typography variant="body2" color="primary">
+                              api.tapfeed.dk/{stand.standerId}
+                            </Typography>
+                          </Link>
                         </TableCell>
                         <TableCell>
                           <Typography variant="body2">

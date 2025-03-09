@@ -21,7 +21,8 @@ import {
   Snackbar,
   Alert,
   TextField,
-  Tooltip
+  Tooltip,
+  Link
 } from '@mui/material';
 import { BarChart } from '@mui/x-charts';
 import { LineChart } from '@mui/x-charts';
@@ -579,6 +580,7 @@ const Statistics = () => {
                     <TableRow>
                       <TableCell>ID</TableCell>
                       <TableCell>Type</TableCell>
+                      <TableCell>TapFeed URL</TableCell>
                       <TableCell>Visninger</TableCell>
                       <TableCell>Seneste</TableCell>
                     </TableRow>
@@ -611,6 +613,18 @@ const Statistics = () => {
                               <Typography variant="body2">
                                 {PRODUCT_TYPES[stand.productType.toUpperCase()]?.label || stand.productType}
                               </Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Link
+                                href={`https://api.tapfeed.dk/${stand.standerId}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                sx={{ textDecoration: 'none' }}
+                              >
+                                <Typography variant="body2" color="primary">
+                                  api.tapfeed.dk/{stand.standerId}
+                                </Typography>
+                              </Link>
                             </TableCell>
                             <TableCell>
                               <Box sx={{ display: 'flex', gap: 1 }}>
