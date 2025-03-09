@@ -548,12 +548,20 @@ const Dashboard = () => {
       const response = await fetch(`${API_URL}/api/stands/unclaimed`, {
         credentials: 'include'
       });
-      if (response.ok) {
-        const data = await response.json();
-        setUnclaimedStands(data);
+      
+      if (!response.ok) {
+        throw new Error('Kunne ikke hente uaktiverede produkter');
       }
+      
+      const data = await response.json();
+      setUnclaimedStands(data);
     } catch (error) {
-      console.error('Fejl ved hentning af unclaimed produkter:', error);
+      console.error('Fejl ved hentning af uaktiverede produkter:', error);
+      setAlert({
+        open: true,
+        message: error.message,
+        severity: 'error'
+      });
     }
   };
 
@@ -916,7 +924,7 @@ const Dashboard = () => {
               </ListItemIcon>
               <ListItemText 
                 primary="1. Find dit Produkt ID" 
-                secondary="Lokaliser det unikke Produkt ID på dit TapFeed produkt (f.eks. 'XYZ123'). Dette ID er trykt på produktet."
+                secondary="Lokaliser det unikke Produkt ID på dit TapFeed produkt (f.eks. 'XYZ123'). Dette ID er trypt på produktet."
               />
             </ListItem>
             
@@ -1282,6 +1290,42 @@ const Dashboard = () => {
       });
     } finally {
       setIsLoadingReviews(false);
+    }
+  };
+
+  const handleActivateStand = async (standerId) => {
+    try {
+      const response = await fetch(`${API_URL}/api/stands/activate/${standerId}`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Kunne ikke aktivere produkt');
+      }
+
+      const data = await response.json();
+      setAlert({
+        open: true,
+        message: data.message,
+        severity: 'success'
+      });
+
+      // Opdater listen over stands
+      await fetchStands();
+      await fetchUnclaimedStands();
+    } catch (error) {
+      console.error('Fejl ved aktivering:', error);
+      setAlert({
+        open: true,
+        message: error.message,
+        severity: 'error'
+      });
     }
   };
 
@@ -1754,6 +1798,24 @@ const Dashboard = () => {
                               </IconButton>
                             </Tooltip>
                           </Box>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {unclaimedStands.map((stand) => (
+                      <TableRow key={stand._id}>
+                        <TableCell>
+                          <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
+                            {stand.standerId}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={() => handleActivateStand(stand.standerId)}
+                          >
+                            Aktiver
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
